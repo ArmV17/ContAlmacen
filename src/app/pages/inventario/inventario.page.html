@@ -1,13 +1,49 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>inventario</ion-title>
+<ion-header class="ion-no-border">
+  <ion-toolbar class="toolbar-elegante">
+    <ion-buttons slot="start">
+      <ion-menu-button color="light"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Inventario</ion-title>
+  </ion-toolbar>
+  
+  <!-- Barra de búsqueda integrada en la cabecera -->
+  <ion-toolbar class="toolbar-elegante barra-busqueda-container">
+    <ion-searchbar class="busqueda-limpia" placeholder="Buscar por código o nombre..."></ion-searchbar>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">inventario</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="fondo-claro ion-padding">
+  <div class="contenedor-maximo">
+    
+    <ion-list class="lista-transparente">
+      <ion-item *ngFor="let item of herramientas" class="item-limpio" lines="none">
+        <div class="icono-contenedor" slot="start">
+          <ion-icon name="build-outline"></ion-icon>
+        </div>
+        
+        <ion-label>
+          <h3 class="herramienta-nombre">{{ item.nombre }}</h3>
+          <p class="herramienta-info">{{ item.id }} • {{ item.categoria }}</p>
+        </ion-label>
+        
+        <!-- Etiqueta dinámica según el estado de la herramienta -->
+        <ion-badge slot="end" class="etiqueta-estado" 
+          [ngClass]="{
+            'estado-disponible': item.estado === 'Disponible',
+            'estado-prestado': item.estado === 'Prestado',
+            'estado-mantenimiento': item.estado === 'Mantenimiento'
+          }">
+          {{ item.estado }}
+        </ion-badge>
+      </ion-item>
+    </ion-list>
+
+  </div>
+
+  <!-- Botón para registrar una NUEVA herramienta al catálogo -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button class="boton-flotante">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>

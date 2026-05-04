@@ -1,13 +1,64 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>nuevo-prestamo</ion-title>
+<ion-header class="ion-no-border">
+  <ion-toolbar class="toolbar-elegante">
+    <!-- Botón para regresar al Dashboard -->
+<!-- POR ESTO: -->
+    <ion-buttons slot="start">
+      <ion-menu-button color="light"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Nuevo Préstamo</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">nuevo-prestamo</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="fondo-claro ion-padding">
+  <div class="contenedor-maximo">
+    
+    <!-- Tarjeta del Alumno -->
+    <ion-card class="tarjeta-formulario">
+      <ion-card-header>
+        <ion-card-title class="titulo-seccion">
+          <ion-icon name="person-outline" class="icono-seccion"></ion-icon>
+          Datos del Alumno
+        </ion-card-title>
+      </ion-card-header>
+      
+      <ion-card-content>
+        <ion-item class="input-limpio" lines="none">
+          <ion-input label="Matrícula" labelPlacement="stacked" placeholder="Ej. 17000000" [(ngModel)]="prestamo.matricula"></ion-input>
+        </ion-item>
+        
+        <ion-item class="input-limpio" lines="none">
+          <ion-input label="Carrera o Grado" labelPlacement="stacked" placeholder="Ej. Mantenimiento Industrial" [(ngModel)]="prestamo.carrera"></ion-input>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Tarjeta de la Herramienta -->
+    <ion-card class="tarjeta-formulario">
+      <ion-card-header>
+        <ion-card-title class="titulo-seccion">
+          <ion-icon name="build-outline" class="icono-seccion"></ion-icon>
+          Herramienta
+        </ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <ion-item class="input-limpio" lines="none">
+          <ion-input label="Código / No. de Serie" labelPlacement="stacked" placeholder="Ej. MULT-04" [(ngModel)]="prestamo.herramientaId"></ion-input>
+          <!-- Botón preparado para futura integración con cámara o lector -->
+          <ion-button fill="clear" slot="end" class="boton-escaner">
+            <ion-icon slot="icon-only" name="barcode-outline"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Botón Principal -->
+    <div class="contenedor-boton">
+      <ion-button expand="block" class="boton-guardar" (click)="guardarPrestamo()">
+        <ion-icon slot="start" name="save-outline"></ion-icon>
+        Autorizar Entrega
+      </ion-button>
+    </div>
+
+  </div>
 </ion-content>

@@ -1,11 +1,23 @@
 import { Component } from '@angular/core';
-import { IonApp, IonRouterOutlet } from '@ionic/angular/standalone';
+import { IonicModule } from '@ionic/angular';
+import { CommonModule } from '@angular/common';
+// Importamos RouterModule para que funcionen los enlaces del menú
+import { RouterModule } from '@angular/router'; 
+
+// Íconos para nuestro menú lateral
+import { addIcons } from 'ionicons';
+import { homeOutline, addCircleOutline, checkmarkCircleOutline, listOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
-  imports: [IonApp, IonRouterOutlet],
+  styleUrls: ['app.component.scss'],
+  standalone: true,
+  imports: [IonicModule, CommonModule, RouterModule],
 })
 export class AppComponent {
-  constructor() {}
+  constructor() {
+    // Registramos los íconos
+    addIcons({ homeOutline, addCircleOutline, checkmarkCircleOutline, listOutline });
+  }
 }

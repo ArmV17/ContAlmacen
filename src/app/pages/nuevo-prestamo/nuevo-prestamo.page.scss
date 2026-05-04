@@ -1,0 +1,73 @@
+/* Mantenemos los estilos generales del proyecto */
+.toolbar-elegante {
+  --background: #1e293b;
+  --color: #ffffff;
+}
+
+.fondo-claro {
+  --background: #f4f5f8;
+}
+
+/* En el formulario reducimos un poco el ancho en monitores grandes */
+.contenedor-maximo {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Tarjetas para agrupar información */
+.tarjeta-formulario {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  border-radius: 16px;
+  background: #ffffff;
+  margin-bottom: 20px;
+  border: none;
+
+  .titulo-seccion {
+    font-size: 1.15rem;
+    color: #2c3e50;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+
+    .icono-seccion {
+      margin-right: 10px;
+      color: #3498db;
+    }
+  }
+}
+
+/* Estilo moderno para los inputs */
+.input-limpio {
+  --background: #f8fafc; /* Gris muy clarito para el área de texto */
+  --border-radius: 10px;
+  --padding-start: 15px;
+  margin-bottom: 15px;
+  border: 1px solid #e2e8f0;
+  
+  ion-input {
+    font-size: 1rem;
+    --color: #2c3e50;
+    --placeholder-color: #94a3b8;
+  }
+}
+
+/* Detalles de botones */
+.boton-escaner {
+  --color: #3498db;
+  margin-top: 15px;
+}
+
+.contenedor-boton {
+  padding: 10px 5px;
+}
+
+.boton-guardar {
+  --background: #27ae60; /* Verde éxito para confirmar la acción */
+  --background-hover: #219653;
+  --border-radius: 12px;
+  --box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+  height: 55px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+}

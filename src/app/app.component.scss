@@ -1,0 +1,43 @@
+.toolbar-elegante {
+  --background: #1e293b;
+  --color: #ffffff;
+}
+
+.fondo-claro {
+  --background: #f4f5f8;
+}
+
+.lista-menu {
+  background: transparent;
+  margin-top: 15px;
+}
+
+.item-menu {
+  --background: transparent;
+  --color: #64748b;
+  font-weight: 500;
+  margin-bottom: 5px;
+  border-radius: 0 20px 20px 0; /* Curva solo del lado derecho */
+  margin-right: 15px;
+  cursor: pointer;
+
+  ion-icon {
+    color: #94a3b8;
+  }
+
+  /* Efecto al pasar el mouse por encima */
+  &:hover {
+    --background: rgba(52, 152, 219, 0.05);
+    --color: #3498db;
+    ion-icon { color: #3498db; }
+  }
+
+  /* Efecto cuando estamos en esa página */
+  &.seleccionado {
+    --background: rgba(52, 152, 219, 0.1);
+    --color: #3498db;
+    font-weight: 600;
+    border-left: 4px solid #3498db;
+    ion-icon { color: #3498db; }
+  }
+}

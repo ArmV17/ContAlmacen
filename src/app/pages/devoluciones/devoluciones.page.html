@@ -1,13 +1,55 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>devoluciones</ion-title>
+<ion-header class="ion-no-border">
+  <ion-toolbar class="toolbar-elegante">
+    
+    <!-- Agregamos el botón de menú aquí -->
+    <ion-buttons slot="start">
+      <ion-menu-button color="light"></ion-menu-button>
+    </ion-buttons>
+    
+    <ion-title>Resumen de Almacén</ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">devoluciones</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="fondo-claro ion-padding">
+  <div class="contenedor-maximo">
+
+    <!-- Mensaje si no hay nada pendiente -->
+    <div *ngIf="prestamosPendientes.length === 0" class="mensaje-vacio">
+      <ion-icon name="checkmark-circle-outline" class="icono-grande"></ion-icon>
+      <h2>¡Todo al día!</h2>
+      <p>No hay herramientas pendientes por devolver.</p>
+    </div>
+
+    <!-- Lista de pendientes -->
+    <ion-list class="lista-transparente" *ngIf="prestamosPendientes.length > 0">
+      
+      <ion-list-header>
+        <ion-label>
+          <h2 class="subtitulo">Préstamos Activos</h2>
+        </ion-label>
+      </ion-list-header>
+
+      <ion-item *ngFor="let prestamo of prestamosPendientes" class="item-limpio" lines="none">
+        
+        <div class="icono-contenedor" slot="start" [ngClass]="{'alerta-icono': prestamo.estado === 'Vencido'}">
+          <ion-icon [name]="prestamo.estado === 'Vencido' ? 'alert-circle-outline' : 'build-outline'"></ion-icon>
+        </div>
+        
+        <ion-label>
+          <h3 class="herramienta-nombre">{{ prestamo.herramienta }} <span class="codigo-mini">({{ prestamo.codigoHerramienta }})</span></h3>
+          <p class="alumno-info">{{ prestamo.alumno }} • Mat: {{ prestamo.matricula }}</p>
+          <p class="estado-texto" [ngClass]="{'texto-peligro': prestamo.estado === 'Vencido'}">
+            Estado: {{ prestamo.estado }}
+          </p>
+        </ion-label>
+        
+        <!-- Botón para procesar la devolución -->
+        <ion-button slot="end" class="boton-recibir" (click)="confirmarDevolucion(prestamo)">
+          Recibir
+        </ion-button>
+
+      </ion-item>
+    </ion-list>
+
+  </div>
 </ion-content>
