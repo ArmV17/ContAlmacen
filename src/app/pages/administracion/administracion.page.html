@@ -11,6 +11,9 @@
       <ion-segment-button value="alumnos">
         <ion-label>Alumnos</ion-label>
       </ion-segment-button>
+      <ion-segment-button value="maestros">
+        <ion-label>Maestros</ion-label>
+      </ion-segment-button>
       <ion-segment-button value="herramientas">
         <ion-label>Catálogo</ion-label>
       </ion-segment-button>
@@ -19,21 +22,33 @@
       </ion-segment-button>
     </ion-segment>
   </ion-toolbar>
+
+  <!-- BUSCADOR UNIVERSAL -->
+  <ion-toolbar class="toolbar-elegante">
+    <ion-searchbar 
+      placeholder="Buscar por nombre, matrícula o ID..." 
+      [(ngModel)]="textoBuscar" 
+      animated="true"
+      class="buscador-personalizado">
+    </ion-searchbar>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content class="fondo-claro ion-padding">
   <div class="contenedor-maximo">
 
+    <!-- SECCIÓN ALUMNOS -->
     <div *ngIf="segmentoActual === 'alumnos'">
       <ion-card class="tarjeta-formulario">
         <ion-card-header>
           <ion-card-title class="titulo-seccion">
-            <ion-icon name="person-add-outline"></ion-icon> Nuevo Alumno
+            <ion-icon [name]="editandoAlumno ? 'create-outline' : 'person-add-outline'"></ion-icon> 
+            {{ editandoAlumno ? 'Editar Alumno' : 'Nuevo Alumno' }}
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="Matrícula" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.matricula"></ion-input>
+            <ion-input label="Matrícula" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.matricula" [readonly]="editandoAlumno"></ion-input>
           </ion-item>
           <ion-item class="input-limpio" lines="none">
             <ion-input label="Nombre" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.nombre"></ion-input>
@@ -44,21 +59,29 @@
           <ion-item class="input-limpio" lines="none">
             <ion-input label="Grado" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.grado"></ion-input>
           </ion-item>
+          
           <ion-button expand="block" class="boton-guardar" (click)="guardarAlumno()">
-            <ion-icon name="save-outline" slot="start"></ion-icon> Guardar Alumno
+            <ion-icon name="save-outline" slot="start"></ion-icon> 
+            {{ editandoAlumno ? 'Actualizar Alumno' : 'Guardar Alumno' }}
+          </ion-button>
+          
+          <ion-button *ngIf="editandoAlumno" expand="block" fill="clear" color="medium" (click)="cancelarEdicionAlumno()">
+            Cancelar Edición
           </ion-button>
         </ion-card-content>
       </ion-card>
 
       <h2 class="subtitulo-gestion">Gestión de Alumnos</h2>
       <ion-list class="lista-gestion">
-        <ion-item *ngFor="let a of alumnos" lines="none" class="item-gestion">
+        <ion-item *ngFor="let a of listaFiltrada" lines="none" class="item-gestion">
           <ion-label>
             <h3>{{ a.nombre }}</h3>
-            <p>{{ a.matricula }} • {{ a.carrera }}</p>
+            <p>{{ a.matricula }} • {{ a.carrera }} • <strong>{{ a.grado }}</strong></p>
           </ion-label>
           <ion-buttons slot="end">
-            <ion-button color="primary"><ion-icon name="create-outline"></ion-icon></ion-button>
+            <ion-button color="primary" (click)="prepararEdicionAlumno(a)">
+              <ion-icon name="create-outline"></ion-icon>
+            </ion-button>
             <ion-button color="danger" (click)="confirmarEliminar('alumnos', a.matricula, a.nombre)">
               <ion-icon name="trash-outline"></ion-icon>
             </ion-button>
@@ -67,48 +90,112 @@
       </ion-list>
     </div>
 
-    <div *ngIf="segmentoActual === 'herramientas'">
+    <!-- SECCIÓN MAESTROS -->
+    <div *ngIf="segmentoActual === 'maestros'">
       <ion-card class="tarjeta-formulario">
         <ion-card-header>
           <ion-card-title class="titulo-seccion">
-            <ion-icon name="build-outline"></ion-icon> Nueva Herramienta
+            <ion-icon [name]="editandoMaestro ? 'create-outline' : 'person-add-outline'"></ion-icon>
+            {{ editandoMaestro ? 'Editar Maestro' : 'Nuevo Maestro' }}
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="Código" labelPlacement="stacked" [(ngModel)]="herramientaNueva.codigo"></ion-input>
+            <ion-input label="No. Maestro" labelPlacement="stacked" [(ngModel)]="maestroNuevo.numMaestro" [readonly]="editandoMaestro"></ion-input>
+          </ion-item>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Nombre Completo" labelPlacement="stacked" [(ngModel)]="maestroNuevo.nombre"></ion-input>
+          </ion-item>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Agregar Materia" labelPlacement="stacked" [(ngModel)]="materiaTemp" placeholder="Escribe y presiona +"></ion-input>
+            <ion-button slot="end" fill="clear" (click)="agregarMateriaLista()">
+              <ion-icon name="add-circle-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </ion-item>
+          <div class="ion-padding-start ion-padding-bottom">
+            <ion-chip *ngFor="let m of maestroNuevo.materias; let i = index">
+              <ion-label>{{ m }}</ion-label>
+              <ion-icon name="close-circle" (click)="quitarMateria(i)"></ion-icon>
+            </ion-chip>
+          </div>
+          <ion-button expand="block" class="boton-guardar" (click)="guardarMaestro()">
+            <ion-icon name="save-outline" slot="start"></ion-icon> 
+            {{ editandoMaestro ? 'Actualizar Maestro' : 'Guardar Maestro' }}
+          </ion-button>
+          <ion-button *ngIf="editandoMaestro" expand="block" fill="clear" color="medium" (click)="cancelarEdicionMaestro()">
+            Cancelar Edición
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+
+      <h2 class="subtitulo-gestion">Cuerpo Docente</h2>
+      <ion-list class="lista-gestion">
+        <ion-item *ngFor="let mae of listaFiltrada" lines="none" class="item-gestion">
+          <ion-label>
+            <h3>{{ mae.nombre }}</h3>
+            <p>No: {{ mae.num_maestro }}</p>
+            <div class="ion-padding-top">
+              <ion-badge color="light" *ngFor="let mat of mae.materias" style="margin-right: 4px;">{{ mat }}</ion-badge>
+            </div>
+          </ion-label>
+          <ion-buttons slot="end">
+            <ion-button color="primary" (click)="prepararEdicionMaestro(mae)">
+              <ion-icon name="create-outline"></ion-icon>
+            </ion-button>
+            <ion-button color="danger" (click)="confirmarEliminar('maestros', mae.num_maestro, mae.nombre)">
+              <ion-icon name="trash-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- SECCIÓN HERRAMIENTAS -->
+    <div *ngIf="segmentoActual === 'herramientas'">
+      <ion-card class="tarjeta-formulario">
+        <ion-card-header>
+          <ion-card-title class="titulo-seccion">
+            <ion-icon [name]="editandoHerramienta ? 'create-outline' : 'build-outline'"></ion-icon> 
+            {{ editandoHerramienta ? 'Editar Herramienta' : 'Nueva Herramienta' }}
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Código" labelPlacement="stacked" [(ngModel)]="herramientaNueva.codigo" [readonly]="editandoHerramienta"></ion-input>
           </ion-item>
           <ion-item class="input-limpio" lines="none">
             <ion-input label="Nombre" labelPlacement="stacked" [(ngModel)]="herramientaNueva.nombre"></ion-input>
           </ion-item>
-
           <ion-item class="input-limpio" lines="none">
-            <ion-select label="Tipo de Herramienta" interface="popover" labelPlacement="stacked" 
-                        placeholder="Selecciona o escribe uno" [(ngModel)]="herramientaNueva.tipo">
+            <ion-select label="Tipo" interface="popover" labelPlacement="stacked" [(ngModel)]="selectorTipo">
               <ion-select-option *ngFor="let tipo of tiposExistentes" [value]="tipo">{{ tipo }}</ion-select-option>
               <ion-select-option value="nuevo">-- Agregar nuevo tipo --</ion-select-option>
             </ion-select>
           </ion-item>
-
-          <ion-item class="input-limpio" lines="none" *ngIf="herramientaNueva.tipo === 'nuevo'">
-            <ion-input label="Escribe el nuevo tipo" labelPlacement="stacked" 
-                       (ionInput)="herramientaNueva.tipo = $any($event).target.value"></ion-input>
+          <ion-item class="input-limpio" lines="none" *ngIf="selectorTipo === 'nuevo'">
+            <ion-input label="Nuevo Tipo" labelPlacement="stacked" [(ngModel)]="tipoNuevoTemp"></ion-input>
           </ion-item>
-
           <ion-button expand="block" class="boton-guardar" (click)="guardarHerramienta()">
-            <ion-icon name="save-outline" slot="start"></ion-icon> Guardar
+            <ion-icon name="save-outline" slot="start"></ion-icon> 
+            {{ editandoHerramienta ? 'Actualizar Herramienta' : 'Guardar Herramienta' }}
+          </ion-button>
+          <ion-button *ngIf="editandoHerramienta" expand="block" fill="clear" color="medium" (click)="cancelarEdicionHerramienta()">
+            Cancelar Edición
           </ion-button>
         </ion-card-content>
       </ion-card>
 
       <h2 class="subtitulo-gestion">Inventario</h2>
       <ion-list class="lista-gestion">
-        <ion-item *ngFor="let h of herramientas" lines="none" class="item-gestion">
+        <ion-item *ngFor="let h of listaFiltrada" lines="none" class="item-gestion">
           <ion-label>
             <h3>{{ h.nombre_herramienta }}</h3>
             <p>{{ h.tipo_herramienta }} | {{ h.num_herramienta }}</p>
           </ion-label>
           <ion-buttons slot="end">
+            <ion-button color="primary" (click)="prepararEdicionHerramienta(h)">
+              <ion-icon name="create-outline"></ion-icon>
+            </ion-button>
             <ion-button color="danger" (click)="confirmarEliminar('inventario', h.num_herramienta, h.nombre_herramienta)">
               <ion-icon name="trash-outline"></ion-icon>
             </ion-button>
@@ -117,22 +204,24 @@
       </ion-list>
     </div>
 
+    <!-- SECCIÓN EMPLEADOS -->
     <div *ngIf="segmentoActual === 'empleados'">
       <ion-card class="tarjeta-formulario">
         <ion-card-header>
           <ion-card-title class="titulo-seccion">
-            <ion-icon name="id-card-outline"></ion-icon> Nuevo Empleado
+            <ion-icon [name]="editandoEmpleado ? 'create-outline' : 'id-card-outline'"></ion-icon> 
+            {{ editandoEmpleado ? 'Editar Empleado' : 'Nuevo Empleado' }}
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="No. Empleado" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.numEmpleado"></ion-input>
+            <ion-input label="No. Empleado" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.numEmpleado" [readonly]="editandoEmpleado"></ion-input>
           </ion-item>
           <ion-item class="input-limpio" lines="none">
             <ion-input label="Nombre" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.nombre"></ion-input>
           </ion-item>
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="Contraseña" type="password" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.password"></ion-input>
+            <ion-input [label]="editandoEmpleado ? 'Nueva Contraseña (opcional)' : 'Contraseña'" type="password" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.password"></ion-input>
           </ion-item>
           <ion-item class="input-limpio" lines="none">
             <ion-select label="Rol" interface="popover" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.rol">
@@ -141,19 +230,26 @@
             </ion-select>
           </ion-item>
           <ion-button expand="block" class="boton-guardar" (click)="guardarEmpleado()">
-            <ion-icon name="save-outline" slot="start"></ion-icon> Guardar
+            <ion-icon name="save-outline" slot="start"></ion-icon> 
+            {{ editandoEmpleado ? 'Actualizar Empleado' : 'Guardar' }}
+          </ion-button>
+          <ion-button *ngIf="editandoEmpleado" expand="block" fill="clear" color="medium" (click)="cancelarEdicionEmpleado()">
+            Cancelar Edición
           </ion-button>
         </ion-card-content>
       </ion-card>
 
       <h2 class="subtitulo-gestion">Equipo de Almacén</h2>
       <ion-list class="lista-gestion">
-        <ion-item *ngFor="let e of empleados" lines="none" class="item-gestion">
+        <ion-item *ngFor="let e of listaFiltrada" lines="none" class="item-gestion">
           <ion-label>
             <h3>{{ e.nombre }}</h3>
             <p>{{ e.num_empleado }} • <strong>{{ e.rol }}</strong></p>
           </ion-label>
           <ion-buttons slot="end">
+            <ion-button color="primary" (click)="prepararEdicionEmpleado(e)">
+              <ion-icon name="create-outline"></ion-icon>
+            </ion-button>
             <ion-button color="danger" (click)="confirmarEliminar('trabajadores', e.num_empleado, e.nombre)">
               <ion-icon name="trash-outline"></ion-icon>
             </ion-button>

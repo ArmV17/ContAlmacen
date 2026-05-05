@@ -202,6 +202,36 @@ export class AlmacenService {
     });
   }
 
+  // --- MÉTODOS PARA MAESTROS ---
+  async registrarMaestro(maestro: any) {
+    try {
+      // Usamos el número de maestro como ID del documento
+      await setDoc(doc(this.firestore, 'maestros', maestro.numMaestro), {
+        num_maestro: maestro.numMaestro,
+        nombre: this.encriptarTexto(maestro.nombre), // Mantenemos el cifrado de seguridad
+        materias: maestro.materias, // Esto será un arreglo de strings
+      });
+      return { exito: true };
+    } catch (e: any) {
+      return { exito: false, mensaje: e.message };
+    }
+  }
+
+  async obtenerMaestros() {
+    try {
+      const snapshot = await getDocs(collection(this.firestore, 'maestros'));
+      return snapshot.docs.map(d => {
+        const data: any = d.data();
+        try {
+          data.nombre = this.desencriptarTexto(data.nombre);
+        } catch (e) {}
+        return { id: d.id, ...data };
+      });
+    } catch (e) {
+      return [];
+    }
+  }
+
   // ==========================================
   // GESTIÓN (EDITAR / ELIMINAR)
   // ==========================================
