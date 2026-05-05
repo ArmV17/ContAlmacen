@@ -1,0 +1,103 @@
+/* =======================================
+   ESTILOS GENERALES
+   ======================================= */
+.toolbar-elegante {
+  --background: #1e293b;
+  --color: #ffffff;
+}
+
+.fondo-claro {
+  --background: #f4f5f8;
+}
+
+.contenedor-maximo {
+  max-width: 700px; /* Lo mantenemos angosto para que los formularios se vean limpios en PC */
+  margin: 0 auto;
+  padding-top: 10px;
+}
+
+/* =======================================
+   PESTAÑAS DE NAVEGACIÓN (SEGMENT)
+   ======================================= */
+ion-segment {
+  margin-bottom: 10px;
+  background: transparent;
+  
+  ion-segment-button {
+    /* Color de las pestañas NO seleccionadas (Gris claro) */
+    --color: #cbd5e1; 
+    color: #cbd5e1; /* Respaldo forzado */
+    
+    /* Color de la pestaña seleccionada (Blanco) */
+    --color-checked: #ffffff; 
+    
+    /* Color de la línea inferior (Azul estilo Ionic) */
+    --indicator-color: #3498db; 
+    
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+    transition: 0.3s;
+  }
+
+  /* Efecto extra cuando está seleccionada */
+  ion-segment-button.segment-button-checked {
+    opacity: 1;
+    font-weight: 600;
+  }
+}
+
+/* =======================================
+   TARJETAS Y FORMULARIOS
+   ======================================= */
+.tarjeta-formulario {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  border-radius: 16px;
+  background: #ffffff;
+  margin-bottom: 20px;
+  border: none;
+
+  .titulo-seccion {
+    font-size: 1.15rem;
+    color: #2c3e50;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+
+    .icono-seccion {
+      margin-right: 10px;
+      color: #3498db;
+    }
+  }
+}
+
+.input-limpio {
+  --background: #f8fafc;
+  --border-radius: 10px;
+  --padding-start: 15px;
+  margin-bottom: 15px;
+  border: 1px solid #e2e8f0;
+  
+  /* Aplica tanto a inputs de texto como a listas desplegables (select) */
+  ion-input, ion-select {
+    font-size: 1rem;
+    --color: #2c3e50;
+    --placeholder-color: #94a3b8;
+  }
+}
+
+/* =======================================
+   BOTONES
+   ======================================= */
+.boton-guardar {
+  --background: #27ae60; /* Verde de éxito */
+  --background-hover: #219653;
+  --border-radius: 12px;
+  --box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+  height: 55px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+  margin-top: 20px;
+  margin-bottom: 5px;
+}

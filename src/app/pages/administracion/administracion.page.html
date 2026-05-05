@@ -1,0 +1,110 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="toolbar-elegante">
+    <ion-buttons slot="start">
+      <ion-menu-button color="light"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Administración</ion-title>
+  </ion-toolbar>
+
+  <!-- Pestañas de navegación -->
+  <ion-toolbar class="toolbar-elegante">
+    <ion-segment [(ngModel)]="segmentoActual">
+      <ion-segment-button value="alumnos">
+        <ion-label>Alumnos</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="herramientas">
+        <ion-label>Catálogo</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="empleados">
+        <ion-label>Empleados</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="fondo-claro ion-padding">
+  <div class="contenedor-maximo">
+
+    <!-- FORMULARIO ALUMNOS -->
+    <div *ngIf="segmentoActual === 'alumnos'">
+      <ion-card class="tarjeta-formulario">
+        <ion-card-header>
+          <ion-card-title class="titulo-seccion">
+            <ion-icon name="person-add-outline" class="icono-seccion"></ion-icon> Nuevo Alumno
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Matrícula" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.matricula" placeholder="Ej. 17001122"></ion-input>
+          </ion-item>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Nombre Completo" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.nombre" placeholder="Ej. Juan Pérez"></ion-input>
+          </ion-item>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Carrera" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.carrera" placeholder="Ej. Mantenimiento"></ion-input>
+          </ion-item>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Grado / Cuatrimestre" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.grado" placeholder="Ej. 5to"></ion-input>
+          </ion-item>
+          <ion-button expand="block" class="boton-guardar" (click)="guardarAlumno()">
+            <ion-icon slot="start" name="save-outline"></ion-icon> Guardar Alumno
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- FORMULARIO HERRAMIENTAS -->
+    <div *ngIf="segmentoActual === 'herramientas'">
+      <ion-card class="tarjeta-formulario">
+        <ion-card-header>
+          <ion-card-title class="titulo-seccion">
+            <ion-icon name="build-outline" class="icono-seccion"></ion-icon> Nueva Herramienta
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Código / No. Serie" labelPlacement="stacked" [(ngModel)]="herramientaNueva.codigo" placeholder="Ej. MULT-05"></ion-input>
+          </ion-item>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Nombre / Descripción" labelPlacement="stacked" [(ngModel)]="herramientaNueva.nombre" placeholder="Ej. Multímetro Digital"></ion-input>
+          </ion-item>
+          <ion-button expand="block" class="boton-guardar" (click)="guardarHerramienta()">
+            <ion-icon slot="start" name="save-outline"></ion-icon> Guardar Herramienta
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- FORMULARIO EMPLEADOS -->
+    <div *ngIf="segmentoActual === 'empleados'">
+      <ion-card class="tarjeta-formulario">
+        <ion-card-header>
+          <ion-card-title class="titulo-seccion">
+            <ion-icon name="id-card-outline" class="icono-seccion"></ion-icon> Nuevo Empleado
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="No. de Empleado" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.numEmpleado" placeholder="Ej. EMP-02"></ion-input>
+          </ion-item>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Nombre" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.nombre" placeholder="Ej. Ana López"></ion-input>
+          </ion-item>
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Contraseña Temporal" type="password" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.password" placeholder="***"></ion-input>
+          </ion-item>
+          <ion-item class="input-limpio" lines="none">
+            <ion-select label="Rol del Sistema" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.rol" interface="popover">
+              <ion-select-option value="Staff">Staff (Almacenista)</ion-select-option>
+              <ion-select-option value="Admin">Administrador</ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-button expand="block" class="boton-guardar" (click)="guardarEmpleado()">
+            <ion-icon slot="start" name="save-outline"></ion-icon> Guardar Empleado
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+  </div>
+</ion-content>

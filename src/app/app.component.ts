@@ -6,8 +6,8 @@ import { RouterModule } from '@angular/router';
 
 // Íconos para nuestro menú lateral
 import { addIcons } from 'ionicons';
-import { homeOutline, addCircleOutline, checkmarkCircleOutline, listOutline } from 'ionicons/icons';
-
+import { homeOutline, addCircleOutline, checkmarkCircleOutline, listOutline, settingsOutline } from 'ionicons/icons';
+addIcons({ homeOutline, addCircleOutline, checkmarkCircleOutline, listOutline, settingsOutline });
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',

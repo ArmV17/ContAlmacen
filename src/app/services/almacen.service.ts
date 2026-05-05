@@ -1,166 +1,154 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
+import * as CryptoJS from 'crypto-js';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AlmacenService {
   
-  // Variable que guarda la conexión activa a tu base de datos
   private supabase: SupabaseClient;
 
   constructor() {
-    // Inicializamos Supabase con las credenciales
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
   }
 
   // ==========================================
-  // MÉTODOS DE CONEXIÓN A TABLAS
+  // INVENTARIO
   // ==========================================
-
-  /**
-   * Obtiene todas las herramientas de la tabla 'inventario'
-   */
   async obtenerInventario() {
-    const { data, error } = await this.supabase
-      .from('inventario')
-      .select('*');
-
-    if (error) {
-      console.error('Error al conectar con Supabase:', error.message);
-      return [];
-    }
-
+    const { data, error } = await this.supabase.from('inventario').select('*');
+    if (error) { console.error('Error al conectar:', error.message); return []; }
     return data; 
   }
 
-  /**
-   * Ejemplo para insertar un nuevo registro en la tabla 'alumnos'
-   */
-  async registrarAlumno(matricula: string, nombre: string, carrera: string, grado: string) {
-    const { data, error } = await this.supabase
-      .from('alumnos')
-      .insert([
-        { 
-          matricula: matricula, 
-          nombre: nombre, 
-          carrera: carrera, 
-          grado: grado 
-        }
-      ]);
-
-    if (error) {
-      console.error('Error al registrar alumno:', error.message);
-      return false;
-    }
-    return true;
-  }
-
-  /**
-   * Obtiene los préstamos activos y vencidos para el Dashboard
-   * haciendo "JOIN" con las tablas de alumnos e inventario
-   */
+  // ==========================================
+  // DASHBOARD
+  // ==========================================
   async obtenerPrestamosDashboard() {
     const { data, error } = await this.supabase
       .from('prestamos')
-      .select(`
-        id,
-        fecha_salida,
-        estado,
-        alumnos (nombre, carrera),
-        inventario (nombre_herramienta)
-      `)
-      // Solo queremos ver los que están en la calle
+      .select(`id, fecha_salida, estado, alumnos (nombre, carrera), inventario (nombre_herramienta)`)
       .in('estado', ['Activo', 'Vencido']) 
-      // Ordenamos para ver los más antiguos primero
       .order('fecha_salida', { ascending: true });
+    
+    if (error) { console.error('Error:', error.message); return []; }
 
-    if (error) {
-      console.error('Error al obtener préstamos:', error.message);
-      return [];
-    }
-
-    return data;
+    // DESCIFRADO: Convertimos el nombre incomprensible a texto legible para la pantalla
+    return data.map((prestamo: any) => {
+      if (prestamo.alumnos && prestamo.alumnos.nombre) {
+        try {
+          // Intentamos descifrar. Si falla (ej. si el dato se metió antes del cifrado), lo deja como está.
+          const nombreDescifrado = this.desencriptarTexto(prestamo.alumnos.nombre);
+          if (nombreDescifrado) prestamo.alumnos.nombre = nombreDescifrado;
+        } catch (e) { /* Ignorar si no está cifrado */ }
+      }
+      return prestamo;
+    });
   }
 
-/**
-   * Registra un nuevo préstamo en la base de datos
-   * y actualiza el estado de la herramienta en el inventario.
-   */
+  // ==========================================
+  // NUEVO PRÉSTAMO
+  // ==========================================
   async registrarNuevoPrestamo(matricula: string, numHerramienta: string, numEmpleado: string) {
-    // 1. Insertamos el registro en la tabla prestamos
-    const { data, error } = await this.supabase
-      .from('prestamos')
-      .insert([
-        {
-          matricula_alumno: matricula,
-          num_herramienta: numHerramienta,
-          num_empleado: numEmpleado,
-          estado: 'Activo'
-        }
-      ]);
+    const { error } = await this.supabase.from('prestamos').insert([{
+      matricula_alumno: matricula,
+      num_herramienta: numHerramienta,
+      num_empleado: numEmpleado,
+      estado: 'Activo'
+    }]);
 
-    if (error) {
-      console.error('Error de Supabase:', error.message);
-      return { exito: false, mensaje: error.message };
-    }
+    if (error) return { exito: false, mensaje: error.message };
 
-    // 2. Si se prestó bien, actualizamos el estado de la herramienta
-    await this.supabase
-      .from('inventario')
-      .update({ estado: 'Prestado' })
-      .eq('num_herramienta', numHerramienta);
-
+    await this.supabase.from('inventario').update({ estado: 'Prestado' }).eq('num_herramienta', numHerramienta);
     return { exito: true, mensaje: 'Préstamo guardado correctamente' };
   }
 
-  /**
-   * Obtiene la lista específica para la pantalla de devoluciones
-   */
+  // ==========================================
+  // DEVOLUCIONES
+  // ==========================================
   async obtenerPrestamosPendientes() {
     const { data, error } = await this.supabase
       .from('prestamos')
-      .select(`
-        id,
-        num_herramienta,
-        estado,
-        alumnos (matricula, nombre),
-        inventario (nombre_herramienta)
-      `)
+      .select(`id, num_herramienta, estado, alumnos (matricula, nombre), inventario (nombre_herramienta)`)
       .in('estado', ['Activo', 'Vencido'])
       .order('fecha_salida', { ascending: true });
+    
+    if (error) { console.error('Error:', error.message); return []; }
 
-    if (error) {
-      console.error('Error al obtener pendientes:', error.message);
-      return [];
-    }
-    return data;
+    // DESCIFRADO: Igual que en el Dashboard, hacemos legible el nombre del alumno
+    return data.map((prestamo: any) => {
+      if (prestamo.alumnos && prestamo.alumnos.nombre) {
+        try {
+          const nombreDescifrado = this.desencriptarTexto(prestamo.alumnos.nombre);
+          if (nombreDescifrado) prestamo.alumnos.nombre = nombreDescifrado;
+        } catch (e) { /* Ignorar si no está cifrado */ }
+      }
+      return prestamo;
+    });
   }
 
-  /**
-   * Procesa la devolución: Cierra el préstamo y libera la herramienta
-   */
   async registrarDevolucion(idPrestamo: string, numHerramienta: string) {
-    // 1. Cerramos el préstamo poniendo la fecha actual
-    const { error: errorPrestamo } = await this.supabase
-      .from('prestamos')
-      .update({
-        estado: 'Devuelto',
-        fecha_devolucion: new Date().toISOString() // Hora exacta de entrega
-      })
+    const { error: errorPrestamo } = await this.supabase.from('prestamos')
+      .update({ estado: 'Devuelto', fecha_devolucion: new Date().toISOString() })
       .eq('id', idPrestamo);
 
     if (errorPrestamo) return { exito: false };
 
-    // 2. Liberamos la herramienta en el inventario
-    const { error: errorInventario } = await this.supabase
-      .from('inventario')
-      .update({ estado: 'Disponible' })
-      .eq('num_herramienta', numHerramienta);
+    const { error: errorInventario } = await this.supabase.from('inventario')
+      .update({ estado: 'Disponible' }).eq('num_herramienta', numHerramienta);
 
     if (errorInventario) return { exito: false };
 
     return { exito: true };
+  }
+
+  // ==========================================
+  // FUNCIONES DE SEGURIDAD (CRIPTOGRAFÍA)
+  // ==========================================
+  encriptarTexto(texto: string): string {
+    return CryptoJS.AES.encrypt(texto, environment.llaveCifrado).toString();
+  }
+
+  desencriptarTexto(textoCifrado: string): string {
+    const bytes = CryptoJS.AES.decrypt(textoCifrado, environment.llaveCifrado);
+    return bytes.toString(CryptoJS.enc.Utf8);
+  }
+
+  hashearPassword(password: string): string {
+    return CryptoJS.SHA256(password).toString();
+  }
+
+  // ==========================================
+  // ADMINISTRACIÓN (ALTAS CON CIFRADO)
+  // ==========================================
+  async registrarAlumno(alumno: any) {
+    const { error } = await this.supabase.from('alumnos').insert([{
+      matricula: alumno.matricula, 
+      nombre: this.encriptarTexto(alumno.nombre), // CIFRADO 
+      carrera: alumno.carrera,
+      grado: alumno.grado
+    }]);
+    return { exito: !error, mensaje: error?.message };
+  }
+
+  async registrarHerramienta(herramienta: any) {
+    const { error } = await this.supabase.from('inventario').insert([{
+      num_herramienta: herramienta.codigo, 
+      nombre_herramienta: herramienta.nombre, 
+      estado: 'Disponible'
+    }]);
+    return { exito: !error, mensaje: error?.message };
+  }
+
+  async registrarEmpleado(empleado: any) {
+    const { error } = await this.supabase.from('trabajadores').insert([{
+      num_empleado: empleado.numEmpleado, 
+      nombre: this.encriptarTexto(empleado.nombre), // CIFRADO (Se agregó)
+      password: this.hashearPassword(empleado.password), // HASHED
+      rol: empleado.rol
+    }]);
+    return { exito: !error, mensaje: error?.message };
   }
 }
