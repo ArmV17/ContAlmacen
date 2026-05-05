@@ -151,4 +151,30 @@ export class AlmacenService {
     }]);
     return { exito: !error, mensaje: error?.message };
   }
+
+  // --- MÉTODOS DE EDICIÓN Y ELIMINACIÓN ---
+
+  async eliminarRegistro(tabla: string, columnaId: string, valorId: string) {
+    const { error } = await this.supabase.from(tabla).delete().eq(columnaId, valorId);
+    return { exito: !error, mensaje: error?.message };
+  }
+
+  async actualizarRegistro(tabla: string, columnaId: string, valorId: string, datos: any) {
+    const { error } = await this.supabase.from(tabla).update(datos).eq(columnaId, valorId);
+    return { exito: !error, mensaje: error?.message };
+  }
+
+  // Método para obtener todos los empleados (los alumnos e inventario ya los tenemos)
+  async obtenerEmpleados() {
+    const { data, error } = await this.supabase.from('trabajadores').select('*');
+    if (error) return [];
+    
+    return data.map((emp: any) => {
+      try {
+        const nombreDescifrado = this.desencriptarTexto(emp.nombre);
+        if (nombreDescifrado) emp.nombre = nombreDescifrado;
+      } catch (e) { /* No cifrado */ }
+      return emp;
+    });
+  }
 }
