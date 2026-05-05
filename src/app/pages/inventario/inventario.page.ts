@@ -2,10 +2,6 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
-import { addIcons } from 'ionicons';
-import { searchOutline, buildOutline, menu } from 'ionicons/icons';
-
-// Importamos el servicio
 import { AlmacenService } from '../../services/almacen.service';
 
 @Component({
@@ -17,43 +13,66 @@ import { AlmacenService } from '../../services/almacen.service';
 })
 export class InventarioPage {
 
-  // Lista original que viene de Supabase
-  herramientas: any[] = [];
-  // Lista que se mostrará en pantalla (afectada por el buscador)
-  herramientasFiltradas: any[] = [];
+  herramientasOriginales: any[] = []; // Datos brutos de Firebase
+  herramientasAgrupadas: any[] = []; // Datos para mostrar en la lista
+  textoBuscar: string = '';
 
-  constructor(private almacenService: AlmacenService) {
-    addIcons({ searchOutline, buildOutline, menu });
-  }
+  constructor(private almacenService: AlmacenService) {}
 
-  // Cargamos los datos cada vez que el usuario entra a la pantalla
   async ionViewWillEnter() {
     await this.cargarInventario();
   }
 
   async cargarInventario() {
-    // Usamos el método que ya habíamos creado en el servicio
-    const datos = await this.almacenService.obtenerInventario();
-    this.herramientas = datos as any[];
-    this.herramientasFiltradas = this.herramientas; // Al inicio mostramos todas
+    this.herramientasOriginales = await this.almacenService.obtenerInventario();
+    this.procesarInventario();
   }
 
-  // Método que se ejecuta cada vez que el usuario escribe en la barra de búsqueda
-  buscarHerramienta(event: any) {
-    const textoBuscado = event.target.value.toLowerCase();
+  // Agrupa por nombre y cuenta existencias
+  procesarInventario() {
+    const mapa = new Map();
 
-    // Si el buscador está vacío, restauramos la lista original
-    if (!textoBuscado || textoBuscado.trim() === '') {
-      this.herramientasFiltradas = this.herramientas;
-      return;
-    }
+    this.herramientasOriginales.forEach(h => {
+      const nombre = h.nombre_herramienta;
+      // Si no tiene tipo, lo clasificamos como 'Normal'
+      const tipo = h.tipo_herramienta || 'Normal';
 
-    // Filtramos buscando coincidencias en el nombre o en el código (número de herramienta)
-    this.herramientasFiltradas = this.herramientas.filter(item => {
-      const nombre = item.nombre_herramienta ? item.nombre_herramienta.toLowerCase() : '';
-      const codigo = item.num_herramienta ? item.num_herramienta.toLowerCase() : '';
+      if (!mapa.has(nombre)) {
+        mapa.set(nombre, {
+          nombre: nombre,
+          detallesPorTipo: [] // Aquí guardaremos los conteos por tipo
+        });
+      }
+
+      const grupo = mapa.get(nombre);
       
-      return nombre.includes(textoBuscado) || codigo.includes(textoBuscado);
+      // Buscar si ya existe este tipo dentro del grupo
+      let subGrupo = grupo.detallesPorTipo.find((t: any) => t.tipo === tipo);
+      
+      if (!subGrupo) {
+        subGrupo = { tipo: tipo, total: 0, disponibles: 0 };
+        grupo.detallesPorTipo.push(subGrupo);
+      }
+
+      subGrupo.total++;
+      if (h.estado === 'Disponible') {
+        subGrupo.disponibles++;
+      }
     });
+
+    this.herramientasAgrupadas = Array.from(mapa.values());
+  }
+
+  // Getter para filtrar por nombre o tipo
+  get inventarioFiltrado() {
+    const t = this.textoBuscar.toLowerCase().trim();
+    return this.herramientasAgrupadas.filter(g => 
+      g.nombre.toLowerCase().includes(t) || 
+      g.tipo.toLowerCase().includes(t)
+    );
+  }
+
+  buscarHerramienta(event: any) {
+    this.textoBuscar = event.detail.value;
   }
 }
