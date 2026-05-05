@@ -1,5 +1,18 @@
 import { Injectable } from '@angular/core';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { 
+  Firestore, 
+  collection, 
+  addDoc, 
+  getDocs, 
+  query, 
+  where, 
+  doc, 
+  updateDoc, 
+  deleteDoc, 
+  setDoc,
+  getDoc,
+  orderBy
+} from '@angular/fire/firestore';
 import { environment } from '../../environments/environment';
 import * as CryptoJS from 'crypto-js';
 
@@ -7,105 +20,11 @@ import * as CryptoJS from 'crypto-js';
   providedIn: 'root'
 })
 export class AlmacenService {
-  
-  private supabase: SupabaseClient;
 
-  constructor() {
-    this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
-  }
+  constructor(private firestore: Firestore) { }
 
   // ==========================================
-  // INVENTARIO
-  // ==========================================
-  async obtenerInventario() {
-    const { data, error } = await this.supabase.from('inventario').select('*');
-    if (error) { console.error('Error al conectar:', error.message); return []; }
-    return data; 
-  }
-
-  // ==========================================
-  // DASHBOARD
-  // ==========================================
-  async obtenerPrestamosDashboard() {
-    const { data, error } = await this.supabase
-      .from('prestamos')
-      .select(`id, fecha_salida, estado, alumnos (nombre, carrera), inventario (nombre_herramienta)`)
-      .in('estado', ['Activo', 'Vencido']) 
-      .order('fecha_salida', { ascending: true });
-    
-    if (error) { console.error('Error:', error.message); return []; }
-
-    // DESCIFRADO: Convertimos el nombre incomprensible a texto legible para la pantalla
-    return data.map((prestamo: any) => {
-      if (prestamo.alumnos && prestamo.alumnos.nombre) {
-        try {
-          // Intentamos descifrar. Si falla (ej. si el dato se metió antes del cifrado), lo deja como está.
-          const nombreDescifrado = this.desencriptarTexto(prestamo.alumnos.nombre);
-          if (nombreDescifrado) prestamo.alumnos.nombre = nombreDescifrado;
-        } catch (e) { /* Ignorar si no está cifrado */ }
-      }
-      return prestamo;
-    });
-  }
-
-  // ==========================================
-  // NUEVO PRÉSTAMO
-  // ==========================================
-  async registrarNuevoPrestamo(matricula: string, numHerramienta: string, numEmpleado: string) {
-    const { error } = await this.supabase.from('prestamos').insert([{
-      matricula_alumno: matricula,
-      num_herramienta: numHerramienta,
-      num_empleado: numEmpleado,
-      estado: 'Activo'
-    }]);
-
-    if (error) return { exito: false, mensaje: error.message };
-
-    await this.supabase.from('inventario').update({ estado: 'Prestado' }).eq('num_herramienta', numHerramienta);
-    return { exito: true, mensaje: 'Préstamo guardado correctamente' };
-  }
-
-  // ==========================================
-  // DEVOLUCIONES
-  // ==========================================
-  async obtenerPrestamosPendientes() {
-    const { data, error } = await this.supabase
-      .from('prestamos')
-      .select(`id, num_herramienta, estado, alumnos (matricula, nombre), inventario (nombre_herramienta)`)
-      .in('estado', ['Activo', 'Vencido'])
-      .order('fecha_salida', { ascending: true });
-    
-    if (error) { console.error('Error:', error.message); return []; }
-
-    // DESCIFRADO: Igual que en el Dashboard, hacemos legible el nombre del alumno
-    return data.map((prestamo: any) => {
-      if (prestamo.alumnos && prestamo.alumnos.nombre) {
-        try {
-          const nombreDescifrado = this.desencriptarTexto(prestamo.alumnos.nombre);
-          if (nombreDescifrado) prestamo.alumnos.nombre = nombreDescifrado;
-        } catch (e) { /* Ignorar si no está cifrado */ }
-      }
-      return prestamo;
-    });
-  }
-
-  async registrarDevolucion(idPrestamo: string, numHerramienta: string) {
-    const { error: errorPrestamo } = await this.supabase.from('prestamos')
-      .update({ estado: 'Devuelto', fecha_devolucion: new Date().toISOString() })
-      .eq('id', idPrestamo);
-
-    if (errorPrestamo) return { exito: false };
-
-    const { error: errorInventario } = await this.supabase.from('inventario')
-      .update({ estado: 'Disponible' }).eq('num_herramienta', numHerramienta);
-
-    if (errorInventario) return { exito: false };
-
-    return { exito: true };
-  }
-
-  // ==========================================
-  // FUNCIONES DE SEGURIDAD (CRIPTOGRAFÍA)
+  // SEGURIDAD Y CRIPTOGRAFÍA
   // ==========================================
   encriptarTexto(texto: string): string {
     return CryptoJS.AES.encrypt(texto, environment.llaveCifrado).toString();
@@ -121,60 +40,186 @@ export class AlmacenService {
   }
 
   // ==========================================
-  // ADMINISTRACIÓN (ALTAS CON CIFRADO)
+  // INVENTARIO
+  // ==========================================
+  async obtenerInventario() {
+    const colRef = collection(this.firestore, 'inventario');
+    const snapshot = await getDocs(colRef);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  }
+
+  // ==========================================
+  // DASHBOARD & DEVOLUCIONES (Con cruce de datos manual)
+  // ==========================================
+  async obtenerPrestamosDashboard() {
+    try {
+      const colRef = collection(this.firestore, 'prestamos');
+      // Quitamos el orderBy temporalmente para que la consulta no falle por falta de índices
+      const q = query(colRef, where('estado', 'in', ['Activo', 'Vencido']));
+      const snapshot = await getDocs(q);
+
+      console.log("Documentos brutos encontrados en Firebase:", snapshot.size);
+
+      const prestamos = await Promise.all(snapshot.docs.map(async (d) => {
+        const data: any = d.data();
+        
+        // Buscamos al alumno usando la matrícula como ID del documento
+        const aluSnap = await getDoc(doc(this.firestore, 'alumnos', data['matricula_alumno']));
+        const aluData: any = aluSnap.exists() ? aluSnap.data() : { nombre: 'Alumno no encontrado', carrera: 'N/A' };
+        
+        // Buscamos la herramienta usando el código como ID del documento
+        const invSnap = await getDoc(doc(this.firestore, 'inventario', data['num_herramienta']));
+        const invData: any = invSnap.exists() ? invSnap.data() : { nombre_herramienta: 'Herramienta no encontrada' };
+
+        // Intentamos descifrar el nombre del alumno
+        try {
+          if (aluData.nombre) {
+            const nombreDescifrado = this.desencriptarTexto(aluData.nombre);
+            if (nombreDescifrado) aluData.nombre = nombreDescifrado;
+          }
+        } catch (e) { /* Nombre no cifrado o error */ }
+
+        return {
+          id: d.id,
+          ...data,
+          alumnos: aluData,
+          inventario: invData
+        };
+      }));
+
+      console.log("Lista final procesada para el Dashboard:", prestamos);
+      return prestamos;
+    } catch (error) {
+      console.error("Error en el servicio de Firebase:", error);
+      return [];
+    }
+  }
+  // ==========================================
+  // REGISTRO DE PRÉSTAMOS
+  // ==========================================
+  async registrarNuevoPrestamo(matricula: string, numHerramienta: string, numEmpleado: string) {
+    try {
+      // 1. Crear el préstamo
+      await addDoc(collection(this.firestore, 'prestamos'), {
+        matricula_alumno: matricula,
+        num_herramienta: numHerramienta,
+        num_empleado: numEmpleado,
+        estado: 'Activo',
+        fecha_salida: new Date().toISOString()
+      });
+
+      // 2. Actualizar estado de herramienta
+      const toolRef = doc(this.firestore, 'inventario', numHerramienta);
+      await updateDoc(toolRef, { estado: 'Prestado' });
+
+      return { exito: true };
+    } catch (e: any) {
+      return { exito: false, mensaje: e.message };
+    }
+  }
+
+  async registrarDevolucion(idPrestamo: string, numHerramienta: string) {
+    try {
+      await updateDoc(doc(this.firestore, 'prestamos', idPrestamo), {
+        estado: 'Devuelto',
+        fecha_devolucion: new Date().toISOString()
+      });
+
+      await updateDoc(doc(this.firestore, 'inventario', numHerramienta), {
+        estado: 'Disponible'
+      });
+
+      return { exito: true };
+    } catch (e) {
+      return { exito: false };
+    }
+  }
+
+  // ==========================================
+  // ADMINISTRACIÓN (ALTAS)
   // ==========================================
   async registrarAlumno(alumno: any) {
-    const { error } = await this.supabase.from('alumnos').insert([{
-      matricula: alumno.matricula, 
-      nombre: this.encriptarTexto(alumno.nombre), // CIFRADO 
-      carrera: alumno.carrera,
-      grado: alumno.grado
-    }]);
-    return { exito: !error, mensaje: error?.message };
+    try {
+      // Usamos setDoc para que el ID del documento sea la matrícula
+      await setDoc(doc(this.firestore, 'alumnos', alumno.matricula), {
+        matricula: alumno.matricula,
+        nombre: this.encriptarTexto(alumno.nombre),
+        carrera: alumno.carrera,
+        grado: alumno.grado
+      });
+      return { exito: true };
+    } catch (e: any) {
+      return { exito: false, mensaje: e.message };
+    }
+  }
+
+  async obtenerTiposDeHerramientas() {
+    const snapshot = await getDocs(collection(this.firestore, 'inventario'));
+    const herramientas = snapshot.docs.map(doc => doc.data() as any);
+    // Extraemos los tipos, filtramos los que estén vacíos y eliminamos duplicados
+    const tipos = herramientas
+      .map(h => h.tipo_herramienta)
+      .filter((tipo, index, self) => tipo && self.indexOf(tipo) === index);
+    return tipos;
   }
 
   async registrarHerramienta(herramienta: any) {
-    const { error } = await this.supabase.from('inventario').insert([{
-      num_herramienta: herramienta.codigo, 
-      nombre_herramienta: herramienta.nombre, 
-      estado: 'Disponible'
-    }]);
-    return { exito: !error, mensaje: error?.message };
+    try {
+      await setDoc(doc(this.firestore, 'inventario', herramienta.codigo), {
+        num_herramienta: herramienta.codigo,
+        nombre_herramienta: herramienta.nombre,
+        tipo_herramienta: herramienta.tipo, // Nuevo campo
+        estado: 'Disponible'
+      });
+      return { exito: true };
+    } catch (e: any) {
+      return { exito: false, mensaje: e.message };
+    }
   }
 
   async registrarEmpleado(empleado: any) {
-    const { error } = await this.supabase.from('trabajadores').insert([{
-      num_empleado: empleado.numEmpleado, 
-      nombre: this.encriptarTexto(empleado.nombre), // CIFRADO (Se agregó)
-      password: this.hashearPassword(empleado.password), // HASHED
-      rol: empleado.rol
-    }]);
-    return { exito: !error, mensaje: error?.message };
+    try {
+      await setDoc(doc(this.firestore, 'trabajadores', empleado.numEmpleado), {
+        num_empleado: empleado.numEmpleado,
+        nombre: this.encriptarTexto(empleado.nombre),
+        password: this.hashearPassword(empleado.password),
+        rol: empleado.rol
+      });
+      return { exito: true };
+    } catch (e: any) {
+      return { exito: false, mensaje: e.message };
+    }
   }
 
-  // --- MÉTODOS DE EDICIÓN Y ELIMINACIÓN ---
-
-  async eliminarRegistro(tabla: string, columnaId: string, valorId: string) {
-    const { error } = await this.supabase.from(tabla).delete().eq(columnaId, valorId);
-    return { exito: !error, mensaje: error?.message };
-  }
-
-  async actualizarRegistro(tabla: string, columnaId: string, valorId: string, datos: any) {
-    const { error } = await this.supabase.from(tabla).update(datos).eq(columnaId, valorId);
-    return { exito: !error, mensaje: error?.message };
-  }
-
-  // Método para obtener todos los empleados (los alumnos e inventario ya los tenemos)
-  async obtenerEmpleados() {
-    const { data, error } = await this.supabase.from('trabajadores').select('*');
-    if (error) return [];
-    
-    return data.map((emp: any) => {
+  async obtenerAlumnos() {
+    const snapshot = await getDocs(collection(this.firestore, 'alumnos'));
+    return snapshot.docs.map(d => {
+      const data: any = d.data();
       try {
-        const nombreDescifrado = this.desencriptarTexto(emp.nombre);
-        if (nombreDescifrado) emp.nombre = nombreDescifrado;
-      } catch (e) { /* No cifrado */ }
-      return emp;
+        data.nombre = this.desencriptarTexto(data.nombre);
+      } catch (e) {}
+      return { ...data }; // Retornamos los datos del alumno
+    });
+  }
+
+  // ==========================================
+  // GESTIÓN (EDITAR / ELIMINAR)
+  // ==========================================
+  async eliminarRegistro(coleccion: string, id: string) {
+    try {
+      await deleteDoc(doc(this.firestore, coleccion, id));
+      return { exito: true };
+    } catch (e: any) {
+      return { exito: false, mensaje: e.message };
+    }
+  }
+
+  async obtenerEmpleados() {
+    const snapshot = await getDocs(collection(this.firestore, 'trabajadores'));
+    return snapshot.docs.map(d => {
+      const data: any = d.data();
+      try { data.nombre = this.desencriptarTexto(data.nombre); } catch (e) {}
+      return { id: d.id, ...data };
     });
   }
 }

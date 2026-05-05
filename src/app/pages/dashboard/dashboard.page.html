@@ -9,22 +9,25 @@
 
 <ion-content class="fondo-claro ion-padding">
 
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
   <div class="contenedor-maximo">
-    <!-- Tarjetas de Resumen (KPIs) -->
+    
+    <!-- Tarjetas de Resumen -->
     <ion-grid class="ion-no-padding">
       <ion-row>
-        <!-- Tarjeta Préstamos Activos -->
-        <ion-col size="12" size-md="6" size-lg="4">
+        <ion-col size="6">
           <ion-card class="tarjeta-limpia">
             <ion-card-header>
-              <ion-card-subtitle class="texto-secundario">Préstamos Activos</ion-card-subtitle>
+              <ion-card-subtitle class="texto-secundario">Activos</ion-card-subtitle>
               <ion-card-title class="texto-primario">{{ totalActivos }}</ion-card-title>
             </ion-card-header>
           </ion-card>
         </ion-col>
 
-        <!-- Tarjeta Vencidos -->
-        <ion-col size="12" size-md="6" size-lg="4">
+        <ion-col size="6">
           <ion-card class="tarjeta-limpia alerta">
             <ion-card-header>
               <ion-card-subtitle class="texto-secundario">Vencidos</ion-card-subtitle>
@@ -40,27 +43,36 @@
       <h2 class="subtitulo">Últimos Movimientos</h2>
       
       <ion-list class="lista-transparente">
+        
+        <!-- Mensaje de lista vacía -->
+        <div *ngIf="prestamosActivos.length === 0" class="ion-padding ion-text-center">
+          <ion-icon name="alert-circle-outline" style="font-size: 48px; color: #cbd5e1;"></ion-icon>
+          <p style="color: #94a3b8;">No hay préstamos activos registrados</p>
+        </div>
+
         <ion-item *ngFor="let prestamo of prestamosActivos" class="item-limpio" lines="none">
           <div class="icono-contenedor" slot="start">
             <ion-icon name="build-outline"></ion-icon>
           </div>
           
           <ion-label>
-            <!-- Leemos los datos desde las tablas anidadas que simula Supabase -->
-            <h3 class="herramienta-nombre">{{ prestamo.inventario.nombre_herramienta }}</h3>
-            <p class="alumno-info">{{ prestamo.alumnos.nombre }} • {{ prestamo.alumnos.carrera }}</p>
-            <!-- El pipe de fecha de Angular recorta el formato largo de Supabase -->
-            <p class="fecha-info">Salida: {{ prestamo.fecha_salida | date:'dd/MM/yyyy HH:mm' }}</p>
+            <h3 class="herramienta-nombre">{{ prestamo.inventario?.nombre_herramienta || 'Herramienta desconocida' }}</h3>
+            <p class="alumno-info">
+              <strong>{{ prestamo.alumnos?.nombre || 'Sin nombre' }}</strong>
+              <span *ngIf="prestamo.alumnos?.carrera"> • {{ prestamo.alumnos?.carrera }}</span>
+            </p>
+            <p class="fecha-info">
+              Salida: {{ prestamo.fecha_salida | date:'dd/MM/yyyy HH:mm' }}
+            </p>
           </ion-label>
           
-          <!-- Ajustamos la clase CSS para que empate con la base de datos (Activo vs Vencido) -->
           <ion-badge slot="end" class="etiqueta-estado" 
             [ngClass]="{'estado-vencido': prestamo.estado === 'Vencido', 'estado-ok': prestamo.estado === 'Activo'}">
             {{ prestamo.estado }}
           </ion-badge>
         </ion-item>
+
       </ion-list>
     </div>
   </div>
-
 </ion-content>

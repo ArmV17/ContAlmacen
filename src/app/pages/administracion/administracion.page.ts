@@ -21,14 +21,13 @@ export class AdministracionPage {
 
   segmentoActual: string = 'alumnos';
   
-  // Listas de datos
   alumnos: any[] = [];
   herramientas: any[] = [];
   empleados: any[] = [];
+  tiposExistentes: string[] = [];
 
-  // Modelos para formularios
   alumnoNuevo = { matricula: '', nombre: '', carrera: '', grado: '' };
-  herramientaNueva = { codigo: '', nombre: '' };
+  herramientaNueva = { codigo: '', nombre: '', tipo: '' };
   empleadoNuevo = { numEmpleado: '', nombre: '', password: '', rol: 'Staff' };
 
   constructor(
@@ -44,41 +43,33 @@ export class AdministracionPage {
   }
 
   async cargarDatos() {
-    // 1. Cargar Alumnos y descifrar nombres
-    const { data: dataAlu } = await (this.almacenService as any).supabase.from('alumnos').select('*');
-    this.alumnos = dataAlu.map((a: any) => {
-      try { a.nombre = this.almacenService.desencriptarTexto(a.nombre); } catch(e) {}
-      return a;
-    });
+    // 1. Alumnos
+    this.alumnos = await this.almacenService.obtenerAlumnos();
 
-    // 2. Cargar Herramientas (Inventario)
+    // 2. Herramientas y Tipos
     this.herramientas = await this.almacenService.obtenerInventario();
+    this.tiposExistentes = await this.almacenService.obtenerTiposDeHerramientas();
 
-    // 3. Cargar Empleados (Trabajadores)
-    const { data: dataEmp } = await (this.almacenService as any).supabase.from('trabajadores').select('*');
-    this.empleados = dataEmp.map((e: any) => {
-      try { e.nombre = this.almacenService.desencriptarTexto(e.nombre); } catch(e) {}
-      return e;
-    });
+    // 3. Empleados
+    this.empleados = await this.almacenService.obtenerEmpleados();
   }
 
-  // --- MÉTODOS DE GUARDADO ---
   async guardarAlumno() {
     const res = await this.almacenService.registrarAlumno(this.alumnoNuevo);
     if (res.exito) {
       this.mostrarMensaje('Alumno registrado', 'success');
       this.alumnoNuevo = { matricula: '', nombre: '', carrera: '', grado: '' };
       this.cargarDatos();
-    } else this.mostrarMensaje('Error: ' + res.mensaje, 'danger');
+    } else this.mostrarMensaje('Error al guardar', 'danger');
   }
 
   async guardarHerramienta() {
     const res = await this.almacenService.registrarHerramienta(this.herramientaNueva);
     if (res.exito) {
       this.mostrarMensaje('Herramienta registrada', 'success');
-      this.herramientaNueva = { codigo: '', nombre: '' };
+      this.herramientaNueva = { codigo: '', nombre: '', tipo: '' };
       this.cargarDatos();
-    } else this.mostrarMensaje('Error: ' + res.mensaje, 'danger');
+    } else this.mostrarMensaje('Error al guardar', 'danger');
   }
 
   async guardarEmpleado() {
@@ -87,11 +78,11 @@ export class AdministracionPage {
       this.mostrarMensaje('Empleado registrado', 'success');
       this.empleadoNuevo = { numEmpleado: '', nombre: '', password: '', rol: 'Staff' };
       this.cargarDatos();
-    } else this.mostrarMensaje('Error: ' + res.mensaje, 'danger');
+    } else this.mostrarMensaje('Error al guardar', 'danger');
   }
 
-  // --- MÉTODOS DE ELIMINACIÓN ---
-  async confirmarEliminar(tabla: string, idCol: string, idVal: string, nombre: string) {
+  // MÉTODO CORREGIDO: Recibe exactamente 3 argumentos
+  async confirmarEliminar(tabla: string, idVal: string, nombre: string) {
     const alert = await this.alertController.create({
       header: 'Confirmar eliminación',
       message: `¿Estás seguro de eliminar a <strong>${nombre}</strong>?`,
@@ -101,11 +92,11 @@ export class AdministracionPage {
           text: 'Eliminar', 
           cssClass: 'boton-alerta-eliminar',
           handler: async () => {
-            const res = await this.almacenService.eliminarRegistro(tabla, idCol, idVal);
+            const res = await this.almacenService.eliminarRegistro(tabla, idVal);
             if (res.exito) {
               this.mostrarMensaje('Eliminado correctamente', 'success');
               this.cargarDatos();
-            } else this.mostrarMensaje('Error: El registro tiene historial vinculado', 'danger');
+            } else this.mostrarMensaje('Error al eliminar', 'danger');
           }
         }
       ]

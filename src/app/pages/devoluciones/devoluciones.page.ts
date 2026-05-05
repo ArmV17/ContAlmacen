@@ -33,7 +33,7 @@ export class DevolucionesPage {
   }
 
   async cargarPendientes() {
-    this.prestamosPendientes = await this.almacenService.obtenerPrestamosPendientes();
+    this.prestamosPendientes = await this.almacenService.obtenerPrestamosDashboard();
   }
 
   async confirmarDevolucion(prestamo: any) {
