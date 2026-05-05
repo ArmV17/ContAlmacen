@@ -2,10 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
-
-// Importamos los íconos necesarios para esta pantalla
 import { addIcons } from 'ionicons';
-import { saveOutline, personOutline, buildOutline, barcodeOutline } from 'ionicons/icons';
+import { saveOutline, personOutline, buildOutline, barcodeOutline, menu } from 'ionicons/icons';
+
+// Importamos el servicio
+import { AlmacenService } from '../../services/almacen.service';
 
 @Component({
   selector: 'app-nuevo-prestamo',
@@ -16,41 +17,51 @@ import { saveOutline, personOutline, buildOutline, barcodeOutline } from 'ionico
 })
 export class NuevoPrestamoPage implements OnInit {
 
-  // Objeto para guardar lo que se escriba en el formulario
   prestamo = {
     matricula: '',
-    carrera: '',
     herramientaId: ''
   };
 
-  constructor(private toastController: ToastController) {
-    // Registramos los íconos
-    addIcons({ saveOutline, personOutline, buildOutline, barcodeOutline });
+  // Por ahora "quemamos" (hardcodeamos) el ID de un empleado 
+  // Más adelante esto vendrá del inicio de sesión
+  empleadoActual = 'EMP-01';
+
+  constructor(
+    private toastController: ToastController,
+    private almacenService: AlmacenService
+  ) {
+    addIcons({ saveOutline, personOutline, buildOutline, barcodeOutline, menu });
   }
 
   ngOnInit() { }
 
   async guardarPrestamo() {
-    // Validación básica
     if (!this.prestamo.matricula || !this.prestamo.herramientaId) {
-      this.mostrarMensaje('Falta la matrícula o la herramienta.', 'warning');
+      this.mostrarMensaje('Falta la matrícula o el código de herramienta.', 'warning');
       return;
     }
 
-    // Aquí irá la conexión a Supabase más adelante
-    console.log('Guardando préstamo en base de datos...', this.prestamo);
+    // Llamamos a Supabase
+    const resultado = await this.almacenService.registrarNuevoPrestamo(
+      this.prestamo.matricula,
+      this.prestamo.herramientaId,
+      this.empleadoActual
+    );
 
-    // Simulamos el éxito
-    this.mostrarMensaje('Préstamo autorizado correctamente.', 'success');
-
-    // Limpiamos el formulario para el siguiente alumno
-    this.prestamo = { matricula: '', carrera: '', herramientaId: '' };
+    if (resultado.exito) {
+      this.mostrarMensaje('Préstamo autorizado y registrado.', 'success');
+      // Limpiamos los campos
+      this.prestamo = { matricula: '', herramientaId: '' };
+    } else {
+      // Si la matrícula no existe o la herramienta no existe, mostrará error
+      this.mostrarMensaje('Error: Verifica que el alumno y la herramienta existan.', 'danger');
+    }
   }
 
   async mostrarMensaje(mensaje: string, color: string) {
     const toast = await this.toastController.create({
       message: mensaje,
-      duration: 2500,
+      duration: 3500,
       color: color,
       position: 'bottom',
       cssClass: 'toast-personalizado'

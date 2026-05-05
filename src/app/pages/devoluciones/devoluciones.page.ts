@@ -1,11 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, AlertController, ToastController } from '@ionic/angular';
-
-// Íconos para la interfaz
 import { addIcons } from 'ionicons';
-import { checkmarkCircleOutline, alertCircleOutline, buildOutline } from 'ionicons/icons';
+import { checkmarkCircleOutline, alertCircleOutline, buildOutline, menu } from 'ionicons/icons';
+
+// Importamos el servicio
+import { AlmacenService } from '../../services/almacen.service';
 
 @Component({
   selector: 'app-devoluciones',
@@ -14,43 +15,32 @@ import { checkmarkCircleOutline, alertCircleOutline, buildOutline } from 'ionico
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule]
 })
-export class DevolucionesPage implements OnInit {
+export class DevolucionesPage {
 
-  // Lista de préstamos activos simulados
-  prestamosPendientes = [
-    {
-      id: 'P-001',
-      alumno: 'Juan Pérez',
-      matricula: '17001122',
-      herramienta: 'Multímetro Fluke',
-      codigoHerramienta: 'MULT-04',
-      estado: 'A tiempo'
-    },
-    {
-      id: 'P-002',
-      alumno: 'María Gómez',
-      matricula: '17003344',
-      herramienta: 'Cautín de estación',
-      codigoHerramienta: 'CAUT-01',
-      estado: 'Vencido'
-    }
-  ];
+  prestamosPendientes: any[] = [];
 
   constructor(
     private alertController: AlertController,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private almacenService: AlmacenService
   ) {
-    addIcons({ checkmarkCircleOutline, alertCircleOutline, buildOutline });
+    addIcons({ checkmarkCircleOutline, alertCircleOutline, buildOutline, menu });
   }
 
-  ngOnInit() {
+  // Recarga la lista real desde Supabase cada vez que entras a la vista
+  async ionViewWillEnter() {
+    await this.cargarPendientes();
   }
 
-  // Método para confirmar la devolución
+  async cargarPendientes() {
+    this.prestamosPendientes = await this.almacenService.obtenerPrestamosPendientes();
+  }
+
   async confirmarDevolucion(prestamo: any) {
     const alert = await this.alertController.create({
       header: 'Confirmar Devolución',
-      message: `¿El alumno <strong>${prestamo.alumno}</strong> entregó la herramienta <strong>${prestamo.herramienta}</strong> en buen estado?`,
+      // Usamos la estructura anidada de Supabase
+      message: `¿El alumno <strong>${prestamo.alumnos.nombre}</strong> entregó la herramienta <strong>${prestamo.inventario.nombre_herramienta}</strong> en buen estado?`,
       buttons: [
         {
           text: 'Cancelar',
@@ -59,7 +49,8 @@ export class DevolucionesPage implements OnInit {
         }, {
           text: 'Sí, recibir',
           handler: () => {
-            this.procesarDevolucion(prestamo.id);
+            // Mandamos el ID del préstamo y el de la herramienta para liberar ambos
+            this.procesarDevolucion(prestamo.id, prestamo.num_herramienta);
           }
         }
       ]
@@ -68,17 +59,28 @@ export class DevolucionesPage implements OnInit {
     await alert.present();
   }
 
-  // Método que simula la actualización en la base de datos
-  async procesarDevolucion(id: string) {
-    // Filtramos la lista para quitar el préstamo devuelto (simulando la DB)
-    this.prestamosPendientes = this.prestamosPendientes.filter(p => p.id !== id);
+  async procesarDevolucion(idPrestamo: string, numHerramienta: string) {
+    const resultado = await this.almacenService.registrarDevolucion(idPrestamo, numHerramienta);
 
-    const toast = await this.toastController.create({
-      message: 'Herramienta devuelta y registrada correctamente.',
-      duration: 2500,
-      color: 'success',
-      position: 'bottom'
-    });
-    toast.present();
+    if (resultado.exito) {
+      const toast = await this.toastController.create({
+        message: 'Herramienta devuelta y disponible en inventario.',
+        duration: 2500,
+        color: 'success',
+        position: 'bottom'
+      });
+      toast.present();
+
+      // Recargamos la lista para que desaparezca el que acabamos de devolver
+      await this.cargarPendientes();
+    } else {
+      const toast = await this.toastController.create({
+        message: 'Error al procesar la devolución.',
+        duration: 2500,
+        color: 'danger',
+        position: 'bottom'
+      });
+      toast.present();
+    }
   }
 }

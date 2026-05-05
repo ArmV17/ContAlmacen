@@ -125,3 +125,10 @@
   --background: #3498db;
   --box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
 }
+
+/* Agrega esto al final de tu dashboard.page.scss */
+.fecha-info {
+  color: #a0aec0;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}

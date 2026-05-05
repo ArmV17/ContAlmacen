@@ -6,27 +6,37 @@
     <ion-title>Inventario</ion-title>
   </ion-toolbar>
   
-  <!-- Barra de búsqueda integrada en la cabecera -->
+  <!-- Barra de búsqueda conectada a la función buscarHerramienta -->
   <ion-toolbar class="toolbar-elegante barra-busqueda-container">
-    <ion-searchbar class="busqueda-limpia" placeholder="Buscar por código o nombre..."></ion-searchbar>
+    <ion-searchbar 
+      class="busqueda-limpia" 
+      placeholder="Buscar por código o nombre..."
+      (ionInput)="buscarHerramienta($event)">
+    </ion-searchbar>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="fondo-claro ion-padding">
   <div class="contenedor-maximo">
     
-    <ion-list class="lista-transparente">
-      <ion-item *ngFor="let item of herramientas" class="item-limpio" lines="none">
+    <!-- Mensaje por si la búsqueda no encuentra nada -->
+    <div *ngIf="herramientasFiltradas.length === 0" class="mensaje-vacio-busqueda">
+      <p>No se encontraron herramientas.</p>
+    </div>
+
+    <!-- Ciclo iterando sobre herramientasFiltradas en lugar de herramientas -->
+    <ion-list class="lista-transparente" *ngIf="herramientasFiltradas.length > 0">
+      <ion-item *ngFor="let item of herramientasFiltradas" class="item-limpio" lines="none">
         <div class="icono-contenedor" slot="start">
           <ion-icon name="build-outline"></ion-icon>
         </div>
         
         <ion-label>
-          <h3 class="herramienta-nombre">{{ item.nombre }}</h3>
-          <p class="herramienta-info">{{ item.id }} • {{ item.categoria }}</p>
+          <!-- Nombres de columnas reales de Supabase -->
+          <h3 class="herramienta-nombre">{{ item.nombre_herramienta }}</h3>
+          <p class="herramienta-info">Código: {{ item.num_herramienta }}</p>
         </ion-label>
         
-        <!-- Etiqueta dinámica según el estado de la herramienta -->
         <ion-badge slot="end" class="etiqueta-estado" 
           [ngClass]="{
             'estado-disponible': item.estado === 'Disponible',
@@ -39,11 +49,4 @@
     </ion-list>
 
   </div>
-
-  <!-- Botón para registrar una NUEVA herramienta al catálogo -->
-  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button class="boton-flotante">
-      <ion-icon name="add-outline"></ion-icon>
-    </ion-fab-button>
-  </ion-fab>
 </ion-content>

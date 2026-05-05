@@ -1,7 +1,5 @@
 <ion-header class="ion-no-border">
   <ion-toolbar class="toolbar-elegante">
-    <!-- Botón para regresar al Dashboard -->
-<!-- POR ESTO: -->
     <ion-buttons slot="start">
       <ion-menu-button color="light"></ion-menu-button>
     </ion-buttons>
@@ -23,11 +21,7 @@
       
       <ion-card-content>
         <ion-item class="input-limpio" lines="none">
-          <ion-input label="Matrícula" labelPlacement="stacked" placeholder="Ej. 17000000" [(ngModel)]="prestamo.matricula"></ion-input>
-        </ion-item>
-        
-        <ion-item class="input-limpio" lines="none">
-          <ion-input label="Carrera o Grado" labelPlacement="stacked" placeholder="Ej. Mantenimiento Industrial" [(ngModel)]="prestamo.carrera"></ion-input>
+          <ion-input label="Matrícula" labelPlacement="stacked" placeholder="Ej. 17001122" [(ngModel)]="prestamo.matricula"></ion-input>
         </ion-item>
       </ion-card-content>
     </ion-card>
@@ -44,7 +38,6 @@
       <ion-card-content>
         <ion-item class="input-limpio" lines="none">
           <ion-input label="Código / No. de Serie" labelPlacement="stacked" placeholder="Ej. MULT-04" [(ngModel)]="prestamo.herramientaId"></ion-input>
-          <!-- Botón preparado para futura integración con cámara o lector -->
           <ion-button fill="clear" slot="end" class="boton-escaner">
             <ion-icon slot="icon-only" name="barcode-outline"></ion-icon>
           </ion-button>
