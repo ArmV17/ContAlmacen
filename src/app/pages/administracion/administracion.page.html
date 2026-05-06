@@ -23,7 +23,6 @@
     </ion-segment>
   </ion-toolbar>
 
-  <!-- BUSCADOR UNIVERSAL -->
   <ion-toolbar class="toolbar-elegante">
     <ion-searchbar 
       placeholder="Buscar por nombre, matrícula o ID..." 
@@ -37,7 +36,6 @@
 <ion-content class="fondo-claro ion-padding">
   <div class="contenedor-maximo">
 
-    <!-- SECCIÓN ALUMNOS -->
     <div *ngIf="segmentoActual === 'alumnos'">
       <ion-card class="tarjeta-formulario">
         <ion-card-header>
@@ -48,19 +46,22 @@
         </ion-card-header>
         <ion-card-content>
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="Matrícula" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.matricula" [readonly]="editandoAlumno"></ion-input>
-          </ion-item>
-          <ion-item class="input-limpio" lines="none">
-            <ion-input label="Nombre" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.nombre"></ion-input>
-          </ion-item>
-          <ion-item class="input-limpio" lines="none">
-            <ion-input label="Carrera" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.carrera"></ion-input>
-          </ion-item>
-          <ion-item class="input-limpio" lines="none">
-            <ion-input label="Grado" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.grado"></ion-input>
+            <ion-input label="Matrícula" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.matricula" [readonly]="editandoAlumno" placeholder="Ej: 22040123"></ion-input>
           </ion-item>
           
-          <ion-button expand="block" class="boton-guardar" (click)="guardarAlumno()">
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Nombre" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.nombre" placeholder="Nombre Completo"></ion-input>
+          </ion-item>
+
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Carrera" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.carrera" placeholder="Ej: Mantenimiento Industrial"></ion-input>
+          </ion-item>
+
+          <ion-item class="input-limpio" lines="none">
+            <ion-input label="Grado" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.grado" placeholder="Ej: 11S"></ion-input>
+          </ion-item>
+          
+          <ion-button expand="block" class="boton-guardar ion-margin-top" (click)="guardarAlumno()">
             <ion-icon name="save-outline" slot="start"></ion-icon> 
             {{ editandoAlumno ? 'Actualizar Alumno' : 'Guardar Alumno' }}
           </ion-button>
@@ -90,7 +91,6 @@
       </ion-list>
     </div>
 
-    <!-- SECCIÓN MAESTROS -->
     <div *ngIf="segmentoActual === 'maestros'">
       <ion-card class="tarjeta-formulario">
         <ion-card-header>
@@ -101,10 +101,10 @@
         </ion-card-header>
         <ion-card-content>
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="No. Maestro" labelPlacement="stacked" [(ngModel)]="maestroNuevo.numMaestro" [readonly]="editandoMaestro"></ion-input>
+            <ion-input label="No. Maestro" labelPlacement="stacked" [(ngModel)]="maestroNuevo.numMaestro" [readonly]="editandoMaestro" placeholder="Ej: 0001"></ion-input>
           </ion-item>
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="Nombre Completo" labelPlacement="stacked" [(ngModel)]="maestroNuevo.nombre"></ion-input>
+            <ion-input label="Nombre Completo" labelPlacement="stacked" [(ngModel)]="maestroNuevo.nombre" [readonly]="editandoMaestro" placeholder="Nombre Completo"></ion-input>
           </ion-item>
           <ion-item class="input-limpio" lines="none">
             <ion-input label="Agregar Materia" labelPlacement="stacked" [(ngModel)]="materiaTemp" placeholder="Escribe y presiona +"></ion-input>
@@ -150,7 +150,7 @@
       </ion-list>
     </div>
 
-    <!-- SECCIÓN HERRAMIENTAS -->
+    <!-- SECCIÓN HERRAMIENTAS MODIFICADA -->
     <div *ngIf="segmentoActual === 'herramientas'">
       <ion-card class="tarjeta-formulario">
         <ion-card-header>
@@ -160,39 +160,77 @@
           </ion-card-title>
         </ion-card-header>
         <ion-card-content>
+          
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="Código" labelPlacement="stacked" [(ngModel)]="herramientaNueva.codigo" [readonly]="editandoHerramienta"></ion-input>
+            <ion-input label="Código" labelPlacement="stacked" [(ngModel)]="herramientaNueva.codigo" [readonly]="editandoHerramienta" placeholder="Ej: H-101"></ion-input>
           </ion-item>
+
+          <!-- NOMBRE -->
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="Nombre" labelPlacement="stacked" [(ngModel)]="herramientaNueva.nombre"></ion-input>
+            <ion-input 
+              label="Nombre" 
+              labelPlacement="stacked" 
+              [(ngModel)]="herramientaNueva.nombre" 
+              (ionInput)="actualizarSugerenciasTipo()"
+              placeholder="Ej: Pala">
+            </ion-input>
           </ion-item>
-          <ion-item class="input-limpio" lines="none">
-            <ion-select label="Tipo" interface="popover" labelPlacement="stacked" [(ngModel)]="selectorTipo">
-              <ion-select-option *ngFor="let tipo of tiposExistentes" [value]="tipo">{{ tipo }}</ion-select-option>
-              <ion-select-option value="nuevo">-- Agregar nuevo tipo --</ion-select-option>
+
+          <!-- TIPO (Combo Input/Select) -->
+          <ion-item class="input-limpio ion-margin-top" lines="none">
+            <ion-input 
+              *ngIf="tiposFiltrados.length === 0"
+              label="Tipo (Opcional)" 
+              labelPlacement="stacked" 
+              [(ngModel)]="herramientaNueva.tipo" 
+              placeholder="Escribe el tipo">
+            </ion-input>
+            <ion-select 
+              *ngIf="tiposFiltrados.length > 0"
+              label="Tipo (Sugerido)" 
+              labelPlacement="stacked" 
+              [(ngModel)]="herramientaNueva.tipo" 
+              interface="popover"
+              placeholder="Selecciona o escribe abajo">
+              <ion-select-option *ngFor="let tipo of tiposFiltrados" [value]="tipo">{{ tipo }}</ion-select-option>
+              <ion-select-option value="">-- Otro / Nuevo --</ion-select-option>
             </ion-select>
           </ion-item>
-          <ion-item class="input-limpio" lines="none" *ngIf="selectorTipo === 'nuevo'">
-            <ion-input label="Nuevo Tipo" labelPlacement="stacked" [(ngModel)]="tipoNuevoTemp"></ion-input>
+          <ion-item class="input-limpio" lines="none" *ngIf="tiposFiltrados.length > 0">
+            <ion-input 
+              label="¿Otro tipo?" 
+              labelPlacement="stacked" 
+              [(ngModel)]="herramientaNueva.tipo" 
+              placeholder="Escribe un tipo nuevo si no está arriba">
+            </ion-input>
+            <ion-button slot="end" fill="clear" color="medium">
+              <ion-icon name="help-circle-outline" slot="icon-only"></ion-icon>
+            </ion-button>
           </ion-item>
-          <ion-button expand="block" class="boton-guardar" (click)="guardarHerramienta()">
+
+          <ion-button expand="block" class="boton-guardar ion-margin-top" (click)="guardarHerramienta()">
             <ion-icon name="save-outline" slot="start"></ion-icon> 
             {{ editandoHerramienta ? 'Actualizar Herramienta' : 'Guardar Herramienta' }}
           </ion-button>
+          
           <ion-button *ngIf="editandoHerramienta" expand="block" fill="clear" color="medium" (click)="cancelarEdicionHerramienta()">
             Cancelar Edición
           </ion-button>
         </ion-card-content>
       </ion-card>
 
+      <!-- MANTENER LISTA DE INVENTARIO IGUAL -->
       <h2 class="subtitulo-gestion">Inventario</h2>
       <ion-list class="lista-gestion">
         <ion-item *ngFor="let h of listaFiltrada" lines="none" class="item-gestion">
           <ion-label>
             <h3>{{ h.nombre_herramienta }}</h3>
-            <p>{{ h.tipo_herramienta }} | {{ h.num_herramienta }}</p>
+            <p>{{ h.tipo_herramienta || 'Sin tipo' }} | {{ h.num_herramienta }}</p>
           </ion-label>
           <ion-buttons slot="end">
+            <ion-button color="secondary" (click)="descargarQRDirecto(h)">
+              <ion-icon name="qr-code-outline"></ion-icon>
+            </ion-button>
             <ion-button color="primary" (click)="prepararEdicionHerramienta(h)">
               <ion-icon name="create-outline"></ion-icon>
             </ion-button>
@@ -204,7 +242,6 @@
       </ion-list>
     </div>
 
-    <!-- SECCIÓN EMPLEADOS -->
     <div *ngIf="segmentoActual === 'empleados'">
       <ion-card class="tarjeta-formulario">
         <ion-card-header>
@@ -215,13 +252,13 @@
         </ion-card-header>
         <ion-card-content>
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="No. Empleado" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.numEmpleado" [readonly]="editandoEmpleado"></ion-input>
+            <ion-input label="No. Empleado" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.numEmpleado" [readonly]="editandoEmpleado" placeholder="Ej: E-50"></ion-input>
           </ion-item>
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="Nombre" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.nombre"></ion-input>
+            <ion-input label="Nombre" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.nombre" placeholder="Nombre completo"></ion-input>
           </ion-item>
           <ion-item class="input-limpio" lines="none">
-            <ion-input [label]="editandoEmpleado ? 'Nueva Contraseña (opcional)' : 'Contraseña'" type="password" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.password"></ion-input>
+            <ion-input [label]="editandoEmpleado ? 'Nueva Contraseña (opcional)' : 'Contraseña'" type="password" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.password" placeholder="Mín. 6 caracteres"></ion-input>
           </ion-item>
           <ion-item class="input-limpio" lines="none">
             <ion-select label="Rol" interface="popover" labelPlacement="stacked" [(ngModel)]="empleadoNuevo.rol">
@@ -229,7 +266,7 @@
               <ion-select-option value="Admin">Admin</ion-select-option>
             </ion-select>
           </ion-item>
-          <ion-button expand="block" class="boton-guardar" (click)="guardarEmpleado()">
+          <ion-button expand="block" class="boton-guardar ion-margin-top" (click)="guardarEmpleado()">
             <ion-icon name="save-outline" slot="start"></ion-icon> 
             {{ editandoEmpleado ? 'Actualizar Empleado' : 'Guardar' }}
           </ion-button>
@@ -258,5 +295,5 @@
       </ion-list>
     </div>
 
-  </div>
+  </div> 
 </ion-content>
