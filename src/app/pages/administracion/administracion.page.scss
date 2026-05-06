@@ -150,3 +150,18 @@ ion-segment {
   margin-bottom: 10px;
   border: 1px solid #e2e8f0;
 }
+
+.item-gestion {
+  ion-buttons {
+    display: flex !important;
+    min-width: 160px; 
+    justify-content: flex-end;
+  }
+
+  ion-icon {
+    font-size: 1.5rem;
+    margin: 0 4px;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}

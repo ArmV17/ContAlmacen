@@ -6,8 +6,8 @@ import { addIcons } from 'ionicons';
 import { 
   menu, personAddOutline, buildOutline, idCardOutline, 
   saveOutline, trashOutline, createOutline, addCircleOutline, 
-  closeCircle, qrCodeOutline, informationCircleOutline, helpCircleOutline,
-  lockClosedOutline, peopleCircleOutline
+  closeCircle, qrCodeOutline, barcodeOutline, informationCircleOutline, helpCircleOutline,
+  lockClosedOutline, peopleCircleOutline,
 } from 'ionicons/icons';
 
 import { AlmacenService } from '../../services/almacen.service';
@@ -37,19 +37,19 @@ export class AdministracionPage {
   maestros: any[] = [];
   tiposExistentes: string[] = [];
 
-  // --- NUEVAS PROPIEDADES PARA SUGERENCIAS ---
-  nombresUnicos: string[] = [];
+  // --- PROPIEDADES PARA SUGERENCIAS ---
+  nombresFiltrados: string[] = []; // Para sugerencias de nombre
   tiposFiltrados: string[] = [];
 
   // Modelos para formularios
-  alumnoNuevo = { matricula: '', nombre: '', carrera: '', grado: '' };
+  alumnoNuevo = { matricula: '', nombre: '', carrera: '', correo: '' };
   empleadoNuevo = { numEmpleado: '', nombre: '', password: '', rol: 'Staff' };
   
-  // Modelos para Herramientas (Asegúrate de usar 'tipo' y no 'selectorTipo' para el datalist)
-  herramientaNueva = { codigo: '', nombre: '', tipo: '' };
+  // Agregamos 'cantidad' al modelo de herramienta
+  herramientaNueva = { codigo: '', nombre: '', tipo: '', cantidad: 1 };
 
   // Modelos para Maestros
-  maestroNuevo = { numMaestro: '', nombre: '', materias: [] as string[] };
+  maestroNuevo = { numMaestro: '', nombre: '', correo: '', materias: [] as string[] };
   materiaTemp: string = ''; 
 
   constructor(
@@ -61,7 +61,7 @@ export class AdministracionPage {
       menu, personAddOutline, buildOutline, idCardOutline, 
       saveOutline, trashOutline, createOutline, addCircleOutline, 
       closeCircle, qrCodeOutline, informationCircleOutline, helpCircleOutline,
-      lockClosedOutline, peopleCircleOutline
+      lockClosedOutline, peopleCircleOutline, barcodeOutline
     });
   }
 
@@ -75,33 +75,46 @@ export class AdministracionPage {
     this.tiposExistentes = await this.almacenService.obtenerTiposDeHerramientas();
     this.empleados = await this.almacenService.obtenerEmpleados();
     this.maestros = await this.almacenService.obtenerMaestros();
-
-    // Lógica para obtener nombres únicos para el datalist
-    this.nombresUnicos = [...new Set(this.herramientas.map(h => h.nombre_herramienta))];
   }
 
-  // --- LÓGICA DE SUGERENCIAS DINÁMICAS ---
+  validarCorreo(email: string): boolean {
+    const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+    return pattern.test(email);
+  }
+
+  // --- LÓGICA DE SUGERENCIAS ---
+  
+  actualizarSugerenciasNombre() {
+    const texto = this.herramientaNueva.nombre?.trim().toLowerCase() || '';
+    if (texto === '') {
+      this.nombresFiltrados = [];
+      return;
+    }
+    // Obtiene nombres únicos del inventario actual que coincidan
+    const nombresUnicos = [...new Set(this.herramientas.map(h => h.nombre_herramienta))];
+    this.nombresFiltrados = nombresUnicos.filter(n => n.toLowerCase().includes(texto));
+  }
+
   actualizarSugerenciasTipo() {
     const nombreEscrito = this.herramientaNueva.nombre?.trim().toLowerCase() || '';
-    
     if (nombreEscrito === '') {
       this.tiposFiltrados = [];
       return;
     }
-
     const coincidencias = this.herramientas.filter(h => 
       h.nombre_herramienta?.trim().toLowerCase() === nombreEscrito
     );
-
-    this.tiposFiltrados = [...new Set(coincidencias
-      .map(h => h.tipo_herramienta?.trim())
-      .filter(t => t && t !== '')
-    )];
-
-    console.log('Sugerencias para:', nombreEscrito, this.tiposFiltrados);
+    this.tiposFiltrados = [...new Set(coincidencias.map(h => h.tipo_herramienta?.trim()).filter(t => t && t !== ''))];
   }
 
-  // --- LÓGICA DE BÚSQUEDA FILTRADA UNIVERSAL ---
+  // Al seleccionar una sugerencia de nombre
+  seleccionarSugerenciaNombre(nombre: string) {
+    this.herramientaNueva.nombre = nombre;
+    this.nombresFiltrados = [];
+    this.generarCodigoAutomatico();
+    this.actualizarSugerenciasTipo();
+  }
+
   get listaFiltrada() {
     const t = this.textoBuscar.toLowerCase().trim();
     if (this.segmentoActual === 'alumnos') return this.alumnos.filter(a => a.nombre.toLowerCase().includes(t) || a.matricula.includes(t));
@@ -111,56 +124,110 @@ export class AdministracionPage {
     return [];
   }
 
-  // --- GESTIÓN DE HERRAMIENTAS & QR ---
-  async descargarQRDirecto(herramienta: any) {
-    const codigo = herramienta.num_herramienta;
-    const nombre = herramienta.nombre_herramienta;
-    const tipo = herramienta.tipo_herramienta;
-    const textoEtiqueta = tipo ? `${nombre} (${tipo})` : nombre;
-    
-    const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(codigo)}&size=300&caption=${encodeURIComponent(textoEtiqueta)}`;
-
-    try {
-      const response = await fetch(qrUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `QR_${nombre.replace(/[^a-z0-9]/gi, '_')}.png`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-      this.mostrarMensaje('QR descargado', 'success');
-    } catch (e) {
-      window.open(qrUrl, '_blank');
+  // --- GESTIÓN DE HERRAMIENTAS (REGISTRO MASIVO) ---
+  generarCodigoAutomatico() {
+    const nombre = this.herramientaNueva.nombre.trim();
+    if (nombre.length === 0) {
+      this.herramientaNueva.codigo = '';
+      return;
     }
+    if (nombre.length < 3) return;
+
+    const prefijo = nombre.substring(0, 3).toUpperCase();
+    const coincidencias = this.herramientas.filter(h => 
+      h.num_herramienta.startsWith(prefijo)
+    );
+
+    const siguienteNumero = (coincidencias.length + 1).toString().padStart(2, '0');
+    this.herramientaNueva.codigo = `${prefijo}-${siguienteNumero}`;
   }
 
   async guardarHerramienta() {
-    const res = await this.almacenService.registrarHerramienta(this.herramientaNueva);
-    if (res.exito) {
-      this.mostrarMensaje(this.editandoHerramienta ? 'Herramienta actualizada' : 'Herramienta registrada', 'success');
-      this.cancelarEdicionHerramienta();
-      this.cargarDatos();
-    } else this.mostrarMensaje('Error al guardar', 'danger');
+    if (!this.herramientaNueva.nombre || ( !this.editandoHerramienta && this.herramientaNueva.cantidad < 1)) {
+      this.mostrarMensaje('Nombre y cantidad válida son requeridos', 'warning');
+      return;
+    }
+
+    if (this.editandoHerramienta) {
+      // --- LÓGICA DE EDICIÓN ---
+      // IMPORTANTE: No llamamos a generarCodigoAutomatico() aquí
+      const res = await this.almacenService.registrarHerramienta({
+        codigo: this.herramientaNueva.codigo, // Usamos el código que ya tenía
+        nombre: this.herramientaNueva.nombre,
+        tipo: this.herramientaNueva.tipo
+      });
+
+      if (res.exito) {
+        this.mostrarMensaje('Herramienta actualizada con éxito', 'success');
+      } else {
+        this.mostrarMensaje('Error al actualizar', 'danger');
+      }
+
+    } else {
+      // --- LÓGICA DE REGISTRO MASIVO (NUEVAS) ---
+      const totalAInsertar = this.herramientaNueva.cantidad;
+      let insertados = 0;
+
+      for (let i = 0; i < totalAInsertar; i++) {
+        this.generarCodigoAutomatico(); // Solo aquí se genera código nuevo
+
+        const dataParaFirebase = {
+          codigo: this.herramientaNueva.codigo,
+          nombre: this.herramientaNueva.nombre,
+          tipo: this.herramientaNueva.tipo
+        };
+
+        const res = await this.almacenService.registrarHerramienta(dataParaFirebase);
+        
+        if (res.exito) {
+          insertados++;
+          // Actualizamos lista local para que el contador de códigos no se repita
+          this.herramientas.push({
+            nombre_herramienta: dataParaFirebase.nombre,
+            num_herramienta: dataParaFirebase.codigo,
+            tipo_herramienta: dataParaFirebase.tipo
+          });
+        }
+      }
+      this.mostrarMensaje(`Se registraron ${insertados} piezas correctamente`, 'success');
+    }
+
+    this.cancelarEdicionHerramienta();
+    await this.cargarDatos(); // Forzamos la recarga limpia de la lista
   }
 
+  // ESTA FUNCIÓN AHORA ESTÁ FUERA DE GUARDARHERRAMIENTA
   prepararEdicionHerramienta(h: any) {
     this.herramientaNueva = { 
       codigo: h.num_herramienta, 
       nombre: h.nombre_herramienta, 
-      tipo: h.tipo_herramienta 
+      tipo: h.tipo_herramienta,
+      cantidad: 1 
     };
     this.editandoHerramienta = true;
     window.scrollTo(0, 0);
   }
 
   cancelarEdicionHerramienta() {
-    this.herramientaNueva = { codigo: '', nombre: '', tipo: '' };
+    this.herramientaNueva = { codigo: '', nombre: '', tipo: '', cantidad: 1 };
     this.editandoHerramienta = false;
+    this.nombresFiltrados = [];
   }
 
   // --- GESTIÓN DE ALUMNOS ---
   async guardarAlumno() {
+    const { matricula, nombre, carrera, correo } = this.alumnoNuevo;
+
+    if (!matricula || !nombre || !carrera || !correo) {
+      this.mostrarMensaje('Por favor, llena todos los campos', 'warning');
+      return;
+    }
+
+    if (!this.validarCorreo(correo)) {
+      this.mostrarMensaje('El formato del correo no es válido', 'danger');
+      return;
+    }
+
     const res = await this.almacenService.registrarAlumno(this.alumnoNuevo);
     if (res.exito) {
       this.mostrarMensaje(this.editandoAlumno ? 'Alumno actualizado' : 'Alumno registrado', 'success');
@@ -170,13 +237,18 @@ export class AdministracionPage {
   }
 
   prepararEdicionAlumno(alumno: any) {
-    this.alumnoNuevo = { ...alumno };
+    this.alumnoNuevo = { 
+      matricula: alumno.matricula,
+      nombre: alumno.nombre,
+      carrera: alumno.carrera,
+      correo: alumno.correo || alumno.nivel || alumno.grado || '' 
+    };
     this.editandoAlumno = true;
     window.scrollTo(0, 0);
   }
 
   cancelarEdicionAlumno() {
-    this.alumnoNuevo = { matricula: '', nombre: '', carrera: '', grado: '' };
+    this.alumnoNuevo = { matricula: '', nombre: '', carrera: '', correo: '' };
     this.editandoAlumno = false;
   }
 
@@ -193,7 +265,20 @@ export class AdministracionPage {
   }
 
   async guardarMaestro() {
+    const { numMaestro, nombre, correo } = this.maestroNuevo;
+
+    if (!numMaestro || !nombre || !correo) {
+      this.mostrarMensaje('Nombre, Número y Correo son obligatorios', 'warning');
+      return;
+    }
+
+    if (!this.validarCorreo(correo)) {
+      this.mostrarMensaje('El correo del maestro no es válido', 'danger');
+      return;
+    }
+
     if (this.maestroNuevo.materias.length === 0 && this.materiaTemp.trim() !== '') this.agregarMateriaLista();
+    
     const res = await this.almacenService.registrarMaestro(this.maestroNuevo);
     if (res.exito) {
       this.mostrarMensaje(this.editandoMaestro ? 'Maestro actualizado' : 'Maestro registrado', 'success');
@@ -203,19 +288,81 @@ export class AdministracionPage {
   }
 
   prepararEdicionMaestro(m: any) {
-    this.maestroNuevo = { numMaestro: m.num_maestro, nombre: m.nombre, materias: [...m.materias] };
+    this.maestroNuevo = { 
+        numMaestro: m.num_maestro, 
+        nombre: m.nombre, 
+        correo: m.correo || '',
+        materias: [...m.materias] 
+    };
     this.editandoMaestro = true;
     window.scrollTo(0, 0);
   }
 
   cancelarEdicionMaestro() {
-    this.maestroNuevo = { numMaestro: '', nombre: '', materias: [] };
+    this.maestroNuevo = { numMaestro: '', nombre: '', correo: '', materias: [] };
     this.materiaTemp = '';
     this.editandoMaestro = false;
   }
 
-  // --- GESTIÓN DE EMPLEADOS ---
+  // --- DESCARGAR CÓDIGO DE BARRAS ---
+  async descargarBarraDirecto(herramienta: any) {
+    const codigo = herramienta.num_herramienta;
+    const nombre = herramienta.nombre_herramienta;
+    const tipo = herramienta.tipo_herramienta;
+    
+    const nombreFormateado = tipo ? `${nombre} ${tipo} ${codigo}` : `${nombre} ${codigo}`;
+
+    // PARÁMETROS AÑADIDOS:
+    // paddingwidth=10 y paddingheight=10: Crea un margen blanco interno de 10 unidades.
+    // backgroundcolor=ffffff: Asegura que el fondo del margen también sea blanco.
+    const barraUrl = `https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(codigo)}&alttext=${encodeURIComponent(nombreFormateado)}&scale=3&rotate=N&includetext&guardwhitespace&backgroundcolor=ffffff&paddingwidth=15&paddingheight=10`;
+
+    try {
+      const response = await fetch(barraUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${nombreFormateado}.png`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      this.mostrarMensaje(`Barra descargada: ${nombreFormateado}`, 'success');
+    } catch (e) {
+      window.open(barraUrl, '_blank');
+    }
+  }
+
+  // --- DESCARGAR QR ---
+  async descargarQRDirecto(herramienta: any) {
+    const codigo = herramienta.num_herramienta;
+    const nombre = herramienta.nombre_herramienta;
+    const tipo = herramienta.tipo_herramienta;
+    
+    const nombreFormateado = tipo ? `${nombre} ${tipo} ${codigo}` : `${nombre} ${codigo}`;
+    
+    // caption: Este parámetro de quickchart cambia el texto que sale abajo del QR
+    const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(codigo)}&size=300&caption=${encodeURIComponent(nombreFormateado)}`;
+
+    try {
+      const response = await fetch(qrUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${nombreFormateado}.png`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      this.mostrarMensaje(`QR descargado: ${nombreFormateado}`, 'success');
+    } catch (e) {
+      window.open(qrUrl, '_blank');
+    }
+  }
+
   async guardarEmpleado() {
+    if(!this.empleadoNuevo.numEmpleado || !this.empleadoNuevo.nombre || (!this.editandoEmpleado && !this.empleadoNuevo.password)){
+        this.mostrarMensaje('Todos los campos son obligatorios', 'warning');
+        return;
+    }
     const res = await this.almacenService.registrarEmpleado(this.empleadoNuevo);
     if (res.exito) {
       this.mostrarMensaje(this.editandoEmpleado ? 'Empleado actualizado' : 'Empleado registrado', 'success');
@@ -235,31 +382,39 @@ export class AdministracionPage {
     this.editandoEmpleado = false;
   }
 
-  // --- ELIMINACIÓN ---
   async confirmarEliminar(tabla: string, idVal: string, nombre: string) {
-    const alert = await this.alertController.create({
-      header: 'Confirmar eliminación',
-      message: `¿Estás seguro de eliminar a <strong>${nombre}</strong>?`,
-      buttons: [
-        { text: 'Cancelar', role: 'cancel' },
-        { 
-          text: 'Eliminar', 
-          cssClass: 'boton-alerta-eliminar',
-          handler: async () => {
-            const res = await this.almacenService.eliminarRegistro(tabla, idVal);
-            if (res.exito) {
-              this.mostrarMensaje('Registro eliminado', 'success');
-              this.cargarDatos();
-            } else this.mostrarMensaje('Error: registro vinculado a un préstamo', 'danger');
-          }
-        }
-      ]
-    });
-    await alert.present();
-  }
+      const alert = await this.alertController.create({
+        header: 'Confirmar eliminación',
+        message: `¿Estás seguro de eliminar a <strong>${nombre}</strong>?`,
+        buttons: [
+          { text: 'Cancelar', role: 'cancel' },
+          { 
+            text: 'Eliminar', 
+            cssClass: 'boton-alerta-eliminar',
+            handler: async () => {
+              const res = await this.almacenService.eliminarRegistro(tabla, idVal);
+              if (res.exito) {
+                if (this.segmentoActual === 'alumnos') this.alumnos = this.alumnos.filter(a => a.matricula !== idVal);
+                else if (this.segmentoActual === 'maestros') this.maestros = this.maestros.filter(m => m.num_maestro !== idVal);
+                else if (this.segmentoActual === 'herramientas') this.herramientas = this.herramientas.filter(h => h.num_herramienta !== idVal);
+                else if (this.segmentoActual === 'empleados') this.empleados = this.empleados.filter(e => e.num_empleado !== idVal);
 
-  async mostrarMensaje(m: string, c: string) {
-    const t = await this.toastController.create({ message: m, duration: 2000, color: c, position: 'bottom' });
-    t.present();
-  }
+                this.mostrarMensaje('Registro eliminado con éxito', 'success');
+              } else this.mostrarMensaje('Error: registro vinculado a un préstamo', 'danger');
+            }
+          }
+        ]
+      });
+      await alert.present();
+    }
+
+    async mostrarMensaje(m: string, c: string) {
+      const t = await this.toastController.create({ 
+        message: m, 
+        duration: 2000, 
+        color: c, 
+        position: 'bottom' 
+      });
+      t.present();
+    }
 }

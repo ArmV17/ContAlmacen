@@ -10,8 +10,7 @@ import {
   updateDoc, 
   deleteDoc, 
   setDoc,
-  getDoc,
-  orderBy
+  getDoc
 } from '@angular/fire/firestore';
 import { environment } from '../../environments/environment';
 import * as CryptoJS from 'crypto-js';
@@ -40,6 +39,64 @@ export class AlmacenService {
   }
 
   // ==========================================
+  // DASHBOARD & DEVOLUCIONES
+  // ==========================================
+  async obtenerPrestamosDashboard() {
+    try {
+      const colRef = collection(this.firestore, 'prestamos');
+      const q = query(colRef, where('estado', 'in', ['Activo', 'Vencido']));
+      const snapshot = await getDocs(q);
+
+      return await Promise.all(snapshot.docs.map(async (d) => {
+        const data: any = d.data();
+        const aluSnap = await getDoc(doc(this.firestore, 'alumnos', data['matricula_alumno']));
+        const invSnap = await getDoc(doc(this.firestore, 'inventario', data['num_herramienta']));
+        
+        const aluData: any = aluSnap.exists() ? aluSnap.data() : { nombre: 'No encontrado' };
+        const invData: any = invSnap.exists() ? invSnap.data() : { nombre_herramienta: 'No encontrada' };
+
+        try {
+          if (aluData.nombre) {
+            const desc = this.desencriptarTexto(aluData.nombre);
+            if (desc) aluData.nombre = desc;
+          }
+        } catch (e) {}
+
+        return { id: d.id, ...data, alumnos: aluData, inventario: invData };
+      }));
+    } catch (error) {
+      return [];
+    }
+  }
+
+  // ==========================================
+  // ALUMNOS
+  // ==========================================
+  async registrarAlumno(alumno: any) {
+    try {
+      await setDoc(doc(this.firestore, 'alumnos', alumno.matricula), {
+        matricula: alumno.matricula,
+        nombre: this.encriptarTexto(alumno.nombre),
+        carrera: alumno.carrera,
+        correo: alumno.correo // CAMBIO: Ahora se guarda el correo
+      });
+      return { exito: true };
+    } catch (e: any) {
+      return { exito: false, mensaje: e.message };
+    }
+  }
+
+  async obtenerAlumnos() {
+    const snapshot = await getDocs(collection(this.firestore, 'alumnos'));
+    return snapshot.docs.map(d => {
+      const data: any = d.data();
+      try { data.nombre = this.desencriptarTexto(data.nombre); } catch (e) {}
+      // Mantenemos compatibilidad con campos anteriores si fuera necesario
+      return { ...data, correo: data.correo || data.nivel || data.grado || 'Sin correo' };
+    });
+  }
+
+  // ==========================================
   // INVENTARIO
   // ==========================================
   async obtenerInventario() {
@@ -48,58 +105,35 @@ export class AlmacenService {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   }
 
-  // ==========================================
-  // DASHBOARD & DEVOLUCIONES (Con cruce de datos manual)
-  // ==========================================
-  async obtenerPrestamosDashboard() {
+  async obtenerTiposDeHerramientas() {
     try {
-      const colRef = collection(this.firestore, 'prestamos');
-      // Quitamos el orderBy temporalmente para que la consulta no falle por falta de índices
-      const q = query(colRef, where('estado', 'in', ['Activo', 'Vencido']));
-      const snapshot = await getDocs(q);
-
-      console.log("Documentos brutos encontrados en Firebase:", snapshot.size);
-
-      const prestamos = await Promise.all(snapshot.docs.map(async (d) => {
-        const data: any = d.data();
-        
-        // Buscamos al alumno usando la matrícula como ID del documento
-        const aluSnap = await getDoc(doc(this.firestore, 'alumnos', data['matricula_alumno']));
-        const aluData: any = aluSnap.exists() ? aluSnap.data() : { nombre: 'Alumno no encontrado', carrera: 'N/A' };
-        
-        // Buscamos la herramienta usando el código como ID del documento
-        const invSnap = await getDoc(doc(this.firestore, 'inventario', data['num_herramienta']));
-        const invData: any = invSnap.exists() ? invSnap.data() : { nombre_herramienta: 'Herramienta no encontrada' };
-
-        // Intentamos descifrar el nombre del alumno
-        try {
-          if (aluData.nombre) {
-            const nombreDescifrado = this.desencriptarTexto(aluData.nombre);
-            if (nombreDescifrado) aluData.nombre = nombreDescifrado;
-          }
-        } catch (e) { /* Nombre no cifrado o error */ }
-
-        return {
-          id: d.id,
-          ...data,
-          alumnos: aluData,
-          inventario: invData
-        };
-      }));
-
-      console.log("Lista final procesada para el Dashboard:", prestamos);
-      return prestamos;
-    } catch (error) {
-      console.error("Error en el servicio de Firebase:", error);
+      const snapshot = await getDocs(collection(this.firestore, 'inventario'));
+      const herramientas = snapshot.docs.map(doc => doc.data() as any);
+      return [...new Set(herramientas.map(h => h.tipo_herramienta).filter(t => t))];
+    } catch (e) {
       return [];
     }
   }
+
+  async registrarHerramienta(herramienta: any) {
+    try {
+      await setDoc(doc(this.firestore, 'inventario', herramienta.codigo), {
+        num_herramienta: herramienta.codigo,
+        nombre_herramienta: herramienta.nombre,
+        tipo_herramienta: herramienta.tipo,
+        estado: 'Disponible'
+      });
+      return { exito: true };
+    } catch (e: any) {
+      return { exito: false, mensaje: e.message };
+    }
+  }
+
   // ==========================================
-  // REGISTRO DE PRÉSTAMOS
+  // PRÉSTAMOS Y DEVOLUCIONES
   // ==========================================
   async registrarNuevoPrestamo(matricula: string, numHerramienta: string, numEmpleado: string) {
     try {
-      // 1. Crear el préstamo
       await addDoc(collection(this.firestore, 'prestamos'), {
         matricula_alumno: matricula,
         num_herramienta: numHerramienta,
@@ -108,7 +142,6 @@ export class AlmacenService {
         fecha_salida: new Date().toISOString()
       });
 
-      // 2. Actualizar estado de herramienta
       const toolRef = doc(this.firestore, 'inventario', numHerramienta);
       await updateDoc(toolRef, { estado: 'Prestado' });
 
@@ -136,16 +169,15 @@ export class AlmacenService {
   }
 
   // ==========================================
-  // ADMINISTRACIÓN (ALTAS)
+  // MAESTROS Y EMPLEADOS
   // ==========================================
-  async registrarAlumno(alumno: any) {
+  async registrarMaestro(maestro: any) {
     try {
-      // Usamos setDoc para que el ID del documento sea la matrícula
-      await setDoc(doc(this.firestore, 'alumnos', alumno.matricula), {
-        matricula: alumno.matricula,
-        nombre: this.encriptarTexto(alumno.nombre),
-        carrera: alumno.carrera,
-        grado: alumno.grado
+      await setDoc(doc(this.firestore, 'maestros', maestro.numMaestro), {
+        num_maestro: maestro.numMaestro,
+        nombre: this.encriptarTexto(maestro.nombre),
+        correo: maestro.correo, // AGREGADO: Nuevo campo de correo para maestros
+        materias: maestro.materias
       });
       return { exito: true };
     } catch (e: any) {
@@ -153,28 +185,13 @@ export class AlmacenService {
     }
   }
 
-  async obtenerTiposDeHerramientas() {
-    const snapshot = await getDocs(collection(this.firestore, 'inventario'));
-    const herramientas = snapshot.docs.map(doc => doc.data() as any);
-    // Extraemos los tipos, filtramos los que estén vacíos y eliminamos duplicados
-    const tipos = herramientas
-      .map(h => h.tipo_herramienta)
-      .filter((tipo, index, self) => tipo && self.indexOf(tipo) === index);
-    return tipos;
-  }
-
-  async registrarHerramienta(herramienta: any) {
-    try {
-      await setDoc(doc(this.firestore, 'inventario', herramienta.codigo), {
-        num_herramienta: herramienta.codigo,
-        nombre_herramienta: herramienta.nombre,
-        tipo_herramienta: herramienta.tipo, // Nuevo campo
-        estado: 'Disponible'
-      });
-      return { exito: true };
-    } catch (e: any) {
-      return { exito: false, mensaje: e.message };
-    }
+  async obtenerMaestros() {
+    const snapshot = await getDocs(collection(this.firestore, 'maestros'));
+    return snapshot.docs.map(d => {
+      const data: any = d.data();
+      try { data.nombre = this.desencriptarTexto(data.nombre); } catch (e) {}
+      return { id: d.id, ...data };
+    });
   }
 
   async registrarEmpleado(empleado: any) {
@@ -191,49 +208,17 @@ export class AlmacenService {
     }
   }
 
-  async obtenerAlumnos() {
-    const snapshot = await getDocs(collection(this.firestore, 'alumnos'));
+  async obtenerEmpleados() {
+    const snapshot = await getDocs(collection(this.firestore, 'trabajadores'));
     return snapshot.docs.map(d => {
       const data: any = d.data();
-      try {
-        data.nombre = this.desencriptarTexto(data.nombre);
-      } catch (e) {}
-      return { ...data }; // Retornamos los datos del alumno
+      try { data.nombre = this.desencriptarTexto(data.nombre); } catch (e) {}
+      return { id: d.id, ...data };
     });
   }
 
-  // --- MÉTODOS PARA MAESTROS ---
-  async registrarMaestro(maestro: any) {
-    try {
-      // Usamos el número de maestro como ID del documento
-      await setDoc(doc(this.firestore, 'maestros', maestro.numMaestro), {
-        num_maestro: maestro.numMaestro,
-        nombre: this.encriptarTexto(maestro.nombre), // Mantenemos el cifrado de seguridad
-        materias: maestro.materias, // Esto será un arreglo de strings
-      });
-      return { exito: true };
-    } catch (e: any) {
-      return { exito: false, mensaje: e.message };
-    }
-  }
-
-  async obtenerMaestros() {
-    try {
-      const snapshot = await getDocs(collection(this.firestore, 'maestros'));
-      return snapshot.docs.map(d => {
-        const data: any = d.data();
-        try {
-          data.nombre = this.desencriptarTexto(data.nombre);
-        } catch (e) {}
-        return { id: d.id, ...data };
-      });
-    } catch (e) {
-      return [];
-    }
-  }
-
   // ==========================================
-  // GESTIÓN (EDITAR / ELIMINAR)
+  // GESTIÓN GENERAL
   // ==========================================
   async eliminarRegistro(coleccion: string, id: string) {
     try {
@@ -242,14 +227,5 @@ export class AlmacenService {
     } catch (e: any) {
       return { exito: false, mensaje: e.message };
     }
-  }
-
-  async obtenerEmpleados() {
-    const snapshot = await getDocs(collection(this.firestore, 'trabajadores'));
-    return snapshot.docs.map(d => {
-      const data: any = d.data();
-      try { data.nombre = this.desencriptarTexto(data.nombre); } catch (e) {}
-      return { id: d.id, ...data };
-    });
   }
 }
