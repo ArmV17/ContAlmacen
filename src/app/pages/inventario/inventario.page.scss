@@ -5,7 +5,7 @@
 }
 
 .fondo-claro {
-  --background: #f4f5f8; // Fondo gris muy tenue para que resalten los grupos blancos
+  --background: #f4f5f8;
 }
 
 .contenedor-maximo {
@@ -13,91 +13,241 @@
   margin: 0 auto;
 }
 
-/* --- Buscador en Cabecera --- */
+/* --- Estilo del Buscador --- */
 .barra-busqueda-container {
-  padding-bottom: 10px;
+  padding: 10px 16px;
+  
+  ion-searchbar {
+    --border-radius: 12px;
+    --box-shadow: none;
+    --background: rgba(255, 255, 255, 0.1);
+    --color: white;
+    --icon-color: #cbd5e1;
+    --placeholder-color: #cbd5e1;
+  }
 }
 
-.busqueda-limpia {
-  --background: rgba(255, 255, 255, 0.1);
-  --color: #ffffff;
-  --placeholder-color: #cbd5e1;
-  --icon-color: #cbd5e1;
-  --border-radius: 12px;
-  --box-shadow: none;
-  padding-left: 15px;
-  padding-right: 15px;
+/* --- Modo Búsqueda: Títulos y Grupos --- */
+.titulo-herramienta-busqueda {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 25px 0 12px 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
 }
 
-/* --- Lista Minimalista Agrupada --- */
-.lista-minimalista {
-  background: transparent;
-  padding: 8px;
-  margin-top: 8px;
+.grupo-busqueda {
+  margin-bottom: 30px;
 }
 
-.grupo-herramienta {
-  background: #ffffff;
-  border-radius: 16px;
-  margin-bottom: 24px;
-  padding: 24px; 
-  border: 1px solid #e2e8f0;
-}
+/* --- Cabecera del Acordeón (Modo Normal) --- */
+.header-acordeon {
+  --min-height: 85px;
+  --padding-start: 12px;
+  --padding-end: 4px; 
+  --background: #ffffff;
 
-.encabezado-grupo {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
-  /* Ajustamos el padding para que el texto 'Pala' se alinee con 'Tipo:' */
-  padding-left: 2px; 
-
-  ion-icon {
-    font-size: 24px;
+  .avatar-herramienta {
+    width: 55px;
+    height: 55px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
     margin-right: 12px;
-    color: #3b82f6;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    
+    ion-img {
+      object-fit: cover;
+      width: 100%;
+      height: 100%;
+    }
   }
 
   .nombre-principal {
     margin: 0;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 800;
     color: #0f172a;
+    letter-spacing: -0.4px;
   }
 }
 
-.fila-tipo {
+/* --- Controles Derecha (Stock Dashboard) --- */
+.controles-derecha {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-right: 4px; 
+
+  .indicador-stock-moderno {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 6px 14px;
+    border-radius: 12px;
+    min-width: 85px;
+
+    .stock-label {
+      font-size: 0.6rem;
+      font-weight: 900;
+      color: #64748b;
+      letter-spacing: 0.8px;
+      margin-bottom: 2px;
+    }
+
+    .stock-numero {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #1e293b;
+      line-height: 1;
+    }
+
+    &.sin-stock {
+      background: #fef2f2;
+      border-color: #fee2e2;
+      .stock-label { color: #ef4444; }
+      .stock-numero { color: #b91c1c; }
+    }
+  }
+}
+
+/* --- Acordeón Estilo Card --- */
+.tarjeta-herramienta {
+  margin-bottom: 15px;
+  border-radius: 18px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.accordion-expanded {
+    border-color: #3b82f6;
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.1);
+  }
+
+  &::part(header) {
+    --ion-accordion-toggle-icon-display: flex; 
+    --ion-accordion-toggle-icon-color: #94a3b8; 
+    --ion-accordion-toggle-icon-font-size: 20px;
+  }
+}
+
+/* --- Contenedor Desplegable (Modo Normal) --- */
+.contenedor-desplegable {
+  background: #f8fafc;
+  padding: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* --- Agrupación por Tipos --- */
+.bloque-tipo {
+  margin-bottom: 18px;
+  &:last-child { margin-bottom: 0; }
+}
+
+.separador-tipo {
+  display: block; // Asegura que ocupe toda la línea
+  padding: 10px 14px;
+  font-size: 0.85rem; // Tamaño más grande y legible
+  font-weight: 900; // Máximo grosor
+  color: #1e293b; // Color oscuro para contraste, o usa #3b82f6 para azul
+  text-transform: uppercase;
+  letter-spacing: 2px; // Más espacio entre letras para estilo moderno
+  background: #f1f5f9; // Fondo gris muy suave para separar bloques
+  border-left: 4px solid #3b82f6; // Línea azul a la izquierda para destacar
+  border-radius: 4px;
+  margin: 15px 0 10px 0;
+}
+
+/* --- Formato de Fila de Unidad (Diseño Imagen) --- */
+.fila-unidad {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 0;
-  border-top: 1px solid #f1f5f9;
+  background: #ffffff;
+  padding: 14px 20px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: transform 0.2s;
+
+  &:active {
+    transform: scale(0.98);
+  }
 
   .info-izquierda {
     display: flex;
     align-items: center;
-    /* Esto asegura que la fila empiece a la misma distancia que el icono/título */
-    padding-left: 2px; 
   }
 
-  .etiqueta-tipo {
-    color: #64748b;
-    font-size: 0.9rem;
-    font-weight: 500;
+  .contenedor-icono-herramienta {
+    background: #f0f7ff; 
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+
+    ion-icon { 
+      color: #3b82f6; 
+      font-size: 1.4rem; 
+      margin: 0 !important;
+    }
   }
 
-  .valor-dinamico {
-    /* Aquí creas el espacio que querías después de la palabra 'Tipo:' */
-    margin-left: 10px; 
+  .codigo-unidad {
     font-weight: 700;
-    color: #334155;
+    color: #1e293b;
     font-size: 1rem;
+  }
+
+  .estado-contenedor {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #f1f5f9;
+
+    .punto-estado {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      &.disponible { background-color: #22c55e; }
+      &.ocupado, &.prestado { background-color: #ef4444; }
+    }
+
+    .texto-estado {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #475569;
+    }
   }
 }
 
-.badge-stock-minimal {
-  --background: #3b82f6;
-  --color: #ffffff;
-  border-radius: 8px;
-  font-weight: 600;
-  padding: 8px 12px;
+/* --- Utilidades Extras --- */
+.btn-upload-mini {
+  --color: #94a3b8;
+  --padding-start: 0;
+  --padding-end: 0;
+  margin: 0 10px;
+  font-size: 1.3rem;
+  
+  &:hover { --color: #3b82f6; }
+}
+
+.mensaje-vacio-busqueda {
+  text-align: center;
+  padding: 50px 20px;
+  color: #94a3b8;
+  ion-icon { font-size: 64px; opacity: 0.4; margin-bottom: 15px; }
+  p { font-size: 1.1rem; font-weight: 600; }
 }

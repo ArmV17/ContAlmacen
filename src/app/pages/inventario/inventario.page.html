@@ -3,16 +3,14 @@
     <ion-buttons slot="start">
       <ion-menu-button color="light"></ion-menu-button>
     </ion-buttons>
-    <ion-title>Inventario</ion-title>
+    <ion-title>Inventario UTC</ion-title>
   </ion-toolbar>
   
-  <!-- Barra de búsqueda universal -->
   <ion-toolbar class="toolbar-elegante barra-busqueda-container">
     <ion-searchbar 
-      class="busqueda-limpia" 
-      placeholder="Buscar por nombre o tipo..."
+      placeholder="Buscar por nombre, estado o tipo..."
       [(ngModel)]="textoBuscar"
-      animated="true">
+      (ionInput)="buscarHerramienta($event)">
     </ion-searchbar>
   </ion-toolbar>
 </ion-header>
@@ -20,50 +18,80 @@
 <ion-content class="fondo-claro ion-padding">
   <div class="contenedor-maximo">
     
-    <!-- Mensaje si no hay resultados -->
-    <div *ngIf="inventarioFiltrado.length === 0" class="mensaje-vacio-busqueda">
-      <ion-icon name="search-outline"></ion-icon>
-      <p>No se encontraron herramientas con ese nombre o tipo.</p>
-    </div>
-
-    <!-- Lista Minimalista Agrupada -->
-    <div class="lista-minimalista" *ngIf="inventarioFiltrado.length > 0">
-      
-      <!-- Bloque por Herramienta (Ej. Pala) -->
-      <div class="grupo-herramienta" *ngFor="let herramienta of inventarioFiltrado">
+    <div *ngIf="textoBuscar" class="resultados-busqueda-directa">
+      <div *ngFor="let herramienta of inventarioFiltrado" class="grupo-busqueda">
         
-        <!-- Título alineado con las filas de abajo -->
-        <div class="encabezado-grupo">
-          <ion-icon name="construct-outline"></ion-icon>
-          <h2 class="nombre-principal">{{ herramienta.nombre }}</h2>
-        </div>
+        <h2 class="titulo-herramienta-busqueda">{{ herramienta.nombre }}</h2>
 
-        <!-- Desglose por tipos -->
-        <div class="cuerpo-grupo">
-          <div class="fila-tipo" *ngFor="let detalle of herramienta.detallesPorTipo">
-            
+        <div *ngFor="let detalle of herramienta.detallesPorTipo" class="bloque-tipo-busqueda">
+          
+          <div class="separador-tipo" *ngIf="detalle.tipo !== 'Normal'">
+            {{ detalle.tipo }}
+          </div>
+
+          <div class="fila-unidad" *ngFor="let unidad of detalle.items">
             <div class="info-izquierda">
-              <span class="etiqueta-tipo">Tipo:</span>
-              <!-- Espacio controlado antes del valor (Corta, Larga, etc) -->
-              <span class="valor-dinamico">{{ detalle.tipo }}</span>
+              <div class="contenedor-icono-herramienta">
+                <ion-icon name="construct-outline"></ion-icon>
+              </div>
+              <span class="codigo-unidad">{{ unidad.num_herramienta }}</span>
             </div>
-            
             <div class="info-derecha">
-              <ion-badge class="badge-stock-minimal">
-                En stock {{ detalle.disponibles }}
-              </ion-badge>
-              
-              <!-- Aviso visual si no hay stock -->
-              <ion-text color="danger" *ngIf="detalle.disponibles === 0">
-                <small class="texto-agotado">Agotado</small>
-              </ion-text>
+              <div class="estado-contenedor">
+                <span class="punto-estado" [ngClass]="unidad.estado.toLowerCase()"></span>
+                <span class="texto-estado">{{ unidad.estado }}</span>
+              </div>
             </div>
-
           </div>
         </div>
-        
+
       </div>
     </div>
+
+    <ion-accordion-group *ngIf="!textoBuscar" class="lista-minimalista">
+      <ion-accordion [value]="herramienta.nombre" *ngFor="let herramienta of herramientasAgrupadas" class="tarjeta-herramienta">
+        
+        <ion-item slot="header" class="header-acordeon" lines="none">
+          <ion-avatar slot="start" class="avatar-herramienta">
+            <ion-img [src]="herramienta.imagenAI || 'assets/ai_icon.png'"></ion-img>
+          </ion-avatar>
+          <ion-label>
+            <h2 class="nombre-principal">{{ herramienta.nombre }}</h2>
+          </ion-label>
+          <div slot="end" class="controles-derecha">
+            <div class="indicador-stock-moderno">
+              <span class="stock-label">DISPONIBLES</span>
+              <span class="stock-numero">{{ herramienta.totalDisponibles }}</span>
+            </div>
+          </div>
+        </ion-item>
+
+        <div slot="content" class="contenedor-desplegable">
+          <div class="desglose-unidades">
+            <div *ngFor="let detalle of herramienta.detallesPorTipo" class="bloque-tipo">
+              <div class="separador-tipo" *ngIf="detalle.tipo !== 'Normal'">
+                TIPO: {{ detalle.tipo }}
+              </div>
+
+              <div class="fila-unidad" *ngFor="let unidad of detalle.items">
+                <div class="info-izquierda">
+                  <div class="contenedor-icono-herramienta">
+                    <ion-icon name="construct-outline"></ion-icon>
+                  </div>
+                  <span class="codigo-unidad">{{ unidad.num_herramienta }}</span>
+                </div>
+                <div class="info-derecha">
+                  <div class="estado-contenedor">
+                    <span class="punto-estado" [ngClass]="unidad.estado.toLowerCase()"></span>
+                    <span class="texto-estado">{{ unidad.estado }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ion-accordion>
+    </ion-accordion-group>
 
   </div>
 </ion-content>
