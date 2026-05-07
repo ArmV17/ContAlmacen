@@ -199,144 +199,150 @@
       </ion-list>
     </div>
 
-<div *ngIf="segmentoActual === 'herramientas'">
-  <ion-card class="tarjeta-formulario">
-    <ion-card-header>
-      <ion-card-title class="titulo-seccion">
-        <ion-icon [name]="editandoHerramienta ? 'information-circle-outline' : 'build-outline'"></ion-icon> 
-        {{ editandoHerramienta ? 'Información de la Herramienta' : 'Nueva Herramienta' }}
-      </ion-card-title>
-    </ion-card-header>
+    <div *ngIf="segmentoActual === 'herramientas'">
+      <ion-card class="tarjeta-formulario">
+        <ion-card-header>
+          <ion-card-title class="titulo-seccion">
+            <ion-icon [name]="editandoHerramienta ? 'information-circle-outline' : 'build-outline'"></ion-icon> 
+            {{ editandoHerramienta ? 'Información de la Herramienta' : 'Nueva Herramienta' }}
+          </ion-card-title>
+        </ion-card-header>
 
-    <ion-card-content>
-      
-      <div *ngIf="editandoHerramienta">
-        <ion-list lines="none" class="lista-detalles">
-          <ion-item class="item-info">
-            <ion-label>
-              <p>Nombre</p>
-              <h2>{{ herramientaNueva.nombre }}</h2>
-            </ion-label>
-          </ion-item>
-          <ion-item class="item-info">
-            <ion-label>
-              <p>Código (ID)</p>
-              <h2>{{ herramientaNueva.codigo }}</h2>
-            </ion-label>
-          </ion-item>
-          <ion-item class="item-info">
-            <ion-label>
-              <p>Categoría / Tipo</p>
-              <h2>{{ herramientaNueva.tipo || 'Sin tipo asignado' }}</h2>
-            </ion-label>
-          </ion-item>
-        </ion-list>
+        <ion-card-content>
+          
+          <div *ngIf="editandoHerramienta">
+            <ion-list lines="none" class="lista-detalles">
+              <ion-item class="item-info">
+                <ion-label>
+                  <p>Nombre</p>
+                  <h2>{{ herramientaNueva.nombre }}</h2>
+                </ion-label>
+              </ion-item>
+              <ion-item class="item-info">
+                <ion-label>
+                  <p>Código (ID)</p>
+                  <h2>{{ herramientaNueva.codigo }}</h2>
+                </ion-label>
+              </ion-item>
+              <ion-item class="item-info">
+                <ion-label>
+                  <p>Categoría / Tipo</p>
+                  <h2>{{ herramientaNueva.tipo || 'Sin tipo asignado' }}</h2>
+                </ion-label>
+              </ion-item>
+            </ion-list>
 
-        <ion-button expand="block" fill="outline" color="primary" class="ion-margin-top" (click)="cancelarEdicionHerramienta()">
-          <ion-icon name="close-circle-outline" slot="start"></ion-icon>
-          Cerrar Información
-        </ion-button>
-      </div>
+            <ion-button expand="block" fill="outline" color="primary" class="ion-margin-top" (click)="cancelarEdicionHerramienta()">
+              <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+              Cerrar Información
+            </ion-button>
+          </div>
 
-      <div *ngIf="!editandoHerramienta">
-        
-        <ion-item class="input-limpio" lines="none">
-          <ion-input 
-            label="Nombre de la Herramienta" 
-            labelPlacement="stacked" 
-            [(ngModel)]="herramientaNueva.nombre" 
-            (ionInput)="actualizarSugerenciasNombre(); generarCodigoAutomatico(); actualizarSugerenciasTipo()"
-            placeholder="Ej: Pala">
-          </ion-input>
+          <div *ngIf="!editandoHerramienta">
+            
+            <ion-item class="input-limpio" lines="none">
+              <ion-input 
+                label="Nombre de la Herramienta" 
+                labelPlacement="stacked" 
+                [(ngModel)]="herramientaNueva.nombre" 
+                (ionInput)="actualizarSugerenciasNombre(); generarCodigoAutomatico(); actualizarSugerenciasTipo()"
+                placeholder="Ej: Pala">
+              </ion-input>
+            </ion-item>
+
+            <div class="ion-padding-start ion-padding-bottom" *ngIf="nombresFiltrados.length > 0">
+              <p style="font-size: 0.8rem; color: var(--ion-color-medium); margin-bottom: 5px;">Sugerencias:</p>
+              <ion-chip *ngFor="let n of nombresFiltrados" (click)="seleccionarSugerenciaNombre(n)" color="primary" outline="true">
+                <ion-label>{{ n }}</ion-label>
+                <ion-icon name="add-circle-outline"></ion-icon>
+              </ion-chip>
+            </div>
+
+            <ion-item class="input-limpio" lines="none">
+              <ion-input 
+                label="Cantidad a registrar" 
+                labelPlacement="stacked" 
+                type="number"
+                min="1"
+                [(ngModel)]="herramientaNueva.cantidad" 
+                placeholder="¿Cuántas piezas?">
+              </ion-input>
+            </ion-item>
+
+            <ion-item class="input-limpio" lines="none">
+              <ion-input 
+                label="Código Inicial Generado" 
+                labelPlacement="stacked" 
+                [(ngModel)]="herramientaNueva.codigo" 
+                [readonly]="true" 
+                placeholder="Automático">
+              </ion-input>
+              <ion-note slot="helper" *ngIf="herramientaNueva.cantidad > 1">
+                Se crearán {{herramientaNueva.cantidad}} registros consecutivos.
+              </ion-note>
+            </ion-item>
+
+            <ion-item class="input-limpio ion-margin-top" lines="none">
+              <ion-select 
+                *ngIf="tiposFiltrados.length > 0 && !forzarInputTipo"
+                label="Tipo (Sugerido)" 
+                labelPlacement="stacked" 
+                [(ngModel)]="herramientaNueva.tipo" 
+                interface="popover"
+                (ionChange)="checarNuevoTipo($event)"
+                placeholder="Selecciona">
+                <ion-select-option *ngFor="let tipo of tiposFiltrados" [value]="tipo">{{ tipo }}</ion-select-option>
+                <ion-select-option value="NUEVO_TIPO">-- Otro / Nuevo --</ion-select-option>
+              </ion-select>
+
+              <ion-input 
+                *ngIf="tiposFiltrados.length === 0 || forzarInputTipo"
+                label="Escribe el tipo" 
+                labelPlacement="stacked" 
+                [(ngModel)]="herramientaNueva.tipo" 
+                placeholder="Ej: Reforzada, Eléctrica, etc.">
+                
+                <ion-button slot="end" fill="clear" *ngIf="tiposFiltrados.length > 0" (click)="forzarInputTipo = false">
+                  <ion-icon name="list-outline" slot="icon-only"></ion-icon>
+                </ion-button>
+              </ion-input>
+            </ion-item>
+
+            <ion-button expand="block" class="boton-guardar ion-margin-top" (click)="guardarHerramienta()">
+              <ion-icon name="save-outline" slot="start"></ion-icon> 
+              Guardar Registros
+            </ion-button>
+          </div>
+
+        </ion-card-content>
+      </ion-card>
+
+      <h2 class="subtitulo-gestion">Inventario</h2>
+      <ion-list class="lista-gestion">
+        <ion-item *ngFor="let h of listaFiltrada" lines="none" class="item-gestion">
+          <ion-label>
+            <h3>{{ h.nombre_herramienta }}</h3>
+            <p>{{ h.tipo_herramienta || 'Sin tipo' }} | {{ h.num_herramienta }}</p>
+          </ion-label>
+          <ion-buttons slot="end">
+            <ion-button (click)="descargarBarraDirecto(h)" color="primary">
+              <ion-icon name="barcode-outline"></ion-icon>
+            </ion-button>
+            <ion-button (click)="descargarQRDirecto(h)" color="primary">
+              <ion-icon name="qr-code-outline"></ion-icon>
+            </ion-button>
+            
+            <ion-button (click)="prepararEdicionHerramienta(h)" color="primary">
+              <ion-icon name="information-circle-outline"></ion-icon>
+            </ion-button>
+            
+            <ion-button (click)="confirmarEliminar('inventario', h.num_herramienta, h.nombre_herramienta)" color="danger">
+              <ion-icon name="trash-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
         </ion-item>
-
-        <div class="ion-padding-start ion-padding-bottom" *ngIf="nombresFiltrados.length > 0">
-          <p style="font-size: 0.8rem; color: var(--ion-color-medium); margin-bottom: 5px;">Sugerencias:</p>
-          <ion-chip *ngFor="let n of nombresFiltrados" (click)="seleccionarSugerenciaNombre(n)" color="primary" outline="true">
-            <ion-label>{{ n }}</ion-label>
-            <ion-icon name="add-circle-outline"></ion-icon>
-          </ion-chip>
-        </div>
-
-        <ion-item class="input-limpio" lines="none">
-          <ion-input 
-            label="Cantidad a registrar" 
-            labelPlacement="stacked" 
-            type="number"
-            min="1"
-            [(ngModel)]="herramientaNueva.cantidad" 
-            placeholder="¿Cuántas piezas?">
-          </ion-input>
-        </ion-item>
-
-        <ion-item class="input-limpio" lines="none">
-          <ion-input 
-            label="Código Inicial Generado" 
-            labelPlacement="stacked" 
-            [(ngModel)]="herramientaNueva.codigo" 
-            [readonly]="true" 
-            placeholder="Automático">
-          </ion-input>
-          <ion-note slot="helper" *ngIf="herramientaNueva.cantidad > 1">
-            Se crearán {{herramientaNueva.cantidad}} registros consecutivos.
-          </ion-note>
-        </ion-item>
-
-        <ion-item class="input-limpio ion-margin-top" lines="none">
-          <ion-input 
-            *ngIf="tiposFiltrados.length === 0"
-            label="Tipo (Opcional)" 
-            labelPlacement="stacked" 
-            [(ngModel)]="herramientaNueva.tipo" 
-            placeholder="Escribe el tipo">
-          </ion-input>
-          <ion-select 
-            *ngIf="tiposFiltrados.length > 0"
-            label="Tipo (Sugerido)" 
-            labelPlacement="stacked" 
-            [(ngModel)]="herramientaNueva.tipo" 
-            interface="popover"
-            placeholder="Selecciona">
-            <ion-select-option *ngFor="let tipo of tiposFiltrados" [value]="tipo">{{ tipo }}</ion-select-option>
-            <ion-select-option value="">-- Otro / Nuevo --</ion-select-option>
-          </ion-select>
-        </ion-item>
-
-        <ion-button expand="block" class="boton-guardar ion-margin-top" (click)="guardarHerramienta()">
-          <ion-icon name="save-outline" slot="start"></ion-icon> 
-          Guardar Registros
-        </ion-button>
-      </div>
-
-    </ion-card-content>
-  </ion-card>
-
-  <h2 class="subtitulo-gestion">Inventario</h2>
-  <ion-list class="lista-gestion">
-    <ion-item *ngFor="let h of listaFiltrada" lines="none" class="item-gestion">
-      <ion-label>
-        <h3>{{ h.nombre_herramienta }}</h3>
-        <p>{{ h.tipo_herramienta || 'Sin tipo' }} | {{ h.num_herramienta }}</p>
-      </ion-label>
-      <ion-buttons slot="end">
-        <ion-button (click)="descargarBarraDirecto(h)" color="primary">
-          <ion-icon name="barcode-outline"></ion-icon>
-        </ion-button>
-        <ion-button (click)="descargarQRDirecto(h)" color="primary">
-          <ion-icon name="qr-code-outline"></ion-icon>
-        </ion-button>
-        
-        <ion-button (click)="prepararEdicionHerramienta(h)" color="primary">
-          <ion-icon name="information-circle-outline"></ion-icon>
-        </ion-button>
-        
-        <ion-button (click)="confirmarEliminar('inventario', h.num_herramienta, h.nombre_herramienta)" color="danger">
-          <ion-icon name="trash-outline"></ion-icon>
-        </ion-button>
-      </ion-buttons>
-    </ion-item>
-  </ion-list>
-</div>
+      </ion-list>
+    </div>
 
     <div *ngIf="segmentoActual === 'empleados'">
       <ion-card class="tarjeta-formulario">

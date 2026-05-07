@@ -208,10 +208,20 @@ export class AdministracionPage {
     window.scrollTo(0, 0);
   }
 
+  forzarInputTipo: boolean = false;
+
+  checarNuevoTipo(event: any) {
+    if (event.detail.value === 'NUEVO_TIPO') {
+      this.herramientaNueva.tipo = ''; // Limpiamos para que el usuario escriba
+      this.forzarInputTipo = true;     // Activamos el modo "Escribir"
+    }
+  }
+
   cancelarEdicionHerramienta() {
     this.herramientaNueva = { codigo: '', nombre: '', tipo: '', cantidad: 1 };
     this.editandoHerramienta = false;
     this.nombresFiltrados = [];
+    this.forzarInputTipo = false;
   }
 
   // --- GESTIÓN DE ALUMNOS ---
