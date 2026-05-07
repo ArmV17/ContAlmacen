@@ -78,7 +78,7 @@ export class AlmacenService {
         matricula: alumno.matricula,
         nombre: this.encriptarTexto(alumno.nombre),
         carrera: alumno.carrera,
-        correo: alumno.correo // CAMBIO: Ahora se guarda el correo
+        correo: alumno.correo 
       });
       return { exito: true };
     } catch (e: any) {
@@ -91,13 +91,12 @@ export class AlmacenService {
     return snapshot.docs.map(d => {
       const data: any = d.data();
       try { data.nombre = this.desencriptarTexto(data.nombre); } catch (e) {}
-      // Mantenemos compatibilidad con campos anteriores si fuera necesario
       return { ...data, correo: data.correo || data.nivel || data.grado || 'Sin correo' };
     });
   }
 
   // ==========================================
-  // INVENTARIO
+  // INVENTARIO e ILUSTRACIONES
   // ==========================================
   async obtenerInventario() {
     const colRef = collection(this.firestore, 'inventario');
@@ -176,7 +175,7 @@ export class AlmacenService {
       await setDoc(doc(this.firestore, 'maestros', maestro.numMaestro), {
         num_maestro: maestro.numMaestro,
         nombre: this.encriptarTexto(maestro.nombre),
-        correo: maestro.correo, // AGREGADO: Nuevo campo de correo para maestros
+        correo: maestro.correo,
         materias: maestro.materias
       });
       return { exito: true };

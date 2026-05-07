@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-menu-button color="light"></ion-menu-button>
     </ion-buttons>
-    <ion-title>Inventario UTC</ion-title>
+    <ion-title>Inventario</ion-title>
   </ion-toolbar>
   
   <ion-toolbar class="toolbar-elegante barra-busqueda-container">
@@ -36,6 +36,7 @@
               </div>
               <span class="codigo-unidad">{{ unidad.num_herramienta }}</span>
             </div>
+            
             <div class="info-derecha">
               <div class="estado-contenedor">
                 <span class="punto-estado" [ngClass]="unidad.estado.toLowerCase()"></span>
@@ -44,7 +45,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
 
@@ -52,12 +52,14 @@
       <ion-accordion [value]="herramienta.nombre" *ngFor="let herramienta of herramientasAgrupadas" class="tarjeta-herramienta">
         
         <ion-item slot="header" class="header-acordeon" lines="none">
-          <ion-avatar slot="start" class="avatar-herramienta">
-            <ion-img [src]="herramienta.imagenAI || 'assets/ai_icon.png'"></ion-img>
-          </ion-avatar>
+          <div slot="start" class="contenedor-icono-principal">
+            <ion-icon name="hammer-outline"></ion-icon>
+          </div>
+          
           <ion-label>
             <h2 class="nombre-principal">{{ herramienta.nombre }}</h2>
           </ion-label>
+
           <div slot="end" class="controles-derecha">
             <div class="indicador-stock-moderno">
               <span class="stock-label">DISPONIBLES</span>
@@ -68,6 +70,7 @@
 
         <div slot="content" class="contenedor-desplegable">
           <div class="desglose-unidades">
+            
             <div *ngFor="let detalle of herramienta.detallesPorTipo" class="bloque-tipo">
               <div class="separador-tipo" *ngIf="detalle.tipo !== 'Normal'">
                 TIPO: {{ detalle.tipo }}
@@ -80,6 +83,7 @@
                   </div>
                   <span class="codigo-unidad">{{ unidad.num_herramienta }}</span>
                 </div>
+                
                 <div class="info-derecha">
                   <div class="estado-contenedor">
                     <span class="punto-estado" [ngClass]="unidad.estado.toLowerCase()"></span>
@@ -88,6 +92,7 @@
                 </div>
               </div>
             </div>
+
           </div>
         </div>
       </ion-accordion>

@@ -251,3 +251,33 @@
   ion-icon { font-size: 64px; opacity: 0.4; margin-bottom: 15px; }
   p { font-size: 1.1rem; font-weight: 600; }
 }
+
+.controles-derecha {
+  display: flex;
+  align-items: center;
+  gap: 10px; // Espacio entre el botón y el stock
+
+  .btn-subir {
+    --padding-start: 4px;
+    --padding-end: 4px;
+    margin: 0;
+    height: 32px;
+  }
+}
+
+.contenedor-icono-principal {
+  width: 45px;
+  height: 45px;
+  background: var(--ion-color-primary-contrast);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  border: 2px solid var(--ion-color-primary);
+  
+  ion-icon {
+    font-size: 24px;
+    color: var(--ion-color-primary);
+  }
+}

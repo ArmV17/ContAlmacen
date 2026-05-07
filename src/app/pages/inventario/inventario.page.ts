@@ -14,7 +14,8 @@ import {
   chevronDownCircle,
   chevronUpCircle,
   cloudUploadOutline,
-  imageOutline 
+  imageOutline ,
+  cameraOutline
 } from 'ionicons/icons';
 import { AlmacenService } from '../../services/almacen.service';
 
@@ -43,7 +44,8 @@ export class InventarioPage {
       chevronDownCircle,
       chevronUpCircle,
       cloudUploadOutline,
-      imageOutline 
+      imageOutline ,
+      cameraOutline
     });
   }
 
@@ -66,8 +68,7 @@ export class InventarioPage {
         mapa.set(nombre, {
           nombre: nombre,
           totalDisponibles: 0,
-          imagenAI: 'assets/ai_icon.png',
-          mostrarDetalles: false,
+          imagenAI: h.url_imagen || 'assets/ai_icon.png', // Si hay URL en la DB la usa, si no, el icono
           detallesPorTipo: [] 
         });
       }
@@ -91,24 +92,6 @@ export class InventarioPage {
       }
     });
     this.herramientasAgrupadas = Array.from(mapa.values());
-  }
-
-  async seleccionarImagen(herramienta: any) {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-
-    input.onchange = (event: any) => {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (e: any) => {
-          herramienta.imagenAI = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-    input.click();
   }
 
   // --- LÓGICA DE FILTRADO OPTIMIZADA ---
