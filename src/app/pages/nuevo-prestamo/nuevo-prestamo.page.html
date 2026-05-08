@@ -1,57 +1,134 @@
 <ion-header class="ion-no-border">
   <ion-toolbar class="toolbar-elegante">
     <ion-buttons slot="start">
-      <ion-menu-button color="light"></ion-menu-button>
+      <ion-back-button defaultHref="/tabs/prestamos" color="light"></ion-back-button>
     </ion-buttons>
-    <ion-title>Nuevo Préstamo</ion-title>
+    <ion-title>Registrar Préstamo</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="fondo-claro ion-padding">
   <div class="contenedor-maximo">
     
-    <!-- Tarjeta del Alumno -->
     <ion-card class="tarjeta-formulario">
       <ion-card-header>
         <ion-card-title class="titulo-seccion">
-          <ion-icon name="person-outline" class="icono-seccion"></ion-icon>
-          Datos del Alumno
+          <ion-icon name="person-outline"></ion-icon> 
+          Identificación del Alumno
         </ion-card-title>
       </ion-card-header>
-      
+
       <ion-card-content>
         <ion-item class="input-limpio" lines="none">
-          <ion-input label="Matrícula" labelPlacement="stacked" placeholder="Ej. 17001122" [(ngModel)]="prestamo.matricula"></ion-input>
+          <ion-label position="stacked">Ingresa Matrícula</ion-label>
+          <ion-input 
+            [(ngModel)]="prestamo.matricula" 
+            (ionInput)="verificarAlumno()"
+            placeholder="Ej: 22040111">
+          </ion-input>
+          <ion-icon *ngIf="alumnoEncontrado" name="checkmark-circle" color="success" slot="end"></ion-icon>
         </ion-item>
+
+        <div *ngIf="alumnoEncontrado" class="banner-alumno animated fadeIn">
+          <p><strong>Alumno:</strong> {{ alumnoEncontrado.nombre }}</p>
+          <p [style.color]="cantidadPrestamos >= 5 ? '#dc2626' : '#166534'">
+            <strong>Préstamos activos:</strong> {{ cantidadPrestamos }} / 5
+          </p>
+          <ion-note *ngIf="cantidadPrestamos >= 5" color="danger" style="font-weight: bold;">
+            LÍMITE ALCANZADO: No se pueden realizar más préstamos.
+          </ion-note>
+        </div>
+
+        <div *ngIf="alumnoEncontrado && cantidadPrestamos < 5" class="animated fadeIn">
+          <ion-item class="input-limpio ion-margin-top" lines="none">
+            <ion-select label="Profesor Autoriza" labelPlacement="stacked" 
+                        [(ngModel)]="prestamo.profesor" 
+                        (ionChange)="onProfesorChange()"
+                        interface="popover"
+                        placeholder="Selecciona profesor">
+              <ion-select-option *ngFor="let p of listaMaestros" [value]="p.nombre">
+                {{ p.nombre }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item class="input-limpio" lines="none" *ngIf="prestamo.profesor">
+            <ion-select label="Materia / Taller" labelPlacement="stacked" 
+                        [(ngModel)]="prestamo.materia" 
+                        interface="popover"
+                        placeholder="Materia de este profesor">
+              <ion-select-option *ngFor="let m of materiasFiltradas" [value]="m">
+                {{ m }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+        </div>
       </ion-card-content>
     </ion-card>
 
-    <!-- Tarjeta de la Herramienta -->
-    <ion-card class="tarjeta-formulario">
+    <ion-card class="tarjeta-formulario" *ngIf="alumnoEncontrado && cantidadPrestamos < 5">
       <ion-card-header>
         <ion-card-title class="titulo-seccion">
-          <ion-icon name="build-outline" class="icono-seccion"></ion-icon>
+          <ion-icon name="build-outline"></ion-icon> 
           Herramienta
         </ion-card-title>
       </ion-card-header>
 
       <ion-card-content>
         <ion-item class="input-limpio" lines="none">
-          <ion-input label="Código / No. de Serie" labelPlacement="stacked" placeholder="Ej. MULT-04" [(ngModel)]="prestamo.herramientaId"></ion-input>
-          <ion-button fill="clear" slot="end" class="boton-escaner">
-            <ion-icon slot="icon-only" name="barcode-outline"></ion-icon>
+          <ion-label position="stacked">Escanear o Escribir Código</ion-label>
+          <ion-input 
+            [(ngModel)]="codigoBusqueda" 
+            (ionInput)="buscarHerramienta()" 
+            placeholder="Ej: ARA-01">
+          </ion-input>
+          <ion-button slot="end" fill="clear" (click)="escanearCodigo()">
+            <ion-icon name="qr-code-outline" slot="icon-only"></ion-icon>
           </ion-button>
         </ion-item>
+
+        <div *ngIf="herramientaEncontrada" class="resultado-herramienta animated fadeIn">
+          <ion-item lines="none" class="item-resultado">
+            <ion-icon 
+              [name]="(herramientaEncontrada.prestada || herramientaEncontrada.estado === 'Mantenimiento') ? 'alert-circle' : 'checkmark-circle'" 
+              [color]="(herramientaEncontrada.prestada || herramientaEncontrada.estado === 'Mantenimiento') ? 'danger' : 'success'" 
+              slot="start">
+            </ion-icon>
+            
+            <ion-label>
+              <h2 class="nombre-resultado">{{ herramientaEncontrada.nombre_herramienta }}</h2>
+              <p class="detalle-resultado">
+                ID: {{ herramientaEncontrada.num_herramienta }} | {{ herramientaEncontrada.tipo_herramienta || 'Normal' }}
+              </p>
+              
+              <ion-note *ngIf="herramientaEncontrada.prestada" color="danger" class="nota-mantenimiento">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+                ESTA HERRAMIENTA YA SE ENCUENTRA PRESTADA
+              </ion-note>
+
+              <ion-note *ngIf="herramientaEncontrada.estado === 'Mantenimiento'" color="warning" class="nota-mantenimiento">
+                <ion-icon name="hammer-outline"></ion-icon>
+                HERRAMIENTA EN MANTENIMIENTO
+              </ion-note>
+            </ion-label>
+          </ion-item>
+        </div>
       </ion-card-content>
     </ion-card>
 
-    <!-- Botón Principal -->
-    <div class="contenedor-boton">
-      <ion-button expand="block" class="boton-guardar" (click)="guardarPrestamo()">
-        <ion-icon slot="start" name="save-outline"></ion-icon>
-        Autorizar Entrega
-      </ion-button>
-    </div>
+    <ion-button 
+      expand="block" 
+      class="boton-guardar ion-margin-top" 
+      (click)="finalizarPrestamo()"
+      [disabled]="!alumnoEncontrado || 
+                 cantidadPrestamos >= 5 || 
+                 !herramientaEncontrada || 
+                 herramientaEncontrada.prestada || 
+                 herramientaEncontrada.estado === 'Mantenimiento' || 
+                 !prestamo.profesor || !prestamo.materia">
+      <ion-icon name="send-outline" slot="start"></ion-icon>
+      Confirmar Préstamo
+    </ion-button>
 
   </div>
 </ion-content>

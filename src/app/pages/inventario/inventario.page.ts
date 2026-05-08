@@ -163,12 +163,12 @@ export class InventarioPage {
     // --- CONFIGURACIÓN DE ENCABEZADO ---
     doc.setFontSize(18);
     doc.setTextColor(40);
-    doc.text('REPORTE DE INVENTARIO - UTC', 14, 20);
+    doc.text('REPORTE DE INVENTARIO', 14, 20);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Fecha de emisión: ${fecha} | ${hora}`, 14, 28);
-    doc.text('Universidad Tecnológica de Coahuila', 14, 33);
+    doc.text('Universidad Autónoma Agraria Antonio Narro', 14, 33);
 
     const cuerpoTabla: any[] = [];
 

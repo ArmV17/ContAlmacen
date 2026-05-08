@@ -131,21 +131,40 @@ export class AlmacenService {
   // ==========================================
   // PRÉSTAMOS Y DEVOLUCIONES
   // ==========================================
-  async registrarNuevoPrestamo(matricula: string, numHerramienta: string, numEmpleado: string) {
+  async registrarNuevoPrestamo(
+    matricula: string, 
+    herramientaId: string, 
+    empleadoId: string, 
+    profesor?: string, 
+    materia?: string
+  ) {
     try {
-      await addDoc(collection(this.firestore, 'prestamos'), {
-        matricula_alumno: matricula,
-        num_herramienta: numHerramienta,
-        num_empleado: numEmpleado,
-        estado: 'Activo',
-        fecha_salida: new Date().toISOString()
+      // 1. Referencia al documento de la herramienta para marcarla como PRESTADA
+      const herramientaRef = doc(this.firestore, 'inventario', herramientaId);
+      
+      // 2. Guardar el registro del préstamo en una nueva colección
+      const prestamoRef = collection(this.firestore, 'prestamos');
+      await addDoc(prestamoRef, {
+        matricula,
+        herramientaId,
+        empleadoId,
+        profesor: profesor || 'Sin asignar',
+        materia: materia || 'Sin asignar',
+        fecha: new Date(),
+        estado: 'Activo'
       });
 
-      const toolRef = doc(this.firestore, 'inventario', numHerramienta);
-      await updateDoc(toolRef, { estado: 'Prestado' });
-
+      // 3. Actualizar el estado de la herramienta en el inventario
+      // (Opcional: puedes añadir un campo 'prestada: true')
+      await updateDoc(herramientaRef, {
+        prestada: true,               // Para validaciones lógicas
+        estado: 'Prestado',           // PARA QUE EL PUNTITO CAMBIE A ROJO
+        usuario_prestamo: matricula   // Para saber quién la tiene
+      });
+      
       return { exito: true };
     } catch (e: any) {
+      console.error("Error en el servicio:", e);
       return { exito: false, mensaje: e.message };
     }
   }
@@ -167,9 +186,71 @@ export class AlmacenService {
     }
   }
 
+  async contarPrestamosActivos(matricula: string): Promise<number> {
+    try {
+      const prestamosRef = collection(this.firestore, 'prestamos');
+      // Filtramos por matrícula y que el estado sea 'Activo'
+      const q = query(
+        prestamosRef, 
+        where('matricula', '==', matricula), 
+        where('estado', '==', 'Activo')
+      );
+      const snapshot = await getDocs(q);
+      return snapshot.size; // Retorna la cantidad de documentos encontrados
+    } catch (error) {
+      console.error("Error al contar préstamos:", error);
+      return 0;
+    }
+  }
+
+ // ==========================================
+// ALUMNOS
+// ==========================================
+  async buscarAlumnoPorMatricula(matricula: string) {
+    try {
+      const q = query(collection(this.firestore, 'alumnos'), where('matricula', '==', matricula));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        const data: any = querySnapshot.docs[0].data();
+        // DESENCRIPTAMOS EL NOMBRE AQUÍ PARA QUE LA VISTA LO RECONOZCA
+        try {
+          if (data.nombre) {
+            data.nombre = this.desencriptarTexto(data.nombre);
+          }
+        } catch (e) {
+          console.error("Error al desencriptar nombre del alumno");
+        }
+        return data; 
+      }
+      return null;
+    } catch (error) {
+      console.error("Error buscando alumno:", error);
+      return null;
+    }
+  }
+
   // ==========================================
   // MAESTROS Y EMPLEADOS
   // ==========================================
+  async obtenerMaestros() {
+    try {
+      const snapshot = await getDocs(collection(this.firestore, 'maestros'));
+      return snapshot.docs.map(d => {
+        const data: any = d.data();
+        try { 
+          if (data.nombre) {
+            data.nombre = this.desencriptarTexto(data.nombre); 
+          }
+        } catch (e) {}
+        return { id: d.id, ...data };
+      });
+    } catch (error) {
+      console.error("Error al obtener maestros:", error);
+      return [];
+    }
+  }
+
   async registrarMaestro(maestro: any) {
     try {
       await setDoc(doc(this.firestore, 'maestros', maestro.numMaestro), {
@@ -182,15 +263,6 @@ export class AlmacenService {
     } catch (e: any) {
       return { exito: false, mensaje: e.message };
     }
-  }
-
-  async obtenerMaestros() {
-    const snapshot = await getDocs(collection(this.firestore, 'maestros'));
-    return snapshot.docs.map(d => {
-      const data: any = d.data();
-      try { data.nombre = this.desencriptarTexto(data.nombre); } catch (e) {}
-      return { id: d.id, ...data };
-    });
   }
 
   async registrarEmpleado(empleado: any) {

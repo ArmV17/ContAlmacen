@@ -1,4 +1,4 @@
-/* Mantenemos los estilos generales del proyecto */
+/* --- Estilos Base --- */
 .toolbar-elegante {
   --background: #1e293b;
   --color: #ffffff;
@@ -8,13 +8,12 @@
   --background: #f4f5f8;
 }
 
-/* En el formulario reducimos un poco el ancho en monitores grandes */
 .contenedor-maximo {
   max-width: 700px;
   margin: 0 auto;
 }
 
-/* Tarjetas para agrupar información */
+/* --- Tarjetas de Formulario --- */
 .tarjeta-formulario {
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   border-radius: 16px;
@@ -28,46 +27,139 @@
     font-weight: 600;
     display: flex;
     align-items: center;
+    gap: 10px;
 
-    .icono-seccion {
-      margin-right: 10px;
-      color: #3498db;
+    ion-icon {
+      color: #3b82f6; 
+      font-size: 1.4rem;
     }
   }
 }
 
-/* Estilo moderno para los inputs */
-.input-limpio {
-  --background: #f8fafc; /* Gris muy clarito para el área de texto */
-  --border-radius: 10px;
-  --padding-start: 15px;
-  margin-bottom: 15px;
-  border: 1px solid #e2e8f0;
+/* --- Banner de Alumno Encontrado --- */
+.banner-alumno {
+  background: #f0fdf4; // Verde éxito muy claro
+  border-left: 4px solid #22c55e;
+  padding: 15px;
+  border-radius: 12px;
+  margin: 15px 0;
   
-  ion-input {
-    font-size: 1rem;
-    --color: #2c3e50;
-    --placeholder-color: #94a3b8;
+  p {
+    margin: 4px 0;
+    color: #166534;
+    font-size: 0.95rem;
+    
+    strong {
+      color: #14532d;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
   }
 }
 
-/* Detalles de botones */
-.boton-escaner {
-  --color: #3498db;
-  margin-top: 15px;
-}
-
-.contenedor-boton {
-  padding: 10px 5px;
-}
-
-.boton-guardar {
-  --background: #27ae60; /* Verde éxito para confirmar la acción */
-  --background-hover: #219653;
+/* --- Inputs y Selects Modernos --- */
+.input-limpio {
+  --background: #f8fafc; 
   --border-radius: 12px;
-  --box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+  --padding-start: 15px;
+  margin-bottom: 15px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+
+  &:focus-within {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+  }
+  
+  ion-input, ion-select {
+    font-size: 1rem;
+    --color: #2c3e50;
+    --placeholder-color: #94a3b8;
+    --placeholder-opacity: 0.8;
+    font-weight: 500;
+  }
+
+  ion-select {
+    width: 100%;
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  &::part(native) {
+    padding: 10px 0;
+  }
+}
+
+/* --- Resultado de Búsqueda Herramienta --- */
+.resultado-herramienta {
+  margin-top: 15px;
+  padding: 8px;
+  background: #f0f7ff; 
+  border-radius: 12px;
+  border: 1px solid #3b82f6;
+
+  .item-resultado {
+    --background: transparent;
+    --padding-start: 0;
+
+    .nombre-resultado { 
+      font-weight: 800; 
+      color: #1e293b; 
+      font-size: 1.1rem;
+    }
+
+    .detalle-resultado { 
+      font-weight: 600; 
+      color: #64748b;
+    }
+
+    .nota-mantenimiento {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-weight: 800;
+      font-size: 0.75rem;
+      color: #dc2626;
+      background: #fff1f2;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #fecdd3;
+
+      ion-icon {
+        font-size: 1.1rem;
+      }
+    }
+  }
+}
+
+/* --- Botón de Acción --- */
+.boton-guardar {
+  --background: #22c55e; 
+  --background-activated: #16a34a;
+  --border-radius: 14px;
+  --box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
   height: 55px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 1.1rem;
   letter-spacing: 0.5px;
+  margin-top: 25px;
+
+  &[disabled] {
+    opacity: 0.4;
+    --box-shadow: none;
+  }
 }
+
+/* --- Animaciones --- */
+.animated {
+  animation-duration: 0.4s;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fadeIn { animation-name: fadeIn; }
