@@ -4,13 +4,18 @@
       <ion-menu-button color="light"></ion-menu-button>
     </ion-buttons>
     <ion-title>Inventario</ion-title>
+    
+    <ion-buttons slot="end">
+      <ion-button (click)="generarPDFInventario()" title="Descargar Reporte PDF">
+        <ion-icon name="download-outline" slot="icon-only" color="light"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
   
   <ion-toolbar class="toolbar-elegante barra-busqueda-container">
     <ion-searchbar 
       placeholder="Buscar por nombre, estado o tipo..."
-      [(ngModel)]="textoBuscar"
-      (ionInput)="buscarHerramienta($event)">
+      [(ngModel)]="textoBuscar">
     </ion-searchbar>
   </ion-toolbar>
 </ion-header>
@@ -86,7 +91,7 @@
                 
                 <div class="info-derecha">
                   <div class="estado-contenedor">
-                    <span class="punto-estado" [ngClass]="unidad.estado.toLowerCase()"></span>
+                    <span class="punto-estado" [ngClass]="unidad.estado?.toLowerCase() || 'disponible'"></span>
                     <span class="texto-estado">{{ unidad.estado }}</span>
                   </div>
                 </div>

@@ -163,7 +163,7 @@
   margin: 15px 0 10px 0;
 }
 
-/* --- Formato de Fila de Unidad (Diseño Imagen) --- */
+/* --- Formato de Fila de Unidad --- */
 .fila-unidad {
   display: flex;
   justify-content: space-between;
@@ -206,30 +206,38 @@
     color: #1e293b;
     font-size: 1rem;
   }
+} // <--- ESTA LLAVE FALTABA AQUÍ
 
-  .estado-contenedor {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #f8fafc;
-    padding: 6px 12px;
-    border-radius: 20px;
-    border: 1px solid #f1f5f9;
+.estado-contenedor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid #f1f5f9;
 
-    .punto-estado {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      &.disponible { background-color: #22c55e; }
-      &.ocupado, &.prestado { background-color: #ef4444; }
+  .punto-estado {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    
+    &.disponible { 
+      background-color: #22c55e; 
     }
-
-    .texto-estado {
-      font-size: 0.75rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      color: #475569;
+    &.ocupado, &.prestado { 
+      background-color: #ef4444; 
     }
+    &.mantenimiento { 
+      background-color: #f59e0b; 
+    }
+  }
+
+  .texto-estado {
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #475569;
   }
 }
 
@@ -252,32 +260,19 @@
   p { font-size: 1.1rem; font-weight: 600; }
 }
 
-.controles-derecha {
-  display: flex;
-  align-items: center;
-  gap: 10px; // Espacio entre el botón y el stock
-
-  .btn-subir {
-    --padding-start: 4px;
-    --padding-end: 4px;
-    margin: 0;
-    height: 32px;
-  }
-}
-
 .contenedor-icono-principal {
   width: 45px;
   height: 45px;
-  background: var(--ion-color-primary-contrast);
+  background: #ffffff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-right: 15px;
-  border: 2px solid var(--ion-color-primary);
+  border: 2px solid #3b82f6;
   
   ion-icon {
     font-size: 24px;
-    color: var(--ion-color-primary);
+    color: #3b82f6;
   }
 }

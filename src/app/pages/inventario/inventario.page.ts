@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { addIcons } from 'ionicons';
 import { 
   constructOutline, 
@@ -15,7 +17,8 @@ import {
   chevronUpCircle,
   cloudUploadOutline,
   imageOutline ,
-  cameraOutline
+  cameraOutline,
+  downloadOutline
 } from 'ionicons/icons';
 import { AlmacenService } from '../../services/almacen.service';
 
@@ -45,7 +48,8 @@ export class InventarioPage {
       chevronUpCircle,
       cloudUploadOutline,
       imageOutline ,
-      cameraOutline
+      cameraOutline,
+      downloadOutline
     });
   }
 
@@ -149,5 +153,111 @@ export class InventarioPage {
 
   buscarHerramienta(event: any) {
     this.textoBuscar = event.detail.value || '';
+  }
+
+  generarPDFInventario() {
+    const doc = new jsPDF();
+    const fecha = new Date().toLocaleDateString('es-MX'); // Formato México
+    const hora = new Date().toLocaleTimeString('es-MX');
+
+    // --- CONFIGURACIÓN DE ENCABEZADO ---
+    doc.setFontSize(18);
+    doc.setTextColor(40);
+    doc.text('REPORTE DE INVENTARIO - UTC', 14, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`Fecha de emisión: ${fecha} | ${hora}`, 14, 28);
+    doc.text('Universidad Tecnológica de Coahuila', 14, 33);
+
+    const cuerpoTabla: any[] = [];
+
+    // --- LÓGICA DE PROCESAMIENTO DE DATOS ---
+    this.herramientasAgrupadas.forEach((herramienta: any) => {
+      
+      herramienta.detallesPorTipo.forEach((detalle: any) => {
+        
+        let nombreBase = herramienta.nombre.trim();
+        let tipoTexto = detalle.tipo ? detalle.tipo.trim() : '';
+        let nombreFinal = nombreBase;
+
+        const nombreLower = nombreBase.toLowerCase();
+        const tipoLower = tipoTexto.toLowerCase();
+
+        // Validar que el tipo exista y no sea el valor por defecto
+        if (tipoTexto && tipoLower !== 'normal' && tipoLower !== 'sin tipo' && tipoLower !== '') {
+          
+          // 1. Evitar redundancia (Si el nombre ya contiene el tipo, no lo repetimos)
+          if (!nombreLower.includes(tipoLower)) {
+            
+            // 2. Lógica de conectores inteligentes
+            let conector = ' de ';
+            
+            // Caso A: Si es un adjetivo descriptivo
+            const adjetivos = ['largo', 'larga', 'corto', 'corta', 'grande', 'chico', 'chica', 'nuevo', 'viejo', 'usado'];
+            if (adjetivos.includes(tipoLower)) {
+              conector = ' ';
+            }
+
+            // Caso B: Si el tipo ya empieza con "de " o "del "
+            if (tipoLower.startsWith('de ') || tipoLower.startsWith('del ')) {
+              conector = ' ';
+            }
+            
+            // Caso C: Si el tipo empieza con un número (ej. "3 metros")
+            // Agregamos " de " solo si el nombre base no termina ya en preposición
+            if (!isNaN(parseInt(tipoTexto.charAt(0))) && !nombreLower.endsWith(' de')) {
+              conector = ' de ';
+            }
+
+            nombreFinal = `${nombreBase}${conector}${tipoTexto}`;
+          }
+        }
+
+        // 3. Añadir a la lista del PDF
+        cuerpoTabla.push([
+          nombreFinal,
+          detalle.items.length // Cantidad de unidades
+        ]);
+      });
+    });
+
+    // --- GENERACIÓN DE LA TABLA ---
+    autoTable(doc, {
+      startY: 40,
+      head: [['Descripción de la Herramienta', 'Cantidad']],
+      body: cuerpoTabla,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [44, 62, 80], // Azul noche profesional
+        textColor: [255, 255, 255],
+        fontSize: 11,
+        halign: 'left'
+      },
+      styles: {
+        fontSize: 10,
+        cellPadding: 4
+      },
+      columnStyles: {
+        1: { halign: 'center', cellWidth: 35, fontStyle: 'bold' }
+      },
+      margin: { top: 40 },
+      didDrawPage: (data) => {
+          const totalPaginas = (doc as any).internal.pages.length - 1;
+          const str = 'Página ' + totalPaginas;
+
+          const pageSize = doc.internal.pageSize;
+          const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
+
+          doc.setFontSize(9);
+          doc.setTextColor(150);
+          doc.text(str, data.settings.margin.left, pageHeight - 10);
+        }
+    });
+
+    // --- GUARDAR ARCHIVO ---
+    // Reemplazamos las barras de la fecha para evitar problemas en Windows/Android
+    const nombreArchivo = `Reporte_Inventario_${fecha.replace(/\//g, '-')}.pdf`;
+    doc.save(nombreArchivo);
   }
 }

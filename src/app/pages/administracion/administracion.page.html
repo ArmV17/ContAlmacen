@@ -335,6 +335,11 @@
             <ion-button (click)="prepararEdicionHerramienta(h)" color="primary">
               <ion-icon name="information-circle-outline"></ion-icon>
             </ion-button>
+
+            <ion-button (click)="toggleMantenimiento(h)" 
+                        [color]="h.estado === 'Mantenimiento' ? 'success' : 'warning'">
+              <ion-icon [name]="h.estado === 'Mantenimiento' ? 'checkmark-circle' : 'hammer'"></ion-icon>
+            </ion-button>
             
             <ion-button (click)="confirmarEliminar('inventario', h.num_herramienta, h.nombre_herramienta)" color="danger">
               <ion-icon name="trash-outline"></ion-icon>

@@ -120,7 +120,7 @@ export class AlmacenService {
         num_herramienta: herramienta.codigo,
         nombre_herramienta: herramienta.nombre,
         tipo_herramienta: herramienta.tipo,
-        estado: 'Disponible'
+        estado: herramienta.estado || 'Disponible' 
       });
       return { exito: true };
     } catch (e: any) {

@@ -7,7 +7,8 @@ import {
   menu, personAddOutline, buildOutline, idCardOutline, 
   saveOutline, trashOutline, createOutline, addCircleOutline, 
   closeCircle, qrCodeOutline, barcodeOutline, informationCircleOutline, helpCircleOutline,
-  lockClosedOutline, peopleCircleOutline,
+  lockClosedOutline, peopleCircleOutline, hammer, hammerOutline, checkmarkCircleOutline,
+  checkmarkCircle
 } from 'ionicons/icons';
 
 import { AlmacenService } from '../../services/almacen.service';
@@ -46,7 +47,7 @@ export class AdministracionPage {
   empleadoNuevo = { numEmpleado: '', nombre: '', password: '', rol: 'Staff' };
   
   // Agregamos 'cantidad' al modelo de herramienta
-  herramientaNueva = { codigo: '', nombre: '', tipo: '', cantidad: 1 };
+  herramientaNueva = { codigo: '', nombre: '', tipo: '', cantidad: 1, estado: 'Disponible' };
 
   // Modelos para Maestros
   maestroNuevo = { numMaestro: '', nombre: '', correo: '', materias: [] as string[] };
@@ -61,7 +62,7 @@ export class AdministracionPage {
       menu, personAddOutline, buildOutline, idCardOutline, 
       saveOutline, trashOutline, createOutline, addCircleOutline, 
       closeCircle, qrCodeOutline, informationCircleOutline, helpCircleOutline,
-      lockClosedOutline, peopleCircleOutline, barcodeOutline
+      lockClosedOutline, peopleCircleOutline, barcodeOutline, hammer, hammerOutline, checkmarkCircleOutline, checkmarkCircle
     });
   }
 
@@ -124,15 +125,22 @@ export class AdministracionPage {
     return [];
   }
 
+    // --- FUNCIÓN DE APOYO PARA LIMPIEZA DE TEXTO ---
+  private formatearTexto(texto: string): string {
+    if (!texto) return '';
+    const limpio = texto.trim().toLowerCase();
+    return limpio.charAt(0).toUpperCase() + limpio.slice(1);
+  }
+
   // --- GESTIÓN DE HERRAMIENTAS (REGISTRO MASIVO) ---
   generarCodigoAutomatico() {
     const nombre = this.herramientaNueva.nombre.trim();
-    if (nombre.length === 0) {
+    if (nombre.length < 3) {
       this.herramientaNueva.codigo = '';
       return;
     }
-    if (nombre.length < 3) return;
 
+    // El prefijo siempre en MAYÚSCULAS para el ID
     const prefijo = nombre.substring(0, 3).toUpperCase();
     const coincidencias = this.herramientas.filter(h => 
       h.num_herramienta.startsWith(prefijo)
@@ -143,18 +151,20 @@ export class AdministracionPage {
   }
 
   async guardarHerramienta() {
-    if (!this.herramientaNueva.nombre || ( !this.editandoHerramienta && this.herramientaNueva.cantidad < 1)) {
+    if (!this.herramientaNueva.nombre || (!this.editandoHerramienta && this.herramientaNueva.cantidad < 1)) {
       this.mostrarMensaje('Nombre y cantidad válida son requeridos', 'warning');
       return;
     }
 
+    // --- APLICAR FORMATO ANTES DE GUARDAR ---
+    const nombreLimpio = this.formatearTexto(this.herramientaNueva.nombre);
+    const tipoLimpio = this.formatearTexto(this.herramientaNueva.tipo);
+
     if (this.editandoHerramienta) {
-      // --- LÓGICA DE EDICIÓN ---
-      // IMPORTANTE: No llamamos a generarCodigoAutomatico() aquí
       const res = await this.almacenService.registrarHerramienta({
-        codigo: this.herramientaNueva.codigo, // Usamos el código que ya tenía
-        nombre: this.herramientaNueva.nombre,
-        tipo: this.herramientaNueva.tipo
+        codigo: this.herramientaNueva.codigo, // El código ya viene en mayúsculas
+        nombre: nombreLimpio,
+        tipo: tipoLimpio
       });
 
       if (res.exito) {
@@ -169,19 +179,18 @@ export class AdministracionPage {
       let insertados = 0;
 
       for (let i = 0; i < totalAInsertar; i++) {
-        this.generarCodigoAutomatico(); // Solo aquí se genera código nuevo
+        this.generarCodigoAutomatico(); 
 
         const dataParaFirebase = {
-          codigo: this.herramientaNueva.codigo,
-          nombre: this.herramientaNueva.nombre,
-          tipo: this.herramientaNueva.tipo
+          codigo: this.herramientaNueva.codigo, // Generado como "ABC-01"
+          nombre: nombreLimpio,               // Guardado como "Nombre"
+          tipo: tipoLimpio                    // Guardado como "Tipo"
         };
 
         const res = await this.almacenService.registrarHerramienta(dataParaFirebase);
         
         if (res.exito) {
           insertados++;
-          // Actualizamos lista local para que el contador de códigos no se repita
           this.herramientas.push({
             nombre_herramienta: dataParaFirebase.nombre,
             num_herramienta: dataParaFirebase.codigo,
@@ -192,18 +201,19 @@ export class AdministracionPage {
       this.mostrarMensaje(`Se registraron ${insertados} piezas correctamente`, 'success');
     }
 
+    this.forzarInputTipo = false; // Resetear el control de "Otro tipo"
     this.cancelarEdicionHerramienta();
-    await this.cargarDatos(); // Forzamos la recarga limpia de la lista
+    await this.cargarDatos();
   }
 
-  // ESTA FUNCIÓN AHORA ESTÁ FUERA DE GUARDARHERRAMIENTA
   prepararEdicionHerramienta(h: any) {
     this.herramientaNueva = { 
       codigo: h.num_herramienta, 
       nombre: h.nombre_herramienta, 
       tipo: h.tipo_herramienta,
+      estado: h.estado || 'Disponible',
       cantidad: 1 
-    };
+    } as any;
     this.editandoHerramienta = true;
     window.scrollTo(0, 0);
   }
@@ -212,16 +222,119 @@ export class AdministracionPage {
 
   checarNuevoTipo(event: any) {
     if (event.detail.value === 'NUEVO_TIPO') {
-      this.herramientaNueva.tipo = ''; // Limpiamos para que el usuario escriba
-      this.forzarInputTipo = true;     // Activamos el modo "Escribir"
+      this.herramientaNueva.tipo = '';
+      this.forzarInputTipo = true;
     }
   }
-
+  
   cancelarEdicionHerramienta() {
-    this.herramientaNueva = { codigo: '', nombre: '', tipo: '', cantidad: 1 };
+    this.herramientaNueva = { 
+      codigo: '', 
+      nombre: '', 
+      tipo: '', 
+      cantidad: 1, 
+      estado: 'Disponible' 
+    } as any;
+
     this.editandoHerramienta = false;
     this.nombresFiltrados = [];
     this.forzarInputTipo = false;
+  }
+
+  async cambiarEstadoMantenimiento(nuevoEstado: string) {
+    const dataActualizada = {
+      codigo: this.herramientaNueva.codigo,
+      nombre: this.herramientaNueva.nombre,
+      tipo: this.herramientaNueva.tipo,
+      estado: nuevoEstado
+    };
+
+    const res = await this.almacenService.registrarHerramienta(dataActualizada);
+    if (res.exito) {
+      this.mostrarMensaje(`Estado actualizado: ${nuevoEstado}`, 'success');
+      this.cancelarEdicionHerramienta();
+      await this.cargarDatos(); // Recarga la lista
+    } else {
+      this.mostrarMensaje('Error al actualizar estado', 'danger');
+    }
+  }
+
+  async toggleMantenimiento(h: any) {
+    // Cambiamos el estado localmente para reacción inmediata
+    const nuevoEstado = (h.estado === 'Mantenimiento') ? 'Disponible' : 'Mantenimiento';
+
+    // ESENCIAL: El objeto debe tener los nombres de campos que espera tu base de datos
+    // y el 'codigo' debe ser igual al ID del documento en Firebase (ARA-01)
+    const dataActualizada = {
+      codigo: h.num_herramienta, // Esto se usará como ID del documento
+      nombre: h.nombre_herramienta,
+      tipo: h.tipo_herramienta || '',
+      estado: nuevoEstado
+    };
+
+    try {
+      const res = await this.almacenService.registrarHerramienta(dataActualizada);
+      
+      if (res.exito) {
+        // Si el servicio tuvo éxito, actualizamos la vista
+        h.estado = nuevoEstado;
+        this.mostrarMensaje(`Estado de ${h.num_herramienta} actualizado a ${nuevoEstado}`, 'success');
+      } else {
+        this.mostrarMensaje('No se pudo actualizar en Firebase', 'danger');
+      }
+    } catch (error) {
+      console.error("Error al conectar con Firebase:", error);
+    }
+  }
+
+  // --- DESCARGAR CÓDIGO DE BARRAS ---
+  async descargarBarraDirecto(herramienta: any) {
+    const codigo = herramienta.num_herramienta;
+    const nombre = herramienta.nombre_herramienta;
+    const tipo = herramienta.tipo_herramienta;
+    
+    const nombreFormateado = tipo ? `${nombre} ${tipo} ${codigo}` : `${nombre} ${codigo}`;
+    const barraUrl = `https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(codigo)}&alttext=${encodeURIComponent(nombreFormateado)}&scale=3&rotate=N&includetext&guardwhitespace&backgroundcolor=ffffff&paddingwidth=15&paddingheight=10`;
+
+    try {
+      const response = await fetch(barraUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${nombreFormateado}.png`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      this.mostrarMensaje(`Barra descargada: ${nombreFormateado}`, 'success');
+    } catch (e) {
+      window.open(barraUrl, '_blank');
+    }
+  }
+
+  // --- DESCARGAR QR ---
+  async descargarQRDirecto(herramienta: any) {
+    const codigo = herramienta.num_herramienta;
+    const nombre = herramienta.nombre_herramienta;
+    const tipo = herramienta.tipo_herramienta;
+    
+    const nombreFormateado = tipo ? `${nombre} ${tipo} ${codigo}` : `${nombre} ${codigo}`;
+    
+    // caption: Este parámetro de quickchart cambia el texto que sale abajo del QR
+    const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(codigo)}&size=300&caption=${encodeURIComponent(nombreFormateado)}`;
+
+    try {
+      const response = await fetch(qrUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${nombreFormateado}.png`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      this.mostrarMensaje(`QR descargado: ${nombreFormateado}`, 'success');
+    } catch (e) {
+      window.open(qrUrl, '_blank');
+    }
   }
 
   // --- GESTIÓN DE ALUMNOS ---
@@ -237,6 +350,10 @@ export class AdministracionPage {
       this.mostrarMensaje('El formato del correo no es válido', 'danger');
       return;
     }
+
+    // APLICAR FORMATO
+    this.alumnoNuevo.nombre = this.formatearNombrePropio(nombre);
+    this.alumnoNuevo.carrera = this.formatearNombrePropio(carrera);
 
     const res = await this.almacenService.registrarAlumno(this.alumnoNuevo);
     if (res.exito) {
@@ -287,7 +404,13 @@ export class AdministracionPage {
       return;
     }
 
-    if (this.maestroNuevo.materias.length === 0 && this.materiaTemp.trim() !== '') this.agregarMateriaLista();
+    // APLICAR FORMATO A NOMBRE Y MATERIAS
+    this.maestroNuevo.nombre = this.formatearNombrePropio(nombre);
+    this.maestroNuevo.materias = this.maestroNuevo.materias.map(m => this.formatearNombrePropio(m));
+
+    if (this.maestroNuevo.materias.length === 0 && this.materiaTemp.trim() !== '') {
+      this.agregarMateriaLista();
+    }
     
     const res = await this.almacenService.registrarMaestro(this.maestroNuevo);
     if (res.exito) {
@@ -314,65 +437,15 @@ export class AdministracionPage {
     this.editandoMaestro = false;
   }
 
-  // --- DESCARGAR CÓDIGO DE BARRAS ---
-  async descargarBarraDirecto(herramienta: any) {
-    const codigo = herramienta.num_herramienta;
-    const nombre = herramienta.nombre_herramienta;
-    const tipo = herramienta.tipo_herramienta;
-    
-    const nombreFormateado = tipo ? `${nombre} ${tipo} ${codigo}` : `${nombre} ${codigo}`;
-
-    // PARÁMETROS AÑADIDOS:
-    // paddingwidth=10 y paddingheight=10: Crea un margen blanco interno de 10 unidades.
-    // backgroundcolor=ffffff: Asegura que el fondo del margen también sea blanco.
-    const barraUrl = `https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(codigo)}&alttext=${encodeURIComponent(nombreFormateado)}&scale=3&rotate=N&includetext&guardwhitespace&backgroundcolor=ffffff&paddingwidth=15&paddingheight=10`;
-
-    try {
-      const response = await fetch(barraUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${nombreFormateado}.png`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-      this.mostrarMensaje(`Barra descargada: ${nombreFormateado}`, 'success');
-    } catch (e) {
-      window.open(barraUrl, '_blank');
-    }
-  }
-
-  // --- DESCARGAR QR ---
-  async descargarQRDirecto(herramienta: any) {
-    const codigo = herramienta.num_herramienta;
-    const nombre = herramienta.nombre_herramienta;
-    const tipo = herramienta.tipo_herramienta;
-    
-    const nombreFormateado = tipo ? `${nombre} ${tipo} ${codigo}` : `${nombre} ${codigo}`;
-    
-    // caption: Este parámetro de quickchart cambia el texto que sale abajo del QR
-    const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(codigo)}&size=300&caption=${encodeURIComponent(nombreFormateado)}`;
-
-    try {
-      const response = await fetch(qrUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${nombreFormateado}.png`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-      this.mostrarMensaje(`QR descargado: ${nombreFormateado}`, 'success');
-    } catch (e) {
-      window.open(qrUrl, '_blank');
-    }
-  }
-
   async guardarEmpleado() {
     if(!this.empleadoNuevo.numEmpleado || !this.empleadoNuevo.nombre || (!this.editandoEmpleado && !this.empleadoNuevo.password)){
         this.mostrarMensaje('Todos los campos son obligatorios', 'warning');
         return;
     }
+
+    // APLICAR FORMATO AL NOMBRE
+    this.empleadoNuevo.nombre = this.formatearNombrePropio(this.empleadoNuevo.nombre);
+
     const res = await this.almacenService.registrarEmpleado(this.empleadoNuevo);
     if (res.exito) {
       this.mostrarMensaje(this.editandoEmpleado ? 'Empleado actualizado' : 'Empleado registrado', 'success');
@@ -427,4 +500,15 @@ export class AdministracionPage {
       });
       t.present();
     }
+
+  // Convierte "JUAN PEREZ" o "juan perez" en "Juan Perez"
+  formatearNombrePropio(texto: string): string {
+    if (!texto) return '';
+    return texto
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+      .join(' ');
+  }
 }
