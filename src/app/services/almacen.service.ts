@@ -44,27 +44,38 @@ export class AlmacenService {
   async obtenerPrestamosDashboard() {
     try {
       const colRef = collection(this.firestore, 'prestamos');
-      const q = query(colRef, where('estado', 'in', ['Activo', 'Vencido']));
+      // Buscamos solo los que no han sido devueltos
+      const q = query(colRef, where('estado', '==', 'Activo'));
       const snapshot = await getDocs(q);
+
+      if (snapshot.empty) return [];
 
       return await Promise.all(snapshot.docs.map(async (d) => {
         const data: any = d.data();
-        const aluSnap = await getDoc(doc(this.firestore, 'alumnos', data['matricula_alumno']));
-        const invSnap = await getDoc(doc(this.firestore, 'inventario', data['num_herramienta']));
         
-        const aluData: any = aluSnap.exists() ? aluSnap.data() : { nombre: 'No encontrado' };
-        const invData: any = invSnap.exists() ? invSnap.data() : { nombre_herramienta: 'No encontrada' };
+        // IMPORTANTE: Verifica que estos IDs existan en sus respectivas colecciones
+        const aluSnap = await getDoc(doc(this.firestore, 'alumnos', data.matricula));
+        const invSnap = await getDoc(doc(this.firestore, 'inventario', data.herramientaId));
+        
+        const aluData: any = aluSnap.exists() ? aluSnap.data() : { nombre: 'Alumno no encontrado' };
+        const invData: any = invSnap.exists() ? invSnap.data() : { nombre_herramienta: 'Herramienta no encontrada' };
 
+        // Desencriptamos el nombre del alumno si es necesario
         try {
           if (aluData.nombre) {
-            const desc = this.desencriptarTexto(aluData.nombre);
-            if (desc) aluData.nombre = desc;
+            aluData.nombre = this.desencriptarTexto(aluData.nombre);
           }
-        } catch (e) {}
+        } catch (e) { console.error("Error al desencriptar"); }
 
-        return { id: d.id, ...data, alumnos: aluData, inventario: invData };
+        return { 
+          id: d.id, 
+          ...data, 
+          alumnos: aluData, 
+          inventario: invData 
+        };
       }));
     } catch (error) {
+      console.error("Error en dashboard:", error);
       return [];
     }
   }
@@ -169,15 +180,19 @@ export class AlmacenService {
     }
   }
 
-  async registrarDevolucion(idPrestamo: string, numHerramienta: string) {
+  async registrarDevolucion(idPrestamo: string, idHerramienta: string) {
     try {
+      // 1. Actualizar Préstamo
       await updateDoc(doc(this.firestore, 'prestamos', idPrestamo), {
         estado: 'Devuelto',
-        fecha_devolucion: new Date().toISOString()
+        fecha_devolucion: new Date()
       });
 
-      await updateDoc(doc(this.firestore, 'inventario', numHerramienta), {
-        estado: 'Disponible'
+      // 2. Liberar Herramienta
+      await updateDoc(doc(this.firestore, 'inventario', idHerramienta), {
+        estado: 'Disponible',
+        prestada: false,
+        usuario_prestamo: ""
       });
 
       return { exito: true };

@@ -1,7 +1,21 @@
-/* --- Estilos Base --- */
+/* ==========================================================================
+   1. ESTILOS BASE Y CONTENEDORES
+   ========================================================================== */
 .toolbar-elegante {
-  --background: #1e293b;
+  --background: #1e293b; 
   --color: #ffffff;
+  --border-style: none;
+  padding: 5px 10px;
+
+  ion-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: -0.2px;
+  }
+
+  ion-back-button, ion-menu-button {
+    --color: #ffffff;
+  }
 }
 
 .fondo-claro {
@@ -11,55 +25,37 @@
 .contenedor-maximo {
   max-width: 700px;
   margin: 0 auto;
+  padding-top: 20px;
+  padding-bottom: 40px;
 }
 
-/* --- Tarjetas de Formulario --- */
+/* ==========================================================================
+   2. TARJETAS Y FORMULARIOS
+   ========================================================================== */
 .tarjeta-formulario {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
   border-radius: 16px;
   background: #ffffff;
   margin-bottom: 20px;
   border: none;
 
   .titulo-seccion {
-    font-size: 1.15rem;
-    color: #2c3e50;
-    font-weight: 600;
+    font-size: 1.1rem;
+    color: #1e293b;
+    font-weight: 700;
     display: flex;
     align-items: center;
     gap: 10px;
 
     ion-icon {
-      color: #3b82f6; 
-      font-size: 1.4rem;
+      color: #3b82f6;
+      font-size: 1.3rem;
     }
   }
 }
 
-/* --- Banner de Alumno Encontrado --- */
-.banner-alumno {
-  background: #f0fdf4; // Verde éxito muy claro
-  border-left: 4px solid #22c55e;
-  padding: 15px;
-  border-radius: 12px;
-  margin: 15px 0;
-  
-  p {
-    margin: 4px 0;
-    color: #166534;
-    font-size: 0.95rem;
-    
-    strong {
-      color: #14532d;
-      text-transform: uppercase;
-      font-size: 0.8rem;
-    }
-  }
-}
-
-/* --- Inputs y Selects Modernos --- */
 .input-limpio {
-  --background: #f8fafc; 
+  --background: #f8fafc;
   --border-radius: 12px;
   --padding-start: 15px;
   margin-bottom: 15px;
@@ -70,80 +66,147 @@
     border-color: #3b82f6;
     box-shadow: 0 0 0 1px #3b82f6;
   }
-  
+
   ion-input, ion-select {
     font-size: 1rem;
     --color: #2c3e50;
     --placeholder-color: #94a3b8;
-    --placeholder-opacity: 0.8;
     font-weight: 500;
   }
-
-  ion-select {
-    width: 100%;
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-
-  &::part(native) {
-    padding: 10px 0;
-  }
 }
 
-/* --- Resultado de Búsqueda Herramienta --- */
-.resultado-herramienta {
-  margin-top: 15px;
-  padding: 8px;
-  background: #f0f7ff; 
+/* ==========================================================================
+   3. BANNER DE ALUMNO Y RESULTADOS
+   ========================================================================== */
+.banner-alumno {
+  background: #f0fdf4;
+  border-left: 4px solid #22c55e;
+  padding: 15px;
   border-radius: 12px;
-  border: 1px solid #3b82f6;
+  margin: 15px 0;
 
-  .item-resultado {
-    --background: transparent;
-    --padding-start: 0;
+  p {
+    margin: 4px 0;
+    color: #166534;
+    font-size: 0.95rem;
+    strong { color: #14532d; }
+  }
+}
 
-    .nombre-resultado { 
-      font-weight: 800; 
-      color: #1e293b; 
-      font-size: 1.1rem;
-    }
+/* --- Resultado de búsqueda sin cuadro --- */
+.item-herramienta-encontrada {
+  --background: transparent;
+  --padding-start: 0;
+  margin-top: 10px;
 
-    .detalle-resultado { 
-      font-weight: 600; 
-      color: #64748b;
-    }
+  .icono-herramienta-azul {
+    background: #eff6ff;
+    color: #3b82f6;
+    padding: 10px;
+    border-radius: 10px;
+    display: flex;
+    font-size: 1.2rem;
+  }
 
-    .nota-mantenimiento {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 10px;
-      font-weight: 800;
+  h2 {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 1rem;
+  }
+
+  p {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+}
+
+.boton-anadir-plus {
+  --background: #f0fdf4;
+  --color: #16a34a;
+  --border-radius: 8px;
+  --box-shadow: none;
+  height: 32px;
+  font-weight: 800;
+  font-size: 0.75rem;
+  border: 1px solid #bbf7d0;
+
+  ion-icon {
+    font-size: 1rem;
+    margin-right: 4px;
+  }
+}
+
+/* ==========================================================================
+   4. LISTA DE PRÉSTAMO (CARRITO)
+   ========================================================================== */
+.tarjeta-lista-prestamo {
+  margin-top: 25px;
+
+  .titulo-seccion-lista {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 20px 0 10px 5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    span {
+      background: #3b82f6;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
       font-size: 0.75rem;
-      color: #dc2626;
-      background: #fff1f2;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #fecdd3;
-
-      ion-icon {
-        font-size: 1.1rem;
-      }
     }
   }
 }
 
-/* --- Botón de Acción --- */
+.item-carrito-estilizado {
+  --background: #ffffff;
+  --border-radius: 12px;
+  --padding-start: 12px;
+  margin-bottom: 8px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+
+  .icono-lista {
+    color: #3b82f6;
+    font-size: 1.2rem;
+  }
+
+  h3 {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+  }
+
+  p {
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+
+  .boton-borrar {
+    --color: #94a3b8;
+    transition: 0.2s;
+    &:hover, &:active { --color: #ef4444; }
+  }
+}
+
+/* ==========================================================================
+   5. BOTONES Y ANIMACIONES
+   ========================================================================== */
 .boton-guardar {
-  --background: #22c55e; 
+  --background: #22c55e;
   --background-activated: #16a34a;
   --border-radius: 14px;
   --box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
   height: 55px;
   font-weight: 700;
   font-size: 1.1rem;
-  letter-spacing: 0.5px;
-  margin-top: 25px;
+  margin-top: 30px;
 
   &[disabled] {
     opacity: 0.4;
@@ -151,7 +214,6 @@
   }
 }
 
-/* --- Animaciones --- */
 .animated {
   animation-duration: 0.4s;
   animation-fill-mode: both;
@@ -162,4 +224,10 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .fadeIn { animation-name: fadeIn; }
+.fadeInUp { animation-name: fadeInUp; }

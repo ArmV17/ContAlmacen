@@ -1,93 +1,150 @@
-/* Estilos base (Mantenidos de las otras vistas) */
-.toolbar-elegante { --background: #1e293b; --color: #ffffff; }
-.fondo-claro { --background: #f4f5f8; }
-.contenedor-maximo { max-width: 1200px; margin: 0 auto; }
-.lista-transparente { background: transparent; }
+/* --- Estilos base (Sincronizados) --- */
+.toolbar-elegante { 
+  --background: #1e293b; 
+  --color: #ffffff; 
+}
+
+.fondo-claro { 
+  --background: #f4f5f8; 
+}
+
+.contenedor-maximo { 
+  max-width: 800px; // Un poco más estrecho para que las tarjetas luzcan mejor
+  margin: 0 auto; 
+}
 
 .subtitulo {
   font-size: 1.1rem;
-  font-weight: 600;
-  color: #8c98a4;
-  margin-bottom: 5px;
+  font-weight: 700;
+  color: #64748b;
+  margin: 15px 0 10px 5px;
 }
 
-.item-limpio {
-  --background: #ffffff;
-  --border-radius: 12px;
-  margin-bottom: 15px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+/* --- Tarjeta de Devolución (Nuevo Diseño) --- */
+.tarjeta-devolucion {
+  margin: 15px 0;
+  border-radius: 20px; // Bordes más redondeados
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  border: none;
+  background: #ffffff;
+  overflow: hidden;
 
-  .icono-contenedor {
-    background: #eef2f6;
-    padding: 12px;
-    border-radius: 10px;
-    color: #3498db;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-
-    &.alerta-icono {
-      background: #fdedec;
-      color: #e74c3c;
-    }
-  }
-
-  .herramienta-nombre {
-    font-weight: 600;
-    color: #2c3e50;
-    font-size: 1.05rem;
+  .item-cabecera {
+    --padding-start: 16px;
+    --inner-padding-end: 16px;
+    background: #f8fafc; // Fondo sutil para la cabecera
+    border-bottom: 1px solid #f1f5f9;
     
-    .codigo-mini {
-      font-weight: normal;
-      color: #95a5a6;
+    .icono-herramienta {
+      background: #3b82f6;
+      color: white;
+      padding: 10px;
+      border-radius: 12px;
+      display: flex;
+      font-size: 1.3rem;
+      margin-right: 12px;
+    }
+
+    .herramienta-nombre {
+      font-weight: 800;
+      color: #1e293b;
+      font-size: 1.1rem;
+      letter-spacing: -0.3px;
+    }
+
+    .codigo-herramienta {
+      font-weight: 600;
+      color: #64748b;
       font-size: 0.85rem;
     }
   }
 
-  .alumno-info {
-    color: #7f8c8d;
-    font-size: 0.9rem;
-    margin-top: 4px;
-  }
+  .cuerpo-tarjeta {
+    padding: 16px;
 
-  .estado-texto {
-    font-size: 0.85rem;
-    margin-top: 2px;
-    color: #27ae60; /* Verde por defecto */
-    font-weight: 500;
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr; // Una columna en móvil
+      gap: 10px;
+      margin-bottom: 18px;
 
-    &.texto-peligro {
-      color: #e74c3c;
+      @media (min-width: 576px) {
+        grid-template-columns: 1fr 1fr; // Dos columnas en tablets/PC
+      }
+
+      .info-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #475569;
+        font-size: 0.9rem;
+        font-weight: 500;
+
+        ion-icon {
+          font-size: 1.2rem;
+          color: #3b82f6; // Azul distintivo de tus iconos
+        }
+
+        span {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
     }
   }
 }
 
-/* Botón de acción principal */
-.boton-recibir {
-  --background: #3498db;
-  --background-hover: #2980b9;
-  --border-radius: 8px;
-  --box-shadow: 0 4px 10px rgba(52, 152, 219, 0.2);
-  font-weight: 600;
-  height: 40px;
-  text-transform: capitalize;
+/* --- Botón Recibir Moderno --- */
+.boton-recibir-moderno {
+  --background: #3b82f6;
+  --background-activated: #2563eb;
+  --border-radius: 14px;
+  --box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+  height: 50px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin: 0;
+  text-transform: none;
 }
 
-/* Estado Vacío */
+/* --- Estado Vacío --- */
 .mensaje-vacio {
   text-align: center;
-  margin-top: 60px;
-  color: #95a5a6;
+  margin-top: 80px;
+  padding: 20px;
 
   .icono-grande {
-    font-size: 5rem;
-    color: #bdc3c7;
-    margin-bottom: 10px;
+    font-size: 90px;
+    color: #cbd5e1;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
   }
 
   h2 {
-    color: #2c3e50;
-    font-weight: 600;
+    color: #1e293b;
+    font-weight: 800;
+    font-size: 1.6rem;
+    margin-bottom: 10px;
+  }
+
+  p {
+    color: #64748b;
+    font-size: 1rem;
+    max-width: 250px;
+    margin: 0 auto;
   }
 }
+
+/* --- Animaciones --- */
+.animated {
+  animation-duration: 0.5s;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fadeIn { animation-name: fadeIn; }

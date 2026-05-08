@@ -4,19 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { 
-  saveOutline, 
-  personOutline, 
-  buildOutline, 
-  barcodeOutline, 
-  menu, 
-  alertCircle, 
-  checkmarkCircle, 
-  sendOutline, 
-  qrCodeOutline,
-  hammerOutline 
+  saveOutline, personOutline, buildOutline, barcodeOutline, 
+  menu, alertCircle, checkmarkCircle, sendOutline, 
+  qrCodeOutline, hammerOutline, trashOutline, addOutline,
+  constructOutline
 } from 'ionicons/icons';
 
-// Importamos el servicio
 import { AlmacenService } from '../../services/almacen.service';
 
 @Component({
@@ -28,16 +21,17 @@ import { AlmacenService } from '../../services/almacen.service';
 })
 export class NuevoPrestamoPage implements OnInit {
 
-  // Objeto principal del préstamo
   prestamo = {
     matricula: '',
-    usuario: '',     // Se llenará automáticamente con el nombre del alumno
-    herramientaId: '',
+    usuario: '',
     profesor: '',
     materia: ''
   };
 
-  // Variables de estado
+  // --- NUEVAS VARIABLES PARA EL CARRITO ---
+  carritoHerramientas: any[] = []; 
+  cantidadPrestamosActuales: number = 0; // Préstamos que ya tiene en la BD
+
   alumnoEncontrado: any = null;
   listaMaestros: any[] = [];
   materiasFiltradas: string[] = [];
@@ -48,15 +42,14 @@ export class NuevoPrestamoPage implements OnInit {
   
   empleadoActual = 'EMP-01';
 
-  cantidadPrestamos: number = 0;
-
   constructor(
     private toastController: ToastController,
     private almacenService: AlmacenService
   ) {
     addIcons({ 
       saveOutline, personOutline, buildOutline, barcodeOutline, 
-      menu, alertCircle, checkmarkCircle, sendOutline, qrCodeOutline, hammerOutline
+      menu, alertCircle, checkmarkCircle, sendOutline, 
+      qrCodeOutline, hammerOutline, trashOutline, addOutline, constructOutline
     });
   }
 
@@ -68,44 +61,25 @@ export class NuevoPrestamoPage implements OnInit {
   async cargarInventario() {
     try {
       this.listaInventario = await this.almacenService.obtenerInventario();
-    } catch (error) {
-      console.error("Error al cargar inventario:", error);
-    }
+    } catch (error) { console.error(error); }
   }
 
   async cargarMaestros() {
     try {
-      // Este método debe existir en tu servicio y traer nombre y materias
       this.listaMaestros = await this.almacenService.obtenerMaestros();
-    } catch (error) {
-      console.error("Error al cargar maestros:", error);
-    }
-  }
-
-  onProfesorChange() {
-    // Buscamos al maestro seleccionado en la lista que vino de la BD
-    const prof = this.listaMaestros.find(p => p.nombre === this.prestamo.profesor);
-    this.materiasFiltradas = prof ? prof.materias : [];
-    this.prestamo.materia = ''; 
+    } catch (error) { console.error(error); }
   }
 
   async verificarAlumno() {
     if (this.prestamo.matricula.length >= 8) {
       const alumno = await this.almacenService.buscarAlumnoPorMatricula(this.prestamo.matricula);
-      
       if (alumno) {
         this.alumnoEncontrado = alumno;
         this.prestamo.usuario = alumno.nombre;
-        
-        // VALIDACIÓN: Contar cuántas herramientas tiene ya
-        this.cantidadPrestamos = await this.almacenService.contarPrestamosActivos(this.prestamo.matricula);
-        
-        if (this.cantidadPrestamos >= 5) {
-          this.mostrarMensaje('El alumno ya tiene 5 herramientas. No puede pedir más.', 'danger');
-        }
+        // Consultamos cuántas herramientas debe actualmente
+        this.cantidadPrestamosActuales = await this.almacenService.contarPrestamosActivos(this.prestamo.matricula);
       } else {
         this.alumnoEncontrado = null;
-        this.cantidadPrestamos = 0;
       }
     } else {
       this.alumnoEncontrado = null;
@@ -124,59 +98,95 @@ export class NuevoPrestamoPage implements OnInit {
     
     if (encontrada) {
       this.herramientaEncontrada = encontrada;
-      this.prestamo.herramientaId = encontrada.num_herramienta;
       
-      // VALIDACIÓN: ¿Está ya prestada? (Checamos el campo 'prestada' o el 'estado')
-      if (encontrada.prestada === true || encontrada.estado === 'Prestado') {
-        this.mostrarMensaje('Esta herramienta ya se encuentra prestada.', 'warning');
+      if (encontrada.prestada || encontrada.estado === 'Prestado') {
+        this.mostrarMensaje('Esta herramienta ya está prestada.', 'warning');
       } else if (encontrada.estado === 'Mantenimiento') {
         this.mostrarMensaje('Herramienta en mantenimiento.', 'warning');
       }
     } else {
       this.herramientaEncontrada = null;
-      this.prestamo.herramientaId = '';
     }
+  }
+
+  // --- LÓGICA DEL CARRITO ---
+  agregarAlCarrito() {
+    if (!this.herramientaEncontrada) return;
+
+    // 1. Validar que no esté ya en el carrito
+    const existe = this.carritoHerramientas.find(h => h.num_herramienta === this.herramientaEncontrada.num_herramienta);
+    if (existe) {
+      this.mostrarMensaje('Ya agregaste esta herramienta a la lista.', 'warning');
+      return;
+    }
+
+    // 2. Validar límite (Existentes en BD + En carrito)
+    if ((this.cantidadPrestamosActuales + this.carritoHerramientas.length) >= 5) {
+      this.mostrarMensaje('Límite de 5 herramientas alcanzado para este alumno.', 'danger');
+      return;
+    }
+
+    // 3. Agregar
+    this.carritoHerramientas.push(this.herramientaEncontrada);
+    this.codigoBusqueda = '';
+    this.herramientaEncontrada = null;
+    this.mostrarMensaje('Agregada a la lista', 'success');
+  }
+
+  quitarDelCarrito(index: number) {
+    this.carritoHerramientas.splice(index, 1);
   }
 
   async finalizarPrestamo() {
-    if (!this.alumnoEncontrado) {
-      this.mostrarMensaje('Debe verificar un alumno válido.', 'warning');
+    if (this.carritoHerramientas.length === 0) {
+      this.mostrarMensaje('No hay herramientas en la lista.', 'warning');
       return;
     }
 
-    if (this.herramientaEncontrada?.estado === 'Mantenimiento') {
-      this.mostrarMensaje('No se puede prestar una herramienta dañada.', 'danger');
-      return;
+    let exitos = 0;
+
+    // Procesamos todas las herramientas de la lista
+    for (const h of this.carritoHerramientas) {
+      const resultado = await this.almacenService.registrarNuevoPrestamo(
+        this.prestamo.matricula,
+        h.num_herramienta,
+        this.empleadoActual,
+        this.prestamo.profesor,
+        this.prestamo.materia
+      );
+      if (resultado.exito) exitos++;
     }
 
-    const resultado = await this.almacenService.registrarNuevoPrestamo(
-      this.prestamo.matricula,
-      this.herramientaEncontrada.num_herramienta,
-      this.empleadoActual,
-      this.prestamo.profesor,
-      this.prestamo.materia
-    );
-
-    if (resultado.exito) {
-      this.mostrarMensaje('Préstamo registrado correctamente.', 'success');
+    if (exitos === this.carritoHerramientas.length) {
+      this.mostrarMensaje(`¡Se registraron ${exitos} préstamos con éxito!`, 'success');
       this.limpiarFormulario();
     } else {
-      this.mostrarMensaje('Error al registrar.', 'danger');
+      this.mostrarMensaje('Hubo errores en algunos registros.', 'danger');
+      // Recargamos el inventario para reflejar lo que sí se prestó
+      await this.cargarInventario();
     }
   }
 
+  onProfesorChange() {
+    const prof = this.listaMaestros.find(p => p.nombre === this.prestamo.profesor);
+    this.materiasFiltradas = prof ? prof.materias : [];
+    this.prestamo.materia = ''; 
+  }
+
   limpiarFormulario() {
-    this.prestamo = { matricula: '', usuario: '', herramientaId: '', profesor: '', materia: '' };
+    this.prestamo = { matricula: '', usuario: '', profesor: '', materia: '' };
     this.codigoBusqueda = '';
     this.herramientaEncontrada = null;
     this.alumnoEncontrado = null;
+    this.carritoHerramientas = [];
     this.materiasFiltradas = [];
+    this.cantidadPrestamosActuales = 0;
   }
 
   async mostrarMensaje(mensaje: string, color: string) {
     const toast = await this.toastController.create({
       message: mensaje,
-      duration: 2500,
+      duration: 2000,
       color: color,
       position: 'bottom'
     });
@@ -184,12 +194,6 @@ export class NuevoPrestamoPage implements OnInit {
   }
 
   async escanearCodigo() {
-    console.log('Iniciando escaneo...');
-    const toast = await this.toastController.create({
-      message: 'Funcionalidad de cámara próximamente',
-      duration: 2000,
-      color: 'medium'
-    });
-    toast.present();
+    this.mostrarMensaje('Cámara próximamente', 'medium');
   }
 }

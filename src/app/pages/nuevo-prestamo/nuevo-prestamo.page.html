@@ -8,9 +8,9 @@
 </ion-header>
 
 <ion-content class="fondo-claro ion-padding">
-  <div class="contenedor-maximo">
+  <div class="contenedor-maximo ion-margin-top">
     
-    <ion-card class="tarjeta-formulario">
+    <ion-card class="tarjeta-formulario animated fadeIn">
       <ion-card-header>
         <ion-card-title class="titulo-seccion">
           <ion-icon name="person-outline"></ion-icon> 
@@ -20,115 +20,90 @@
 
       <ion-card-content>
         <ion-item class="input-limpio" lines="none">
-          <ion-label position="stacked">Ingresa Matrícula</ion-label>
-          <ion-input 
-            [(ngModel)]="prestamo.matricula" 
-            (ionInput)="verificarAlumno()"
-            placeholder="Ej: 22040111">
-          </ion-input>
+          <ion-label position="stacked">Matrícula</ion-label>
+          <ion-input [(ngModel)]="prestamo.matricula" (ionInput)="verificarAlumno()" placeholder="Ej: 22040111"></ion-input>
           <ion-icon *ngIf="alumnoEncontrado" name="checkmark-circle" color="success" slot="end"></ion-icon>
         </ion-item>
 
-        <div *ngIf="alumnoEncontrado" class="banner-alumno animated fadeIn">
-          <p><strong>Alumno:</strong> {{ alumnoEncontrado.nombre }}</p>
-          <p [style.color]="cantidadPrestamos >= 5 ? '#dc2626' : '#166534'">
-            <strong>Préstamos activos:</strong> {{ cantidadPrestamos }} / 5
+        <div *ngIf="alumnoEncontrado" class="banner-alumno">
+          <p><strong>{{ alumnoEncontrado.nombre }}</strong></p>
+          <p [style.color]="(cantidadPrestamosActuales + carritoHerramientas.length) >= 5 ? '#dc2626' : '#166534'">
+            Cupo: {{ cantidadPrestamosActuales + carritoHerramientas.length }} / 5
           </p>
-          <ion-note *ngIf="cantidadPrestamos >= 5" color="danger" style="font-weight: bold;">
-            LÍMITE ALCANZADO: No se pueden realizar más préstamos.
-          </ion-note>
         </div>
 
-        <div *ngIf="alumnoEncontrado && cantidadPrestamos < 5" class="animated fadeIn">
+        <div *ngIf="alumnoEncontrado && (cantidadPrestamosActuales + carritoHerramientas.length) < 5" class="animated fadeIn">
           <ion-item class="input-limpio ion-margin-top" lines="none">
-            <ion-select label="Profesor Autoriza" labelPlacement="stacked" 
-                        [(ngModel)]="prestamo.profesor" 
-                        (ionChange)="onProfesorChange()"
-                        interface="popover"
-                        placeholder="Selecciona profesor">
-              <ion-select-option *ngFor="let p of listaMaestros" [value]="p.nombre">
-                {{ p.nombre }}
-              </ion-select-option>
+            <ion-select label="Profesor" labelPlacement="stacked" [(ngModel)]="prestamo.profesor" (ionChange)="onProfesorChange()" placeholder="Selecciona">
+              <ion-select-option *ngFor="let p of listaMaestros" [value]="p.nombre">{{ p.nombre }}</ion-select-option>
             </ion-select>
           </ion-item>
-
           <ion-item class="input-limpio" lines="none" *ngIf="prestamo.profesor">
-            <ion-select label="Materia / Taller" labelPlacement="stacked" 
-                        [(ngModel)]="prestamo.materia" 
-                        interface="popover"
-                        placeholder="Materia de este profesor">
-              <ion-select-option *ngFor="let m of materiasFiltradas" [value]="m">
-                {{ m }}
-              </ion-select-option>
+            <ion-select label="Materia" labelPlacement="stacked" [(ngModel)]="prestamo.materia" placeholder="Selecciona">
+              <ion-select-option *ngFor="let m of materiasFiltradas" [value]="m">{{ m }}</ion-select-option>
             </ion-select>
           </ion-item>
         </div>
       </ion-card-content>
     </ion-card>
 
-    <ion-card class="tarjeta-formulario" *ngIf="alumnoEncontrado && cantidadPrestamos < 5">
+    <ion-card class="tarjeta-formulario animated fadeIn" *ngIf="alumnoEncontrado && (cantidadPrestamosActuales + carritoHerramientas.length) < 5">
       <ion-card-header>
         <ion-card-title class="titulo-seccion">
-          <ion-icon name="build-outline"></ion-icon> 
-          Herramienta
+          <ion-icon name="build-outline"></ion-icon> Herramienta
         </ion-card-title>
       </ion-card-header>
-
       <ion-card-content>
         <ion-item class="input-limpio" lines="none">
-          <ion-label position="stacked">Escanear o Escribir Código</ion-label>
-          <ion-input 
-            [(ngModel)]="codigoBusqueda" 
-            (ionInput)="buscarHerramienta()" 
-            placeholder="Ej: ARA-01">
-          </ion-input>
+          <ion-input [(ngModel)]="codigoBusqueda" (ionInput)="buscarHerramienta()" placeholder="Ej: PAL-01"></ion-input>
           <ion-button slot="end" fill="clear" (click)="escanearCodigo()">
             <ion-icon name="qr-code-outline" slot="icon-only"></ion-icon>
           </ion-button>
         </ion-item>
 
-        <div *ngIf="herramientaEncontrada" class="resultado-herramienta animated fadeIn">
-          <ion-item lines="none" class="item-resultado">
-            <ion-icon 
-              [name]="(herramientaEncontrada.prestada || herramientaEncontrada.estado === 'Mantenimiento') ? 'alert-circle' : 'checkmark-circle'" 
-              [color]="(herramientaEncontrada.prestada || herramientaEncontrada.estado === 'Mantenimiento') ? 'danger' : 'success'" 
-              slot="start">
-            </ion-icon>
-            
+        <div *ngIf="herramientaEncontrada" class="animated fadeIn">
+          <ion-item lines="none" class="item-herramienta-encontrada">
+            <div class="icono-herramienta-azul" slot="start">
+              <ion-icon name="hammer-outline"></ion-icon>
+            </div>
             <ion-label>
-              <h2 class="nombre-resultado">{{ herramientaEncontrada.nombre_herramienta }}</h2>
-              <p class="detalle-resultado">
-                ID: {{ herramientaEncontrada.num_herramienta }} | {{ herramientaEncontrada.tipo_herramienta || 'Normal' }}
-              </p>
-              
-              <ion-note *ngIf="herramientaEncontrada.prestada" color="danger" class="nota-mantenimiento">
-                <ion-icon name="alert-circle-outline"></ion-icon>
-                ESTA HERRAMIENTA YA SE ENCUENTRA PRESTADA
-              </ion-note>
-
-              <ion-note *ngIf="herramientaEncontrada.estado === 'Mantenimiento'" color="warning" class="nota-mantenimiento">
-                <ion-icon name="hammer-outline"></ion-icon>
-                HERRAMIENTA EN MANTENIMIENTO
-              </ion-note>
+              <h2 class="nombre-herramienta">{{ herramientaEncontrada.nombre_herramienta }}</h2>
+              <p class="id-herramienta">ID: {{ herramientaEncontrada.num_herramienta }}</p>
             </ion-label>
+            <ion-button 
+              *ngIf="!herramientaEncontrada.prestada && herramientaEncontrada.estado !== 'Mantenimiento'" 
+              class="boton-anadir-plus" 
+              (click)="agregarAlCarrito()">
+              <ion-icon name="add-outline" slot="start"></ion-icon>
+              AGREGAR
+            </ion-button>
           </ion-item>
         </div>
       </ion-card-content>
     </ion-card>
 
-    <ion-button 
-      expand="block" 
-      class="boton-guardar ion-margin-top" 
-      (click)="finalizarPrestamo()"
-      [disabled]="!alumnoEncontrado || 
-                 cantidadPrestamos >= 5 || 
-                 !herramientaEncontrada || 
-                 herramientaEncontrada.prestada || 
-                 herramientaEncontrada.estado === 'Mantenimiento' || 
-                 !prestamo.profesor || !prestamo.materia">
+    <div class="tarjeta-lista-prestamo animated fadeInUp" *ngIf="carritoHerramientas.length > 0">
+      <h2 class="titulo-seccion-lista">
+        Lista de Préstamo <span>{{ carritoHerramientas.length }}</span>
+      </h2>
+      
+      <ion-item *ngFor="let item of carritoHerramientas; let i = index" class="item-carrito-estilizado" lines="none">
+        <ion-icon name="construct-outline" slot="start" class="icono-lista"></ion-icon>
+        <ion-label>
+          <h3>{{ item.nombre_herramienta }}</h3>
+          <p>Código: {{ item.num_herramienta }}</p>
+        </ion-label>
+        <ion-button slot="end" fill="clear" (click)="quitarDelCarrito(i)" class="boton-borrar">
+          <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </div>
+
+    <ion-button expand="block" class="boton-guardar ion-margin-y" (click)="finalizarPrestamo()"
+                [disabled]="carritoHerramientas.length === 0 || !prestamo.profesor || !prestamo.materia">
       <ion-icon name="send-outline" slot="start"></ion-icon>
-      Confirmar Préstamo
+      Confirmar {{ carritoHerramientas.length }} Préstamos
     </ion-button>
 
-  </div>
-</ion-content>
+    <div style="height: 30px;"></div> 
+  </div> </ion-content>
