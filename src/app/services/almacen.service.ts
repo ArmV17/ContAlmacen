@@ -142,43 +142,78 @@ export class AlmacenService {
   // ==========================================
   // PRÉSTAMOS Y DEVOLUCIONES
   // ==========================================
-  async registrarNuevoPrestamo(
-    matricula: string, 
-    herramientaId: string, 
-    empleadoId: string, 
-    profesor?: string, 
-    materia?: string
-  ) {
+  async registrarNuevoPrestamoDetallado(datos: any) {
     try {
-      // 1. Referencia al documento de la herramienta para marcarla como PRESTADA
-      const herramientaRef = doc(this.firestore, 'inventario', herramientaId);
+      const prestamosRef = collection(this.firestore, 'prestamos');
       
-      // 2. Guardar el registro del préstamo en una nueva colección
-      const prestamoRef = collection(this.firestore, 'prestamos');
-      await addDoc(prestamoRef, {
-        matricula,
-        herramientaId,
-        empleadoId,
-        profesor: profesor || 'Sin asignar',
-        materia: materia || 'Sin asignar',
-        fecha: new Date(),
+      // 1. Lógica para formatear Nombre + Tipo (Si no hay tipo, solo queda el nombre)
+      const nombreHerramientaFull = datos.herramienta.tipo_herramienta 
+        ? `${datos.herramienta.nombre_herramienta} (${datos.herramienta.tipo_herramienta})`
+        : datos.herramienta.nombre_herramienta;
+
+      // 2. Estructura de datos detallada (Desnormalización para historial permanente)
+      const docData = {
+        // Información del Receptor (Sea Alumno o Profesor)
+        receptor_id: datos.receptor.id,
+        receptor_nombre: datos.receptor.nombre,
+        receptor_tipo: datos.esProfesor ? 'Profesor' : 'Alumno',
+        receptor_info_extra: datos.receptor.info_extra, // Carrera o "Personal Docente"
+
+        // Información de Autorización
+        autorizado_por_nombre: datos.autorizador.nombre,
+        autorizado_por_id: datos.autorizador.num_empleado,
+        materia: datos.materia,
+        
+        // Información de la Herramienta
+        herramienta_id_db: datos.herramienta.id,       // ID del documento en Firestore
+        herramienta_codigo: datos.herramienta.num_herramienta, // Código físico (ARA-01)
+        herramienta_nombre: nombreHerramientaFull,
+        
+        // Fechas (Timestamp de JS a Firestore)
+        fecha_prestamo: new Date(),
+        fecha_devolucion_pactada: new Date(datos.fechaEntrega),
+        
+        // Control de Gestión
+        empleado_almacen: datos.empleadoAlmacen,
         estado: 'Activo'
+      };
+
+      // 3. Guardar el registro en la colección 'prestamos'
+      await addDoc(prestamosRef, docData);
+
+      // 4. Actualizar el estado físico en la colección 'inventario'
+      const herramientaDoc = doc(this.firestore, 'inventario', datos.herramienta.id);
+      
+      await updateDoc(herramientaDoc, {
+        prestada: true,
+        estado: 'Prestado',
+        usuario_prestamo: datos.receptor.id // Guardamos quién la tiene físicamente
       });
 
-      // 3. Actualizar el estado de la herramienta en el inventario
-      // (Opcional: puedes añadir un campo 'prestada: true')
-      await updateDoc(herramientaRef, {
-        prestada: true,               // Para validaciones lógicas
-        estado: 'Prestado',           // PARA QUE EL PUNTITO CAMBIE A ROJO
-        usuario_prestamo: matricula   // Para saber quién la tiene
-      });
-      
       return { exito: true };
-    } catch (e: any) {
-      console.error("Error en el servicio:", e);
-      return { exito: false, mensaje: e.message };
+    } catch (e) {
+      console.error("Error crítico en registrarNuevoPrestamoDetallado:", e);
+      return { exito: false };
     }
   }
+
+  /**
+   * Método auxiliar para contar préstamos (Asegúrate de que use el campo genérico receptor_id)
+   */
+  async contarPrestamosActivos(identificador: string): Promise<number> {
+    try {
+      const prestamosRef = collection(this.firestore, 'prestamos');
+      const q = query(
+        prestamosRef, 
+        where('receptor_id', '==', identificador), 
+        where('estado', '==', 'Activo')
+      );
+      const snap = await getDocs(q);
+      return snap.size;
+    } catch (e) {
+      return 0;
+    }
+}
 
   async registrarDevolucion(idPrestamo: string, idHerramienta: string) {
     try {
@@ -200,24 +235,6 @@ export class AlmacenService {
       return { exito: false };
     }
   }
-
-  async contarPrestamosActivos(matricula: string): Promise<number> {
-    try {
-      const prestamosRef = collection(this.firestore, 'prestamos');
-      // Filtramos por matrícula y que el estado sea 'Activo'
-      const q = query(
-        prestamosRef, 
-        where('matricula', '==', matricula), 
-        where('estado', '==', 'Activo')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.size; // Retorna la cantidad de documentos encontrados
-    } catch (error) {
-      console.error("Error al contar préstamos:", error);
-      return 0;
-    }
-  }
-
  // ==========================================
 // ALUMNOS
 // ==========================================
@@ -257,14 +274,22 @@ export class AlmacenService {
           if (data.nombre) {
             data.nombre = this.desencriptarTexto(data.nombre); 
           }
+          // Si el número de maestro también está encriptado, desencriptalo aquí
+          // Si NO está encriptado, se pasará directo en el ...data
         } catch (e) {}
-        return { id: d.id, ...data };
+        
+        return { 
+          id: d.id, 
+          ...data,
+          // Forzamos una copia para estar seguros del nombre del campo
+          num_maestro: data.num_maestro 
+        };
       });
     } catch (error) {
       console.error("Error al obtener maestros:", error);
       return [];
     }
-  }
+}
 
   async registrarMaestro(maestro: any) {
     try {

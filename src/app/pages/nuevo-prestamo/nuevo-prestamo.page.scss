@@ -30,7 +30,7 @@
 }
 
 /* ==========================================================================
-   2. TARJETAS Y FORMULARIOS
+   2. TARJETAS Y SELECTOR (SEGMENT)
    ========================================================================== */
 .tarjeta-formulario {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
@@ -38,6 +38,23 @@
   background: #ffffff;
   margin-bottom: 20px;
   border: none;
+  overflow: hidden;
+
+  ion-segment {
+    --background: #f1f5f9;
+    padding: 4px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+
+    ion-segment-button {
+      --indicator-color: #ffffff;
+      --color: #64748b;
+      --color-checked: #1e293b;
+      font-weight: 700;
+      text-transform: none;
+      min-height: 40px;
+    }
+  }
 
   .titulo-seccion {
     font-size: 1.1rem;
@@ -76,7 +93,7 @@
 }
 
 /* ==========================================================================
-   3. BANNER DE ALUMNO Y RESULTADOS
+   3. BANNERS DINÁMICOS
    ========================================================================== */
 .banner-alumno {
   background: #f0fdf4;
@@ -93,7 +110,16 @@
   }
 }
 
-/* --- Resultado de búsqueda sin cuadro --- */
+/* Banner azul específico para cuando es Profesor */
+.banner-docente {
+  background: #eff6ff !important;
+  border-left-color: #3b82f6 !important;
+  p { color: #1e40af !important; }
+}
+
+/* ==========================================================================
+   4. BUSCADOR Y HERRAMIENTAS
+   ========================================================================== */
 .item-herramienta-encontrada {
   --background: transparent;
   --padding-start: 0;
@@ -112,12 +138,14 @@
     font-weight: 700;
     color: #1e293b;
     font-size: 1rem;
+    margin: 0;
   }
 
   p {
     color: #94a3b8;
     font-size: 0.85rem;
     font-weight: 600;
+    margin: 2px 0 0 0;
   }
 }
 
@@ -138,7 +166,7 @@
 }
 
 /* ==========================================================================
-   4. LISTA DE PRÉSTAMO (CARRITO)
+   5. LISTA DE PRÉSTAMO (CARRITO)
    ========================================================================== */
 .tarjeta-lista-prestamo {
   margin-top: 25px;
@@ -196,7 +224,7 @@
 }
 
 /* ==========================================================================
-   5. BOTONES Y ANIMACIONES
+   6. BOTONES Y ANIMACIONES
    ========================================================================== */
 .boton-guardar {
   --background: #22c55e;
