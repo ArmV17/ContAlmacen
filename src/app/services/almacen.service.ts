@@ -233,7 +233,19 @@ export class AlmacenService {
       return { exito: false };
     }
   }
- // ==========================================
+
+  async obtenerTodosLosPrestamosActivos() {
+    try {
+      const colRef = collection(this.firestore, 'prestamos');
+      const q = query(colRef, where('estado', '==', 'Activo'));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (e) {
+      console.error("Error obteniendo todos los préstamos:", e);
+      return [];
+    }
+  }
+  // ==========================================
 // ALUMNOS
 // ==========================================
   async buscarAlumnoPorMatricula(matricula: string) {

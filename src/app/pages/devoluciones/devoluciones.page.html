@@ -1,51 +1,70 @@
 <ion-header class="ion-no-border">
   <ion-toolbar class="toolbar-elegante">
-    <ion-buttons slot="start">
-      <ion-menu-button color="light"></ion-menu-button>
-    </ion-buttons>
     <ion-title>Devoluciones</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="fondo-claro ion-padding">
-  <div class="contenedor-maximo">
+  <div class="contenedor-maximo ion-margin-top">
 
-    <!-- Mensaje si no hay nada pendiente -->
-    <div *ngIf="prestamosPendientes.length === 0" class="mensaje-vacio">
-      <ion-icon name="checkmark-circle-outline" class="icono-grande"></ion-icon>
-      <h2>¡Todo al día!</h2>
-      <p>No hay herramientas pendientes por devolver en el sistema.</p>
+    <ion-card class="tarjeta-formulario animated fadeIn">
+      <ion-card-content>
+        <ion-item class="input-limpio" lines="none">
+          <ion-label position="stacked">Matrícula o ID Maestro</ion-label>
+          <ion-input [(ngModel)]="busquedaId" (ionInput)="filtrarLista()" placeholder="Buscar deudor..."></ion-input>
+          <ion-button slot="end" fill="clear" (click)="escanearCodigo(); $event.stopPropagation()">
+            <ion-icon name="barcode-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <div *ngIf="prestamosAgrupados.length === 0 && !cargando" class="ion-text-center ion-padding animated fadeIn">
+      <ion-icon name="checkmark-done-circle-outline" size="large" color="success" style="font-size: 80px; opacity: 0.5;"></ion-icon>
+      <p style="color: #64748b; font-weight: 600;">No hay herramientas pendientes</p>
     </div>
 
-    <!-- Lista de pendientes directamente desde la Base de Datos -->
-    <ion-list class="lista-transparente" *ngIf="prestamosPendientes.length > 0">
-      
-      <ion-list-header>
-        <ion-label>
-          <h2 class="subtitulo">Préstamos Activos</h2>
-        </ion-label>
-      </ion-list-header>
+    <h2 class="subtitulo-gestion" *ngIf="prestamosAgrupados.length > 0">Préstamos Activos</h2>
 
-      <ion-item *ngFor="let prestamo of prestamosPendientes" class="item-limpio" lines="none">
-        
-        <div class="icono-contenedor" slot="start" [ngClass]="{'alerta-icono': prestamo.estado === 'Vencido'}">
-          <ion-icon [name]="prestamo.estado === 'Vencido' ? 'alert-circle-outline' : 'build-outline'"></ion-icon>
-        </div>
-        
+    <ion-list class="lista-transparente">
+      <ion-item *ngFor="let grupo of prestamosAgrupados" class="item-gestion ion-margin-bottom" lines="none">
         <ion-label>
-          <h3 class="herramienta-nombre">{{ prestamo.inventario.nombre_herramienta }} <span class="codigo-mini">({{ prestamo.num_herramienta }})</span></h3>
-          <p class="alumno-info">{{ prestamo.alumnos.nombre }} • Mat: {{ prestamo.alumnos.matricula }}</p>
-          <p class="estado-texto" [ngClass]="{'texto-peligro': prestamo.estado === 'Vencido'}">
-            Estado: {{ prestamo.estado }}
-          </p>
+          <h3 class="nombre-maestro">{{ grupo.receptor_nombre }}</h3>
+          
+          <div class="info-secundaria">
+            <ion-badge class="badge-id">ID: {{ grupo.receptor_id }}</ion-badge>
+            <span class="tipo-badge">{{ grupo.receptor_tipo }}</span>
+          </div>
+
+          <div class="seccion-validacion">
+            <ion-item class="input-limpio mini" lines="none">
+              <ion-input [(ngModel)]="grupo.inputValidacion" 
+                        (ionInput)="validarHerramientaEnGrupo(grupo)" 
+                        placeholder="Escanear o digitar código"></ion-input>
+              <ion-icon name="barcode-outline" slot="start"></ion-icon>
+            </ion-item>
+
+            <div class="lista-check-herramientas">
+              <div *ngFor="let h of grupo.datos_devolucion" class="check-item" [class.validado]="h.validado">
+                <ion-icon [name]="h.validado ? 'checkmark-circle' : 'ellipse-outline'" 
+                          [color]="h.validado ? 'success' : 'medium'"></ion-icon>
+                <small>{{ h.nombre }} ({{ h.codigo }})</small>
+              </div>
+            </div>
+          </div>
         </ion-label>
-        
-        <ion-button slot="end" class="boton-recibir" (click)="confirmarDevolucion(prestamo)">
-          Recibir
+
+        <ion-button slot="end" 
+                    class="boton-recibir" 
+                    color="success" 
+                    (click)="recibirTodo(grupo)"
+                    [disabled]="!grupo.todoValidado">
+          <ion-icon name="arrow-undo-outline" slot="start"></ion-icon>
+          RECIBIR
         </ion-button>
-
       </ion-item>
     </ion-list>
 
+    <div style="height: 50px;"></div>
   </div>
 </ion-content>

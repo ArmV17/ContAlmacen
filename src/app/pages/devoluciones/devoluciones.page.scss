@@ -1,4 +1,6 @@
-/* --- Estilos base (Sincronizados) --- */
+/* ==========================================================================
+   ESTILOS BASE Y CONTENEDORES (Sincronizados con el Sistema)
+   ========================================================================== */
 .toolbar-elegante { 
   --background: #1e293b; 
   --color: #ffffff; 
@@ -9,142 +11,235 @@
 }
 
 .contenedor-maximo { 
-  max-width: 800px; // Un poco más estrecho para que las tarjetas luzcan mejor
+  max-width: 800px; 
   margin: 0 auto; 
 }
 
-.subtitulo {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #64748b;
-  margin: 15px 0 10px 5px;
+/* ==========================================================================
+   BUSCADOR Y FORMULARIO
+   ========================================================================== */
+.tarjeta-formulario {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  border-radius: 16px;
+  background: #ffffff;
+  margin-bottom: 20px;
+  border: none;
 }
 
-/* --- Tarjeta de Devolución (Nuevo Diseño) --- */
-.tarjeta-devolucion {
-  margin: 15px 0;
-  border-radius: 20px; // Bordes más redondeados
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-  border: none;
-  background: #ffffff;
-  overflow: hidden;
+.input-limpio {
+  --background: #f8fafc;
+  --border-radius: 10px;
+  --padding-start: 15px;
+  margin-bottom: 10px;
+  border: 1px solid #e2e8f0;
+  
+  ion-input {
+    font-size: 1rem;
+    --color: #2c3e50;
+    --placeholder-color: #94a3b8;
+  }
+}
 
-  .item-cabecera {
-    --padding-start: 16px;
-    --inner-padding-end: 16px;
-    background: #f8fafc; // Fondo sutil para la cabecera
-    border-bottom: 1px solid #f1f5f9;
-    
-    .icono-herramienta {
-      background: #3b82f6;
-      color: white;
-      padding: 10px;
-      border-radius: 12px;
-      display: flex;
-      font-size: 1.3rem;
-      margin-right: 12px;
+/* ==========================================================================
+   LISTADO DE DEVOLUCIONES AGRUPADAS
+   ========================================================================== */
+.subtitulo-gestion {
+  margin: 25px 10px 15px 5px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.lista-transparente {
+  background: transparent;
+  padding: 0;
+
+  .item-gestion {
+    --background: #ffffff;
+    --border-radius: 16px;
+    --padding-start: 18px;
+    --padding-top: 15px;
+    --padding-bottom: 15px;
+    margin-bottom: 15px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+
+    &:active {
+      transform: scale(0.98);
     }
 
-    .herramienta-nombre {
-      font-weight: 800;
+    .nombre-maestro {
+      font-weight: 700 !important;
+      font-size: 1.15rem;
       color: #1e293b;
-      font-size: 1.1rem;
-      letter-spacing: -0.3px;
+      margin-bottom: 6px;
     }
 
-    .codigo-herramienta {
-      font-weight: 600;
+    .info-secundaria {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+
+      .badge-id {
+        --background: #f1f5f9;
+        --color: #475569;
+        font-weight: 700;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+      }
+
+      .separador {
+        color: #cbd5e1;
+      }
+
+      .tipo-badge {
+        font-size: 0.85rem;
+        color: #3b82f6;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+    }
+
+    /* Contenedor de herramientas agrupadas */
+    .materias-preview {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: #334155;
+      background: #f8fafc;
+      padding: 10px;
+      border-radius: 10px;
+      margin-top: 10px;
+      white-space: normal; // Permite salto de línea si hay muchas herramientas
+      
+      ion-icon {
+        font-size: 1.1rem;
+        color: #64748b;
+        margin-top: 2px;
+      }
+
+      strong {
+        color: #1e293b;
+      }
+    }
+
+    .correo-maestro {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       color: #64748b;
       font-size: 0.85rem;
-    }
-  }
+      margin-top: 10px;
 
-  .cuerpo-tarjeta {
-    padding: 16px;
-
-    .info-grid {
-      display: grid;
-      grid-template-columns: 1fr; // Una columna en móvil
-      gap: 10px;
-      margin-bottom: 18px;
-
-      @media (min-width: 576px) {
-        grid-template-columns: 1fr 1fr; // Dos columnas en tablets/PC
+      ion-icon {
+        font-size: 1rem;
+        color: #94a3b8;
       }
+    }
 
-      .info-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: #475569;
-        font-size: 0.9rem;
-        font-weight: 500;
+    /* Botón Recibir */
+    .boton-recibir {
+      --border-radius: 12px;
+      --box-shadow: 0 4px 8px rgba(45, 211, 111, 0.2);
+      font-weight: 700;
+      height: 45px;
+      margin-left: 15px;
+      font-size: 0.85rem;
 
-        ion-icon {
-          font-size: 1.2rem;
-          color: #3b82f6; // Azul distintivo de tus iconos
-        }
-
-        span {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
+      ion-icon {
+        font-size: 1.2rem;
       }
     }
   }
 }
 
-/* --- Botón Recibir Moderno --- */
-.boton-recibir-moderno {
-  --background: #3b82f6;
-  --background-activated: #2563eb;
-  --border-radius: 14px;
-  --box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-  height: 50px;
-  font-weight: 700;
-  font-size: 0.95rem;
-  margin: 0;
-  text-transform: none;
-}
-
-/* --- Estado Vacío --- */
+/* ==========================================================================
+   ESTADOS VACÍOS Y ANIMACIONES
+   ========================================================================== */
 .mensaje-vacio {
   text-align: center;
-  margin-top: 80px;
+  margin-top: 60px;
   padding: 20px;
 
-  .icono-grande {
-    font-size: 90px;
+  ion-icon {
+    font-size: 80px;
     color: #cbd5e1;
-    margin-bottom: 20px;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
-  }
-
-  h2 {
-    color: #1e293b;
-    font-weight: 800;
-    font-size: 1.6rem;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    opacity: 0.6;
   }
 
   p {
     color: #64748b;
-    font-size: 1rem;
-    max-width: 250px;
-    margin: 0 auto;
+    font-weight: 600;
+    font-size: 1.1rem;
   }
 }
 
-/* --- Animaciones --- */
 .animated {
   animation-duration: 0.5s;
   animation-fill-mode: both;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(15px); }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .fadeIn { animation-name: fadeIn; }
+.fadeInUp { animation-name: fadeInUp; }
+
+.seccion-validacion {
+  margin-top: 12px;
+  background: #f1f5f9;
+  padding: 10px;
+  border-radius: 12px;
+
+  .input-limpio.mini {
+    --min-height: 40px;
+    margin-bottom: 8px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+  }
+
+  .lista-check-herramientas {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      padding: 4px 0;
+      
+      .texto-herramienta {
+        font-size: 0.9rem;
+        margin-left: 8px;
+        
+        strong {
+          color: #3b82f6; // El código en azul para identificarlo rápido
+          background: #eff6ff;
+          padding: 2px 4px;
+          border-radius: 4px;
+        }
+      }
+
+      &.validado {
+        .texto-herramienta {
+          text-decoration: line-through;
+          color: #94a3b8;
+          strong { color: #94a3b8; background: #f1f5f9; }
+        }
+      }
+    }
+  }
+}
