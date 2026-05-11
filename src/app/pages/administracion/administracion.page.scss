@@ -1,6 +1,6 @@
-/* =======================================
-   ESTILOS GENERALES
-   ======================================= */
+/* ==========================================================================
+   1. ESTILOS BASE Y CONTENEDORES
+   ========================================================================== */
 .toolbar-elegante {
   --background: #1e293b;
   --color: #ffffff;
@@ -11,45 +11,36 @@
 }
 
 .contenedor-maximo {
-  max-width: 700px; /* Lo mantenemos angosto para que los formularios se vean limpios en PC */
+  max-width: 700px;
   margin: 0 auto;
   padding-top: 10px;
 }
 
-/* =======================================
-   PESTAÑAS DE NAVEGACIÓN (SEGMENT)
-   ======================================= */
+/* ==========================================================================
+   2. PESTAÑAS (SEGMENT)
+   ========================================================================== */
 ion-segment {
   margin-bottom: 10px;
   background: transparent;
   
   ion-segment-button {
-    /* Color de las pestañas NO seleccionadas (Gris claro) */
     --color: #cbd5e1; 
-    color: #cbd5e1; /* Respaldo forzado */
-    
-    /* Color de la pestaña seleccionada (Blanco) */
     --color-checked: #ffffff; 
-    
-    /* Color de la línea inferior (Azul estilo Ionic) */
     --indicator-color: #3498db; 
-    
     font-weight: 500;
     letter-spacing: 0.5px;
     opacity: 0.7;
-    transition: 0.3s;
   }
 
-  /* Efecto extra cuando está seleccionada */
   ion-segment-button.segment-button-checked {
     opacity: 1;
     font-weight: 600;
   }
 }
 
-/* =======================================
-   TARJETAS Y FORMULARIOS
-   ======================================= */
+/* ==========================================================================
+   3. TARJETAS Y FORMULARIOS (COMÚN)
+   ========================================================================== */
 .tarjeta-formulario {
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   border-radius: 16px;
@@ -64,7 +55,7 @@ ion-segment {
     display: flex;
     align-items: center;
 
-    .icono-seccion {
+    ion-icon {
       margin-right: 10px;
       color: #3498db;
     }
@@ -75,10 +66,9 @@ ion-segment {
   --background: #f8fafc;
   --border-radius: 10px;
   --padding-start: 15px;
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   border: 1px solid #e2e8f0;
   
-  /* Aplica tanto a inputs de texto como a listas desplegables (select) */
   ion-input, ion-select {
     font-size: 1rem;
     --color: #2c3e50;
@@ -86,39 +76,13 @@ ion-segment {
   }
 }
 
-/* =======================================
-   BOTONES
-   ======================================= */
-.boton-guardar {
-  --background: #27ae60; /* Verde de éxito */
-  --background-hover: #219653;
-  --border-radius: 12px;
-  --box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
-  height: 55px;
-  font-weight: 600;
-  font-size: 1.1rem;
-  letter-spacing: 0.5px;
-  margin-top: 20px;
-  margin-bottom: 5px;
-}
-
-.toolbar-elegante { --background: #1e293b; --color: #ffffff; }
-.fondo-claro { --background: #f4f5f8; }
-
-ion-segment {
-  background: transparent;
-  ion-segment-button {
-    --color: #cbd5e1;
-    --color-checked: #ffffff;
-    --indicator-color: #3498db;
-    font-weight: 500;
-  }
-}
-
+/* ==========================================================================
+   4. LISTADO DE GESTIÓN (ALUMNOS, MAESTROS, HERRAMIENTAS, EMPLEADOS)
+   ========================================================================== */
 .subtitulo-gestion {
-  margin: 30px 10px 10px;
+  margin: 30px 10px 15px 5px;
   font-size: 0.9rem;
-  font-weight: bold;
+  font-weight: 800;
   color: #64748b;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -126,42 +90,185 @@ ion-segment {
 
 .lista-gestion {
   background: transparent;
+  padding: 0;
+
   .item-gestion {
     --background: #ffffff;
-    margin-bottom: 10px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    
-    h3 { font-weight: 600; color: #1e293b; }
-    p { font-size: 0.85rem; color: #94a3b8; }
+    --border-radius: 16px;
+    --padding-start: 20px;
+    --padding-end: 8px;
+    margin-bottom: 12px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+
+    /* Títulos principales */
+    h3, .nombre-maestro {
+      font-weight: 700 !important;
+      color: #1e293b;
+      font-size: 1.05rem;
+      margin-bottom: 5px;
+    }
+
+    /* Líneas de información (ID, Depto, Correo) */
+    p, .info-secundaria, .correo-maestro {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #64748b;
+      margin: 4px 0;
+
+      ion-icon {
+        font-size: 1.1rem;
+        color: #94a3b8;
+      }
+    }
+
+    /* Estilos específicos para badges y depto */
+    .badge-id {
+      --background: #f1f5f9;
+      --color: #475569;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .texto-departamento {
+      color: #3b82f6;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* Divisor para materias o info extra */
+    .materias-preview {
+      border-top: 1px dashed #f1f5f9;
+      margin-top: 8px;
+      padding-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      small {
+        color: #334155;
+        font-style: italic;
+      }
+    }
   }
 }
 
+/* ==========================================================================
+   5. BOTONES DE ACCIÓN (END SLOT)
+   ========================================================================== */
+ion-buttons[slot="end"] {
+  display: flex !important;
+  align-items: center;
+
+  ion-button {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    height: 40px;
+    margin: 0;
+
+    ion-icon {
+      font-size: 1.4rem;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+
+    &[color="primary"] { --color: #3b82f6; }
+    &[color="danger"] { --color: #ef4444; }
+  }
+}
+
+/* ==========================================================================
+   6. BOTONES PRINCIPALES Y CHIPS
+   ========================================================================== */
 .boton-guardar {
   --background: #27ae60;
   --border-radius: 12px;
-  margin-top: 15px;
+  --box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+  height: 55px;
   font-weight: 600;
+  font-size: 1.1rem;
+  margin-top: 15px;
 }
 
-.input-limpio {
-  --background: #f8fafc;
-  --border-radius: 10px;
-  margin-bottom: 10px;
-  border: 1px solid #e2e8f0;
+.seccion-materias {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 15px;
+  
+  .contenedor-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+
+    ion-chip {
+      --background: #eff6ff;
+      --color: #1e40af;
+      height: 28px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  }
 }
 
 .item-gestion {
-  ion-buttons {
-    display: flex !important;
-    min-width: 160px; 
-    justify-content: flex-end;
+  --padding-start: 18px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+
+  .encabezado-maestro {
+    display: flex;
+    align-items: center;
+    gap: 10px; // Espacio entre nombre e ID
+    margin-bottom: 2px; // Pegamos la siguiente línea
+
+    .nombre-maestro {
+      margin: 0; // Quitamos margen por defecto
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .badge-id {
+      --background: #f1f5f9;
+      --color: #475569;
+      font-size: 0.7rem;
+      height: fit-content;
+      padding: 3px 6px;
+    }
   }
 
-  ion-icon {
-    font-size: 1.5rem;
-    margin: 0 4px;
-    visibility: visible !important;
-    opacity: 1 !important;
+  .detalles-contacto {
+    p {
+      margin: 0; // ELIMINA EL ESPACIO ENTRE LÍNEAS
+      line-height: 1.2; 
+    }
+
+    .correo-maestro {
+      color: #64748b;
+      font-size: 0.9rem;
+    }
+
+    .texto-departamento {
+      color: #3b82f6;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+  }
+
+  .divisor-materias {
+    border-top: 1px dashed #e2e8f0;
+    margin: 8px 0 4px 0; // Espacio controlado antes de materias
+  }
+
+  .materias-preview {
+    margin: 0;
+    small {
+      color: #475569;
+      font-style: italic;
+    }
   }
 }

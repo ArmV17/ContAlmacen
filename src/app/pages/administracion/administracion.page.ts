@@ -37,6 +37,7 @@ export class AdministracionPage {
   empleados: any[] = [];
   maestros: any[] = [];
   tiposExistentes: string[] = [];
+  listaDepartamentos: string[] = [];
 
   // --- PROPIEDADES PARA SUGERENCIAS ---
   nombresFiltrados: string[] = []; // Para sugerencias de nombre
@@ -50,7 +51,7 @@ export class AdministracionPage {
   herramientaNueva = { codigo: '', nombre: '', tipo: '', cantidad: 1, estado: 'Disponible' };
 
   // Modelos para Maestros
-  maestroNuevo = { numMaestro: '', nombre: '', correo: '', materias: [] as string[] };
+  maestroNuevo = { numMaestro: '', nombre: '', correo: '', materias: [] as string[], departamento: ''};
   materiaTemp: string = ''; 
 
   constructor(
@@ -76,6 +77,22 @@ export class AdministracionPage {
     this.tiposExistentes = await this.almacenService.obtenerTiposDeHerramientas();
     this.empleados = await this.almacenService.obtenerEmpleados();
     this.maestros = await this.almacenService.obtenerMaestros();
+    this.obtenerDepartamentosUnicos();
+  }
+
+  obtenerDepartamentosUnicos() {
+    const deps = this.maestros
+      .map(m => m.departamento)
+      .filter(d => d && d.trim() !== '');
+    
+    this.listaDepartamentos = [...new Set(deps)].sort() as string[];
+  }
+
+  formatearDepartamento(event: any) {
+    const valor = event.target.value;
+    if (valor) {
+      this.maestroNuevo.departamento = valor.toUpperCase();
+    }
   }
 
   validarCorreo(email: string): boolean {
@@ -392,10 +409,10 @@ export class AdministracionPage {
   }
 
   async guardarMaestro() {
-    const { numMaestro, nombre, correo } = this.maestroNuevo;
+    const { numMaestro, nombre, correo, departamento } = this.maestroNuevo;
 
-    if (!numMaestro || !nombre || !correo) {
-      this.mostrarMensaje('Nombre, Número y Correo son obligatorios', 'warning');
+    if (!numMaestro || !nombre || !correo || !departamento) {
+      this.mostrarMensaje('Nombre, Número, Correo y Departamento son obligatorios', 'warning');
       return;
     }
 
@@ -406,6 +423,7 @@ export class AdministracionPage {
 
     // APLICAR FORMATO A NOMBRE Y MATERIAS
     this.maestroNuevo.nombre = this.formatearNombrePropio(nombre);
+    this.maestroNuevo.departamento = departamento.toUpperCase().trim();
     this.maestroNuevo.materias = this.maestroNuevo.materias.map(m => this.formatearNombrePropio(m));
 
     if (this.maestroNuevo.materias.length === 0 && this.materiaTemp.trim() !== '') {
@@ -425,14 +443,15 @@ export class AdministracionPage {
         numMaestro: m.num_maestro, 
         nombre: m.nombre, 
         correo: m.correo || '',
-        materias: [...m.materias] 
+        materias: [...m.materias],
+        departamento: m.departamento || ''
     };
     this.editandoMaestro = true;
     window.scrollTo(0, 0);
   }
 
   cancelarEdicionMaestro() {
-    this.maestroNuevo = { numMaestro: '', nombre: '', correo: '', materias: [] };
+    this.maestroNuevo = { numMaestro: '', nombre: '', correo: '', materias: [], departamento: '' };
     this.materiaTemp = '';
     this.editandoMaestro = false;
   }

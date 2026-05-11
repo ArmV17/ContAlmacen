@@ -40,13 +40,22 @@
             </div>
 
             <ion-item class="input-limpio ion-margin-top" lines="none">
-              <ion-select label="Profesor que autoriza" labelPlacement="stacked" [(ngModel)]="prestamo.profesorAutoriza" (ionChange)="onProfesorChange()" placeholder="Selecciona al maestro">
-                <ion-select-option *ngFor="let p of listaMaestros" [value]="p.nombre">{{ p.nombre }}</ion-select-option>
+              <ion-select label="Profesor que autoriza" 
+                          labelPlacement="stacked" 
+                          interface="popover"
+                          [(ngModel)]="prestamo.profesorAutoriza" 
+                          (ionChange)="onProfesorChange()" 
+                          placeholder="Selecciona al maestro">
+                <ion-select-option *ngFor="let p of listaMaestros" [value]="p">{{ p.nombre }}</ion-select-option>
               </ion-select>
             </ion-item>
 
             <ion-item class="input-limpio" lines="none" *ngIf="prestamo.profesorAutoriza">
-              <ion-select label="Materia" labelPlacement="stacked" [(ngModel)]="prestamo.materia" placeholder="Selecciona la materia">
+              <ion-select label="Materia" 
+                          labelPlacement="stacked" 
+                          interface="popover"
+                          [(ngModel)]="prestamo.materia" 
+                          placeholder="Selecciona la materia">
                 <ion-select-option *ngFor="let m of materiasFiltradas" [value]="m">{{ m }}</ion-select-option>
               </ion-select>
             </ion-item>
@@ -62,12 +71,33 @@
 
           <div *ngIf="receptorEncontrado" class="animated fadeIn">
             <div class="banner-alumno banner-docente">
-              <p><strong>{{ prestamo.nombreReceptor }}</strong></p>
-              <p>Personal Docente (Autorizado)</p>
+              <div class="flex-header">
+                <strong>{{ prestamo.nombreReceptor }}</strong>
+                <ion-badge class="badge-id-prestamo">ID: {{ receptorEncontrado.num_maestro }}</ion-badge>
+              </div>
+              
+              <div class="detalles-compactos">
+                <p class="txt-secundario">{{ receptorEncontrado.correo }}</p>
+                <p class="txt-depto">Área: {{ receptorEncontrado.departamento || 'SIN ÁREA' }}</p>
+              </div>
+
+              <div class="status-cupo ion-margin-top">
+                <p *ngIf="receptorEncontrado.departamento !== 'SUELOS'" 
+                   [style.color]="(cantidadPrestamosActuales + carritoHerramientas.length) >= 5 ? '#dc2626' : '#1e40af'">
+                  Cupo: {{ cantidadPrestamosActuales + carritoHerramientas.length }} / 5
+                </p>
+                <p *ngIf="receptorEncontrado.departamento === 'SUELOS'" style="color: #166534;">
+                  <strong>Suelos: Sin límite de préstamo</strong>
+                </p>
+              </div>
             </div>
 
             <ion-item class="input-limpio ion-margin-top" lines="none">
-              <ion-select label="Materia que imparte" labelPlacement="stacked" [(ngModel)]="prestamo.materia" placeholder="Selecciona la materia">
+              <ion-select label="Materia que imparte" 
+                          labelPlacement="stacked" 
+                          interface="popover"
+                          [(ngModel)]="prestamo.materia" 
+                          placeholder="Selecciona la materia">
                 <ion-select-option *ngFor="let m of materiasFiltradas" [value]="m">{{ m }}</ion-select-option>
               </ion-select>
             </ion-item>
@@ -85,10 +115,13 @@
     </ion-card>
 
     <ion-card class="tarjeta-formulario animated fadeIn" 
-      *ngIf="receptorEncontrado && (prestamo.tipoReceptor === 'profesor' || (cantidadPrestamosActuales + carritoHerramientas.length < 5))">
+      *ngIf="receptorEncontrado && (
+        (prestamo.tipoReceptor === 'profesor' && receptorEncontrado.departamento === 'SUELOS') || 
+        (cantidadPrestamosActuales + carritoHerramientas.length < 5)
+      )">
       <ion-card-header>
         <ion-card-title class="titulo-seccion">
-          <ion-icon name="build-outline"></ion-icon> Herramienta
+          <ion-icon name="build-outline" class="icono-seccion"></ion-icon> Herramienta
         </ion-card-title>
       </ion-card-header>
       

@@ -259,3 +259,39 @@
 
 .fadeIn { animation-name: fadeIn; }
 .fadeInUp { animation-name: fadeInUp; }
+
+.banner-docente {
+  .flex-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+    
+    .badge-id-prestamo {
+      --background: #f1f5f9;
+      --color: #475569;
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+  }
+
+  .detalles-compactos {
+    p {
+      margin: 0 !important; // Elimina el espacio entre correo y área
+      line-height: 1.3;
+      font-size: 0.9rem;
+    }
+    .txt-secundario { color: #64748b; }
+    .txt-depto { 
+      color: #3b82f6; 
+      font-weight: 700; 
+      text-transform: uppercase;
+    }
+  }
+}
+
+/* Fix para que los selectores Popover se vean bien en PC */
+ion-popover {
+  --width: 300px;
+}

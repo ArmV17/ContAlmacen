@@ -141,6 +141,21 @@
             </ion-input>
           </ion-item>
 
+          <ion-item class="input-limpio" lines="none">
+            <ion-label position="stacked">Departamento / Área</ion-label>
+            <ion-input 
+              type="text"
+              list="departamentosExistentes"
+              [(ngModel)]="maestroNuevo.departamento" 
+              placeholder="Ej: Industrial, Mecatrónica..."
+              (ionInput)="formatearDepartamento($event)">
+            </ion-input>
+            
+            <datalist id="departamentosExistentes">
+              <option *ngFor="let dep of listaDepartamentos" [value]="dep"></option>
+            </datalist>
+          </ion-item>
+
           <div class="seccion-materias ion-margin-top">
             <ion-item class="input-limpio" lines="none">
               <ion-input 
@@ -177,22 +192,33 @@
       </ion-card>
 
       <h2 class="subtitulo-gestion">Docentes Registrados</h2>
+
       <ion-list class="lista-gestion">
         <ion-item *ngFor="let m of listaFiltrada" lines="none" class="item-gestion">
+          
           <ion-label>
-            <h3>{{ m.nombre }}</h3>
-            <p>ID: {{ m.num_maestro }} | {{ m.correo }}</p>
+            <div class="encabezado-maestro">
+              <h3 class="nombre-maestro">{{ m.nombre }}</h3>
+              <ion-badge class="badge-id">ID: {{ m.num_maestro }}</ion-badge>
+            </div>
+            
+            <div class="detalles-contacto">
+              <p class="correo-maestro">{{ m.correo }}</p>
+              <p class="texto-departamento">{{ m.departamento || 'SIN ÁREA' }}</p>
+            </div>
+
+            <div class="divisor-materias"></div>
             <p class="materias-preview">
-              <small>Materias: {{ m.materias?.join(', ') || 'Ninguna' }}</small>
+              <small>Materias: {{ m.materias?.join(', ') || 'Sin materias asignadas' }}</small>
             </p>
           </ion-label>
           
           <ion-buttons slot="end">
-            <ion-button (click)="prepararEdicionMaestro(m)" color="primary">
-              <ion-icon name="create-outline"></ion-icon>
+            <ion-button (click)="prepararEdicionMaestro(m)" fill="clear" class="boton-editar">
+              <ion-icon slot="icon-only" name="create-outline"></ion-icon>
             </ion-button>
-            <ion-button (click)="confirmarEliminar('maestros', m.num_maestro, m.nombre)" color="danger">
-              <ion-icon name="trash-outline"></ion-icon>
+            <ion-button (click)="confirmarEliminar('maestros', m.num_maestro, m.nombre)" fill="clear" class="boton-eliminar">
+              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
             </ion-button>
           </ion-buttons>
         </ion-item>

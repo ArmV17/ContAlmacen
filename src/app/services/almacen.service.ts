@@ -146,48 +146,45 @@ export class AlmacenService {
     try {
       const prestamosRef = collection(this.firestore, 'prestamos');
       
-      // 1. Lógica para formatear Nombre + Tipo (Si no hay tipo, solo queda el nombre)
       const nombreHerramientaFull = datos.herramienta.tipo_herramienta 
         ? `${datos.herramienta.nombre_herramienta} (${datos.herramienta.tipo_herramienta})`
         : datos.herramienta.nombre_herramienta;
 
-      // 2. Estructura de datos detallada (Desnormalización para historial permanente)
       const docData = {
-        // Información del Receptor (Sea Alumno o Profesor)
         receptor_id: datos.receptor.id,
         receptor_nombre: datos.receptor.nombre,
         receptor_tipo: datos.esProfesor ? 'Profesor' : 'Alumno',
-        receptor_info_extra: datos.receptor.info_extra, // Carrera o "Personal Docente"
+        receptor_info_extra: datos.receptor.info_extra,
 
-        // Información de Autorización
         autorizado_por_nombre: datos.autorizador.nombre,
         autorizado_por_id: datos.autorizador.num_empleado,
+        // --- AGREGAMOS EL DEPARTAMENTO AL REGISTRO DEL PRÉSTAMO ---
+        autorizado_por_depto: datos.autorizador.departamento || 'N/A', 
         materia: datos.materia,
         
-        // Información de la Herramienta
-        herramienta_id_db: datos.herramienta.id,       // ID del documento en Firestore
-        herramienta_codigo: datos.herramienta.num_herramienta, // Código físico (ARA-01)
+        // Usamos el ID del documento de Firestore o el num_herramienta como respaldo
+        herramienta_id_db: datos.herramienta.id || datos.herramienta.num_herramienta, 
+        herramienta_codigo: datos.herramienta.num_herramienta,
         herramienta_nombre: nombreHerramientaFull,
         
-        // Fechas (Timestamp de JS a Firestore)
         fecha_prestamo: new Date(),
         fecha_devolucion_pactada: new Date(datos.fechaEntrega),
         
-        // Control de Gestión
         empleado_almacen: datos.empleadoAlmacen,
         estado: 'Activo'
       };
 
-      // 3. Guardar el registro en la colección 'prestamos'
       await addDoc(prestamosRef, docData);
 
-      // 4. Actualizar el estado físico en la colección 'inventario'
-      const herramientaDoc = doc(this.firestore, 'inventario', datos.herramienta.id);
+      // --- CORRECCIÓN EN LA ACTUALIZACIÓN DEL INVENTARIO ---
+      // Usamos el código de la herramienta como ID del documento
+      const herramientaDocId = datos.herramienta.id || datos.herramienta.num_herramienta;
+      const herramientaDoc = doc(this.firestore, 'inventario', herramientaDocId);
       
       await updateDoc(herramientaDoc, {
         prestada: true,
         estado: 'Prestado',
-        usuario_prestamo: datos.receptor.id // Guardamos quién la tiene físicamente
+        usuario_prestamo: datos.receptor.id
       });
 
       return { exito: true };
@@ -211,6 +208,7 @@ export class AlmacenService {
       const snap = await getDocs(q);
       return snap.size;
     } catch (e) {
+      console.error("Error al contar préstamos:", e);
       return 0;
     }
 }
@@ -265,31 +263,39 @@ export class AlmacenService {
   // ==========================================
   // MAESTROS Y EMPLEADOS
   // ==========================================
-  async obtenerMaestros() {
+async obtenerMaestros() {
     try {
       const snapshot = await getDocs(collection(this.firestore, 'maestros'));
       return snapshot.docs.map(d => {
         const data: any = d.data();
+        
         try { 
           if (data.nombre) {
             data.nombre = this.desencriptarTexto(data.nombre); 
           }
-          // Si el número de maestro también está encriptado, desencriptalo aquí
-          // Si NO está encriptado, se pasará directo en el ...data
-        } catch (e) {}
+          
+          if (data.departamento) {
+            try {
+              data.departamento = this.desencriptarTexto(data.departamento);
+            } catch {
+            }
+          }
+        } catch (e) {
+          console.error("Error al procesar datos del maestro:", e);
+        }
         
         return { 
           id: d.id, 
           ...data,
-          // Forzamos una copia para estar seguros del nombre del campo
-          num_maestro: data.num_maestro 
+          num_maestro: data.num_maestro,
+          departamento: data.departamento || 'SIN ÁREA'
         };
       });
     } catch (error) {
       console.error("Error al obtener maestros:", error);
       return [];
     }
-}
+  }
 
   async registrarMaestro(maestro: any) {
     try {
@@ -297,11 +303,31 @@ export class AlmacenService {
         num_maestro: maestro.numMaestro,
         nombre: this.encriptarTexto(maestro.nombre),
         correo: maestro.correo,
-        materias: maestro.materias
+        materias: maestro.materias,
+        // --- AGREGAMOS DEPARTAMENTO ENCRIPTADO ---
+        departamento: this.encriptarTexto(maestro.departamento || 'SIN AREA')
       });
       return { exito: true };
     } catch (e: any) {
       return { exito: false, mensaje: e.message };
+    }
+  }
+
+  async buscarMaestroPorId(id: string) {
+    try {
+      const docRef = doc(this.firestore, 'maestros', id);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data: any = snap.data();
+        if (data.nombre) data.nombre = this.desencriptarTexto(data.nombre);
+        if (data.departamento) {
+          try { data.departamento = this.desencriptarTexto(data.departamento); } catch { }
+        }
+        return { id: snap.id, ...data };
+      }
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 

@@ -7,7 +7,8 @@ import {
   saveOutline, personOutline, buildOutline, barcodeOutline, 
   menu, alertCircle, checkmarkCircle, sendOutline, 
   qrCodeOutline, hammerOutline, trashOutline, addOutline, 
-  constructOutline, addCircleOutline, listOutline, trashBinOutline
+  constructOutline, addCircleOutline, listOutline, trashBinOutline,
+  chevronDownOutline, chevronUpOutline
 } from 'ionicons/icons';
 
 // Importamos el servicio
@@ -23,11 +24,11 @@ import { AlmacenService } from '../../services/almacen.service';
 export class NuevoPrestamoPage implements OnInit {
 
   // Estructura del préstamo (Modelo de la vista)
-  prestamo = {
+  prestamo: any = {
     tipoReceptor: 'alumno',   // 'alumno' o 'profesor'
     identificador: '',        // Matrícula o N° Empleado
     nombreReceptor: '',
-    profesorAutoriza: '',     // Solo para alumnos
+    profesorAutoriza: null,   // Ahora manejamos el objeto completo del maestro
     materia: '',
     fechaEntrega: ''
   };
@@ -45,7 +46,7 @@ export class NuevoPrestamoPage implements OnInit {
   carritoHerramientas: any[] = []; 
   cantidadPrestamosActuales: number = 0; // Préstamos activos en BD
 
-  // Configuración temporal (Responsable del almacén)
+  // Configuración (Responsable del almacén)
   empleadoActual = 'EMP-01';
 
   constructor(
@@ -56,7 +57,8 @@ export class NuevoPrestamoPage implements OnInit {
       saveOutline, personOutline, buildOutline, barcodeOutline, 
       menu, alertCircle, checkmarkCircle, sendOutline, 
       qrCodeOutline, hammerOutline, trashOutline, addOutline, 
-      constructOutline, addCircleOutline, listOutline, trashBinOutline
+      constructOutline, addCircleOutline, listOutline, trashBinOutline,
+      chevronDownOutline, chevronUpOutline
     });
   }
 
@@ -78,7 +80,7 @@ export class NuevoPrestamoPage implements OnInit {
   }
 
   /**
-   * Verifica la existencia del Alumno o Profesor según el Segment seleccionado
+   * Verifica la existencia del Alumno o Profesor
    */
   async verificarReceptor() {
     const id = this.prestamo.identificador.trim();
@@ -96,7 +98,7 @@ export class NuevoPrestamoPage implements OnInit {
         }
       }
     } else {
-      // --- CAMBIO AQUÍ: Usamos num_maestro ---
+      // Búsqueda para Profesor
       const prof = this.listaMaestros.find(p => 
         String(p.num_maestro).trim() === String(id)
       );
@@ -106,15 +108,24 @@ export class NuevoPrestamoPage implements OnInit {
         this.prestamo.nombreReceptor = prof.nombre;
         this.materiasFiltradas = prof.materias || [];
         this.prestamo.materia = ''; 
-      } else {
-        // Opcional: un log para ver qué hay en la lista si no lo encuentra
-        console.log("No encontrado. Lista disponible:", this.listaMaestros);
+        this.cantidadPrestamosActuales = await this.almacenService.contarPrestamosActivos(id);
       }
     }
   }
 
   /**
-   * Busca herramientas disponibles en el inventario local
+   * Se ejecuta cuando un alumno selecciona al profesor que autoriza
+   */
+  onProfesorChange() {
+    // profesorAutoriza ahora contiene el objeto completo del maestro
+    if (this.prestamo.profesorAutoriza) {
+      this.materiasFiltradas = this.prestamo.profesorAutoriza.materias || [];
+      this.prestamo.materia = ''; 
+    }
+  }
+
+  /**
+   * Busca herramientas disponibles
    */
   async buscarHerramienta() {
     if (!this.codigoBusqueda) {
@@ -139,7 +150,7 @@ export class NuevoPrestamoPage implements OnInit {
   }
 
   /**
-   * Añade la herramienta al carrito (Valida límite solo para alumnos)
+   * Añade la herramienta al carrito con validación de "Suelos"
    */
   agregarAlCarrito() {
     if (!this.herramientaEncontrada) return;
@@ -150,12 +161,17 @@ export class NuevoPrestamoPage implements OnInit {
       return;
     }
 
-    // Validar límite de 5 SOLO SI ES ALUMNO
-    if (this.prestamo.tipoReceptor === 'alumno') {
-      if ((this.cantidadPrestamosActuales + this.carritoHerramientas.length) >= 5) {
-        this.mostrarMensaje('Límite de 5 herramientas alcanzado para alumnos.', 'danger');
-        return;
-      }
+    // Lógica de límites
+    let tieneLimite = true;
+
+    // Si es profesor y del área de SUELOS, no tiene límite
+    if (this.prestamo.tipoReceptor === 'profesor' && this.receptorEncontrado?.departamento === 'SUELOS') {
+      tieneLimite = false;
+    }
+
+    if (tieneLimite && (this.cantidadPrestamosActuales + this.carritoHerramientas.length) >= 5) {
+      this.mostrarMensaje('Límite de 5 herramientas alcanzado.', 'danger');
+      return;
     }
 
     this.carritoHerramientas.push(this.herramientaEncontrada);
@@ -168,25 +184,20 @@ export class NuevoPrestamoPage implements OnInit {
     this.carritoHerramientas.splice(index, 1);
   }
 
-  onProfesorChange() {
-    const prof = this.listaMaestros.find(p => p.nombre === this.prestamo.profesorAutoriza);
-    this.materiasFiltradas = prof ? prof.materias : [];
-    this.prestamo.materia = ''; 
-  }
-
   /**
-   * Registra los préstamos en Firebase
+   * Registra los préstamos en Firebase incluyendo el Departamento
    */
   async finalizarPrestamo() {
-    if (this.carritoHerramientas.length === 0 || !this.prestamo.fechaEntrega) {
+    if (this.carritoHerramientas.length === 0 || !this.prestamo.materia || !this.prestamo.fechaEntrega) {
       this.mostrarMensaje('Completa los datos y la lista.', 'warning');
       return;
     }
 
     let exitos = 0;
     
+    // Identificar quién es el docente responsable (el que autoriza o el que recibe directamente)
     const autorizador = this.prestamo.tipoReceptor === 'alumno' 
-      ? this.listaMaestros.find(p => p.nombre === this.prestamo.profesorAutoriza)
+      ? this.prestamo.profesorAutoriza 
       : this.receptorEncontrado;
 
     for (const h of this.carritoHerramientas) {
@@ -198,8 +209,9 @@ export class NuevoPrestamoPage implements OnInit {
           info_extra: this.prestamo.tipoReceptor === 'alumno' ? this.receptorEncontrado.carrera : 'Personal Docente'
         },
         autorizador: {
-          num_empleado: autorizador?.num_maestro || 'S/N', // Usando tu campo corregido
-          nombre: autorizador?.nombre || 'Auto-autorizado'
+          num_empleado: autorizador?.num_maestro || 'S/N',
+          nombre: autorizador?.nombre || 'Auto-autorizado',
+          departamento: autorizador?.departamento || 'N/A' // Guardamos el departamento en el registro
         },
         herramienta: h,
         materia: this.prestamo.materia,
@@ -212,8 +224,7 @@ export class NuevoPrestamoPage implements OnInit {
       if (resultado.exito) {
         exitos++;
         
-        // --- ESTO ES LO NUEVO: ACTUALIZACIÓN INSTANTÁNEA ---
-        // Buscamos la herramienta en nuestra lista local y la marcamos como prestada
+        // Actualización instantánea local del inventario
         const index = this.listaInventario.findIndex(item => item.id === h.id);
         if (index !== -1) {
           this.listaInventario[index].prestada = true;
@@ -227,21 +238,20 @@ export class NuevoPrestamoPage implements OnInit {
       this.limpiarFormulario();
     } else {
       this.mostrarMensaje('Error en algunos registros.', 'danger');
-      // Si algo falló, recargamos por seguridad
       await this.cargarInventario();
     }
   }
 
   limpiarFormulario() {
     this.prestamo = { 
-      tipoReceptor: this.prestamo.tipoReceptor, // Mantenemos el tipo seleccionado
+      tipoReceptor: this.prestamo.tipoReceptor,
       identificador: '', 
       nombreReceptor: '', 
-      profesorAutoriza: '', 
+      profesorAutoriza: null, 
       materia: '', 
       fechaEntrega: '' 
     };
-    this.receptorEncontrado = null; // CRÍTICO: Borra al usuario anterior
+    this.receptorEncontrado = null;
     this.carritoHerramientas = [];
     this.cantidadPrestamosActuales = 0;
     this.codigoBusqueda = '';
@@ -260,6 +270,7 @@ export class NuevoPrestamoPage implements OnInit {
   }
 
   async escanearCodigo() {
-    this.mostrarMensaje('Escáner próximamente', 'medium');
+    // Aquí puedes integrar el capacitor-barcode-scanner después
+    this.mostrarMensaje('Escáner listo para conectar.', 'medium');
   }
 }
