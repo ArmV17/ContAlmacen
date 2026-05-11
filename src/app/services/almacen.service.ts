@@ -44,32 +44,58 @@ export class AlmacenService {
   async obtenerPrestamosDashboard() {
     try {
       const colRef = collection(this.firestore, 'prestamos');
-      // Buscamos solo los que no han sido devueltos
       const q = query(colRef, where('estado', '==', 'Activo'));
       const snapshot = await getDocs(q);
 
       if (snapshot.empty) return [];
 
+      // 1. Obtenemos el momento exacto de este instante
+      const ahora = new Date();
+      const ahoraMS = ahora.getTime();
+
       return await Promise.all(snapshot.docs.map(async (d) => {
         const data: any = d.data();
-        
-        // IMPORTANTE: Verifica que estos IDs existan en sus respectivas colecciones
-        const aluSnap = await getDoc(doc(this.firestore, 'alumnos', data.matricula));
-        const invSnap = await getDoc(doc(this.firestore, 'inventario', data.herramientaId));
-        
-        const aluData: any = aluSnap.exists() ? aluSnap.data() : { nombre: 'Alumno no encontrado' };
-        const invData: any = invSnap.exists() ? invSnap.data() : { nombre_herramienta: 'Herramienta no encontrada' };
+        let aluData = { nombre: data.receptor_nombre || 'Desconocido' };
+        let invData = { nombre_herramienta: data.herramienta_nombre || 'Herramienta' };
 
-        // Desencriptamos el nombre del alumno si es necesario
+        // --- Búsqueda de detalles de alumno ---
         try {
-          if (aluData.nombre) {
-            aluData.nombre = this.desencriptarTexto(aluData.nombre);
+          if (data.receptor_id) {
+            const aluSnap = await getDoc(doc(this.firestore, 'alumnos', data.receptor_id));
+            if (aluSnap.exists()) {
+              const tempAlu: any = aluSnap.data();
+              try { tempAlu.nombre = this.desencriptarTexto(tempAlu.nombre); } catch (e) { }
+              aluData = tempAlu;
+            }
           }
-        } catch (e) { console.error("Error al desencriptar"); }
+        } catch (e) { }
+
+        // --- LÓGICA DE VENCIMIENTO A LAS 3:00 PM ---
+        let estadoVisual = data.estado;
+        if (data.fecha_devolucion_pactada) {
+          const fechaPactada = data.fecha_devolucion_pactada.toDate();
+          
+          // Creamos la fecha límite: el día pactado a las 15:00:00 (3 PM)
+          const fechaLimite = new Date(
+            fechaPactada.getFullYear(),
+            fechaPactada.getMonth(),
+            fechaPactada.getDate(),
+            15, 0, 0, 0 // 15:00 horas
+          );
+
+          // Si el momento actual ya pasó las 3 PM de ese día -> Vencido
+          // Si todavía no son las 3 PM -> Activo
+          if (ahoraMS > fechaLimite.getTime()) {
+            estadoVisual = 'Vencido';
+          } else {
+            estadoVisual = 'Activo';
+          }
+        }
 
         return { 
           id: d.id, 
           ...data, 
+          estado: estadoVisual,
           alumnos: aluData, 
           inventario: invData 
         };
@@ -146,6 +172,29 @@ export class AlmacenService {
     try {
       const prestamosRef = collection(this.firestore, 'prestamos');
       
+      // 1. BUSCAR EL CORREO AUTOMÁTICAMENTE EN LA TABLA CORRESPONDIENTE
+      let correoFinal = datos.receptor.correo; // Intentamos ver si ya viene
+
+      if (!correoFinal && datos.receptor.id) {
+        // Si no viene, lo buscamos en la colección según el tipo
+        const coleccionNombre = datos.esProfesor ? 'maestros' : 'alumnos';
+        const userDoc = await getDoc(doc(this.firestore, coleccionNombre, datos.receptor.id));
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data() as any;
+          correoFinal = userData.correo; // Aquí recuperamos el correo de tu tabla
+        }
+      }
+
+      // 2. LÓGICA DE FECHA (REGLA DE LAS 3 PM)
+      const fechaBase = new Date(datos.fechaEntrega);
+      const fechaCorregida = new Date(
+        fechaBase.getUTCFullYear(),
+        fechaBase.getUTCMonth(),
+        fechaBase.getUTCDate(),
+        15, 0, 0 // 3:00 PM
+      );
+
       const nombreHerramientaFull = datos.herramienta.tipo_herramienta 
         ? `${datos.herramienta.nombre_herramienta} (${datos.herramienta.tipo_herramienta})`
         : datos.herramienta.nombre_herramienta;
@@ -153,35 +202,37 @@ export class AlmacenService {
       const docData = {
         receptor_id: datos.receptor.id,
         receptor_nombre: datos.receptor.nombre,
+        receptor_correo: correoFinal || 'sin_correo@utc.edu.mx', // Se guarda el correo encontrado
         receptor_tipo: datos.esProfesor ? 'Profesor' : 'Alumno',
-        receptor_info_extra: datos.receptor.info_extra,
-
+        receptor_info_extra: datos.receptor.info_extra || '',
         autorizado_por_nombre: datos.autorizador.nombre,
         autorizado_por_id: datos.autorizador.num_empleado,
-        // --- AGREGAMOS EL DEPARTAMENTO AL REGISTRO DEL PRÉSTAMO ---
         autorizado_por_depto: datos.autorizador.departamento || 'N/A', 
-        materia: datos.materia,
-        
-        // Usamos el ID del documento de Firestore o el num_herramienta como respaldo
+        materia: datos.materia || 'General',
         herramienta_id_db: datos.herramienta.id || datos.herramienta.num_herramienta, 
         herramienta_codigo: datos.herramienta.num_herramienta,
         herramienta_nombre: nombreHerramientaFull,
-        
         fecha_prestamo: new Date(),
-        fecha_devolucion_pactada: new Date(datos.fechaEntrega),
-        
-        empleado_almacen: datos.empleadoAlmacen,
+        fecha_devolucion_pactada: fechaCorregida,
+        empleado_almacen: datos.empleadoAlmacen || 'Admin',
         estado: 'Activo'
       };
 
+      // 3. GUARDAR EN FIREBASE
       await addDoc(prestamosRef, docData);
 
-      // --- CORRECCIÓN EN LA ACTUALIZACIÓN DEL INVENTARIO ---
-      // Usamos el código de la herramienta como ID del documento
+      // 4. ENVIAR A GOOGLE SHEETS (Ahora sí con correo garantizado)
+      const fechaISO = fechaCorregida.toISOString().split('T')[0];
+      await this.enviarAlertaGoogle({
+        to_email: correoFinal, // <--- Este ya no debería ser undefined
+        nombre: docData.receptor_nombre,
+        herramienta: docData.herramienta_nombre,
+        fecha_entrega: fechaISO 
+      });
+
+      // 5. ACTUALIZAR INVENTARIO
       const herramientaDocId = datos.herramienta.id || datos.herramienta.num_herramienta;
-      const herramientaDoc = doc(this.firestore, 'inventario', herramientaDocId);
-      
-      await updateDoc(herramientaDoc, {
+      await updateDoc(doc(this.firestore, 'inventario', herramientaDocId), {
         prestada: true,
         estado: 'Prestado',
         usuario_prestamo: datos.receptor.id
@@ -189,11 +240,10 @@ export class AlmacenService {
 
       return { exito: true };
     } catch (e) {
-      console.error("Error crítico en registrarNuevoPrestamoDetallado:", e);
+      console.error("Error crítico:", e);
       return { exito: false };
     }
   }
-
   /**
    * Método auxiliar para contar préstamos (Asegúrate de que use el campo genérico receptor_id)
    */
@@ -375,6 +425,117 @@ async obtenerMaestros() {
       return { exito: true };
     } catch (e: any) {
       return { exito: false, mensaje: e.message };
+    }
+  }
+
+  // ==========================================
+  // SISTEMA DE ALERTAS (GOOGLE SCRIPT)
+  // ==========================================
+
+  /**
+   * Envía la petición al Google Apps Script para disparar el correo
+   */
+  async enviarAlertaGoogle(datos: any) {
+    const urlScript = environment.urlGoogleScript; 
+    
+    const payload = {
+      to_email: datos.to_email,
+      nombre: datos.nombre,
+      herramienta: datos.herramienta,
+      fecha_entrega: datos.fecha_entrega // Formato YYYY-MM-DD
+    };
+
+    try {
+      // Usamos mode: 'no-cors' porque Google Apps Script no devuelve cabeceras CORS estándar
+      await fetch(urlScript, {
+        method: 'POST',
+        mode: 'no-cors', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      return { exito: true };
+    } catch (error) {
+      console.error("Error al contactar el script de Google:", error);
+      return { exito: false };
+    }
+  }
+
+  /**
+   * Obtiene préstamos de Firestore cuya fecha pactada de entrega es HOY
+   */
+  async obtenerPrestamosParaHoy(fechaISO: string) {
+    try {
+      const colRef = collection(this.firestore, 'prestamos');
+      
+      // Creamos el rango del día (00:00:00 a 23:59:59)
+      const inicioDia = new Date(fechaISO + 'T00:00:00');
+      const finDia = new Date(fechaISO + 'T23:59:59');
+
+      const q = query(
+        colRef, 
+        // Solo revisamos los que siguen en manos del alumno
+        where('estado', '==', 'Activo'),
+        where('fecha_devolucion_pactada', '>=', inicioDia),
+        where('fecha_devolucion_pactada', '<=', finDia)
+      );
+
+      const snapshot = await getDocs(q);
+      
+      // Mapeamos los datos necesarios para el correo
+      return await Promise.all(snapshot.docs.map(async d => {
+        const data: any = d.data();
+        
+        // Buscamos el correo del receptor (sea alumno o maestro)
+        // Intentamos obtenerlo del documento del alumno/maestro si no está en el préstamo
+        let correo = data.receptor_correo;
+        if (!correo) {
+          const colBusqueda = data.receptor_tipo === 'Alumno' ? 'alumnos' : 'maestros';
+          const userSnap = await getDoc(doc(this.firestore, colBusqueda, data.receptor_id));
+          if (userSnap.exists()) {
+            correo = (userSnap.data() as any).correo;
+          }
+        }
+
+        return { 
+          id: d.id, 
+          receptor_nombre: data.receptor_nombre,
+          receptor_correo: correo,
+          herramienta_nombre: data.herramienta_nombre
+        };
+      }));
+    } catch (error) {
+      console.error("Error al buscar préstamos de hoy:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Verifica en la colección 'logs_notificaciones' si ya se enviaron alertas hoy
+   */
+  async comprobarSiYaSeNotificoHoy(fecha: string): Promise<boolean> {
+    try {
+      const docRef = doc(this.firestore, 'logs_notificaciones', fecha);
+      const snap = await getDoc(docRef);
+      return snap.exists();
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Registra en Firestore que las alertas de hoy ya fueron procesadas
+   */
+  async registrarNotificacionExitosa(fecha: string) {
+    try {
+      const docRef = doc(this.firestore, 'logs_notificaciones', fecha);
+      return await setDoc(docRef, { 
+        enviado: true, 
+        fecha_ejecucion: new Date(),
+        sistema: 'Dashboard Almacen UTC' 
+      });
+    } catch (e) {
+      console.error("Error al registrar log de notificación:", e);
     }
   }
 }

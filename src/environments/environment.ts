@@ -9,5 +9,6 @@ export const environment = {
   appId: "1:330253409730:web:26971f940f2100e5790a5b",
   measurementId: "G-TVDK5JZX12"
 },
-  llaveCifrado: 'ContAlmacen_S3cr3t_K3y_2026_xyz!'
+  llaveCifrado: 'ContAlmacen_S3cr3t_K3y_2026_xyz!',
+  urlGoogleScript: 'https://script.google.com/macros/s/AKfycbx_E9NxOinpGZ72BCl7831BnQKJzu2EcKoVeQI7IbW2nQCS4XstzljNL8moKOhPvR_O/exec'
 };
