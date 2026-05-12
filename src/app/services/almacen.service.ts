@@ -195,65 +195,68 @@ export class AlmacenService {
     try {
       const prestamosRef = collection(this.firestore, 'prestamos');
       
-      // 1. BUSCAR EL CORREO AUTOMÁTICAMENTE EN LA TABLA CORRESPONDIENTE
-      let correoFinal = datos.receptor.correo; // Intentamos ver si ya viene
+      // 1. RECUPERAR DATOS DEL EMPLEADO LOGUEADO (SESIÓN ACTUAL)
+      // Si no vienen en 'datos', los tomamos del localStorage
+      const nombreEmpleadoSesion = localStorage.getItem('userName') || 'Admin';
+      const numEmpleadoSesion = localStorage.getItem('userNum') || '0000';
+
+      // 2. BUSCAR EL CORREO AUTOMÁTICAMENTE
+      let correoFinal = datos.receptor.correo;
 
       if (!correoFinal && datos.receptor.id) {
-        // Si no viene, lo buscamos en la colección según el tipo
         const coleccionNombre = datos.esProfesor ? 'maestros' : 'alumnos';
         const userDoc = await getDoc(doc(this.firestore, coleccionNombre, datos.receptor.id));
         
         if (userDoc.exists()) {
           const userData = userDoc.data() as any;
-          correoFinal = userData.correo; // Aquí recuperamos el correo de tu tabla
+          correoFinal = userData.correo;
         }
       }
 
-      // 2. LÓGICA DE FECHA (REGLA DE LAS 3 PM)
+      // 3. LÓGICA DE FECHA (REGLA DE LAS 3 PM)
       const fechaBase = new Date(datos.fechaEntrega);
       const fechaCorregida = new Date(
         fechaBase.getUTCFullYear(),
         fechaBase.getUTCMonth(),
         fechaBase.getUTCDate(),
-        15, 0, 0 // 3:00 PM
+        15, 0, 0 
       );
 
       const nombreHerramientaFull = datos.herramienta.tipo_herramienta 
         ? `${datos.herramienta.nombre_herramienta} (${datos.herramienta.tipo_herramienta})`
         : datos.herramienta.nombre_herramienta;
 
+      // 4. ESTRUCTURA DE DATOS PARA FIREBASE
       const docData = {
         receptor_id: datos.receptor.id,
         receptor_nombre: datos.receptor.nombre,
-        receptor_correo: correoFinal || 'sin_correo@utc.edu.mx', // Se guarda el correo encontrado
+        receptor_correo: correoFinal || 'sin_correo@utc.edu.mx',
         receptor_tipo: datos.esProfesor ? 'Profesor' : 'Alumno',
         receptor_info_extra: datos.receptor.info_extra || '',
+        
+        // Datos del Autorizador (Jefe de Departamento)
         autorizado_por_nombre: datos.autorizador.nombre,
         autorizado_por_id: datos.autorizador.num_empleado,
-        autorizado_por_depto: datos.autorizador.departamento || 'N/A', 
+        autorizado_por_depto: datos.autorizador.departamento || 'SUELOS',
+        
         materia: datos.materia || 'General',
         herramienta_id_db: datos.herramienta.id || datos.herramienta.num_herramienta, 
         herramienta_codigo: datos.herramienta.num_herramienta,
         herramienta_nombre: nombreHerramientaFull,
         fecha_prestamo: new Date(),
         fecha_devolucion_pactada: fechaCorregida,
-        empleado_almacen: datos.empleadoAlmacen || 'Admin',
+        
+        // DINÁMICO: Aquí se guarda quien entrega la herramienta (TÚ)
+        empleado_almacen: nombreEmpleadoSesion,
+        empleado_almacen_id: numEmpleadoSesion,
+        
         estado: 'Activo'
       };
 
-      // 3. GUARDAR EN FIREBASE
+      // 5. GUARDAR EN FIREBASE
       await addDoc(prestamosRef, docData);
 
-      // 4. ENVIAR A GOOGLE SHEETS (Ahora sí con correo garantizado)
-      const fechaISO = fechaCorregida.toISOString().split('T')[0];
-      await this.enviarAlertaGoogle({
-        to_email: correoFinal, // <--- Este ya no debería ser undefined
-        nombre: docData.receptor_nombre,
-        herramienta: docData.herramienta_nombre,
-        fecha_entrega: fechaISO 
-      });
-
-      // 5. ACTUALIZAR INVENTARIO
+      // 6. ACTUALIZAR INVENTARIO
       const herramientaDocId = datos.herramienta.id || datos.herramienta.num_herramienta;
       await updateDoc(doc(this.firestore, 'inventario', herramientaDocId), {
         prestada: true,
@@ -263,7 +266,7 @@ export class AlmacenService {
 
       return { exito: true };
     } catch (e) {
-      console.error("Error crítico:", e);
+      console.error("Error crítico en préstamo:", e);
       return { exito: false };
     }
   }

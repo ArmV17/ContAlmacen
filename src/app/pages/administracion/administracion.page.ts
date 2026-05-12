@@ -22,6 +22,9 @@ import { AlmacenService } from '../../services/almacen.service';
 })
 export class AdministracionPage {
 
+  // --- PROPIEDADES DE SEGURIDAD ---
+  esSuperAdmin: boolean = false;
+
   segmentoActual: string = 'alumnos';
   textoBuscar: string = '';
 
@@ -40,14 +43,12 @@ export class AdministracionPage {
   listaDepartamentos: string[] = [];
 
   // --- PROPIEDADES PARA SUGERENCIAS ---
-  nombresFiltrados: string[] = []; // Para sugerencias de nombre
+  nombresFiltrados: string[] = []; 
   tiposFiltrados: string[] = [];
 
   // Modelos para formularios
   alumnoNuevo = { matricula: '', nombre: '', carrera: '', correo: '' };
   empleadoNuevo = { numEmpleado: '', nombre: '', password: '', rol: 'Staff' };
-  
-  // Agregamos 'cantidad' al modelo de herramienta
   herramientaNueva = { codigo: '', nombre: '', tipo: '', cantidad: 1, estado: 'Disponible' };
 
   // Modelos para Maestros
@@ -68,6 +69,13 @@ export class AdministracionPage {
   }
 
   async ionViewWillEnter() {
+    // Verificamos identidad para permisos especiales de CAMPS
+    const nombreGuardado = localStorage.getItem('userName');
+    const rolGuardado = localStorage.getItem('userRol');
+
+    // Solo habilitamos si es Admin y se llama "Admin D.Suelos"
+    this.esSuperAdmin = (rolGuardado === 'Admin' && nombreGuardado === 'Admin D.suelos');
+
     this.cargarDatos();
   }
 
@@ -75,8 +83,15 @@ export class AdministracionPage {
     this.alumnos = await this.almacenService.obtenerAlumnos();
     this.herramientas = await this.almacenService.obtenerInventario();
     this.tiposExistentes = await this.almacenService.obtenerTiposDeHerramientas();
-    this.empleados = await this.almacenService.obtenerEmpleados();
     this.maestros = await this.almacenService.obtenerMaestros();
+    
+    // Solo cargamos empleados si el usuario tiene el permiso
+    if (this.esSuperAdmin) {
+      this.empleados = await this.almacenService.obtenerEmpleados();
+    } else {
+      this.empleados = []; // Vaciamos por seguridad si no es SuperAdmin
+    }
+
     this.obtenerDepartamentosUnicos();
   }
 

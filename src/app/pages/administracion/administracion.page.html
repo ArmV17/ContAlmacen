@@ -17,7 +17,7 @@
       <ion-segment-button value="herramientas">
         <ion-label>Catálogo</ion-label>
       </ion-segment-button>
-      <ion-segment-button value="empleados">
+      <ion-segment-button value="empleados" *ngIf="esSuperAdmin">
         <ion-label>Empleados</ion-label>
       </ion-segment-button>
     </ion-segment>
@@ -375,7 +375,7 @@
       </ion-list>
     </div>
 
-    <div *ngIf="segmentoActual === 'empleados'">
+    <div *ngIf="segmentoActual === 'empleados' && esSuperAdmin">
       <ion-card class="tarjeta-formulario">
         <ion-card-header>
           <ion-card-title class="titulo-seccion">

@@ -11,7 +11,7 @@ import {
   checkmarkCircleOutline, 
   listOutline, 
   settingsOutline,
-  logOutOutline, // Añadimos este para cerrar sesión
+  logOutOutline, 
   businessOutline
 } from 'ionicons/icons';
 
@@ -39,23 +39,25 @@ export class AppComponent {
 
   /**
    * Verifica si el usuario logueado es Administrador.
-   * Se usa en el HTML con *ngIf para mostrar/ocultar la opción de Administración.
+   * Si el rol es 'Staff', devolverá false y ocultará la opción en el HTML.
    */
   esAdmin(): boolean {
     const rol = localStorage.getItem('userRol');
     return rol === 'Admin';
   }
 
+  obtenerNombreUsuario(): string {
+    return localStorage.getItem('userName') || 'Usuario';
+  }
   /**
-   * Verifica si existe una sesión activa.
-   * Sirve para ocultar el menú lateral por completo cuando el usuario está en el Login.
+   * Verifica si existe una sesión activa para mostrar u ocultar el menú lateral.
    */
   sesionIniciada(): boolean {
     return localStorage.getItem('userRol') !== null;
   }
 
   /**
-   * Borra los datos del localStorage y redirige al Login.
+   * Limpia la sesión y redirige al Login reemplazando la URL en el historial.
    */
   cerrarSesion() {
     localStorage.clear();

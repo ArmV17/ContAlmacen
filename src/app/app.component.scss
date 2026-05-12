@@ -53,3 +53,24 @@
   --background: transparent;
   font-weight: bold;
 }
+
+.user-profile-section {
+  padding: 30px 20px;
+  background: rgba(var(--ion-color-primary-rgb), 0.04);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  margin-bottom: 10px;
+
+  .user-name {
+    margin: 0 0 6px 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e1e1e;
+    text-transform: capitalize; // Asegura que se vea como nombre propio
+  }
+  
+  ion-badge {
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    letter-spacing: 0.3px;
+  }
+}

@@ -4,6 +4,7 @@
     
     <!-- El Menú Lateral: Solo se activa si hay una sesión iniciada -->
     <ion-menu contentId="main-content" type="overlay" *ngIf="sesionIniciada()">
+      
       <ion-header class="ion-no-border">
         <ion-toolbar class="toolbar-elegante">
           <ion-title>CAMPS</ion-title>
@@ -11,6 +12,21 @@
       </ion-header>
 
       <ion-content class="fondo-claro">
+        
+        <!-- SECCIÓN DE IDENTIDAD DEL USUARIO -->
+        <div class="user-profile-section ion-padding">
+          <div class="user-info">
+            <ion-text color="dark">
+              <!-- Muestra el nombre registrado (Ej: Admin D.Suelos o Jose Armando) -->
+              <h2 class="user-name">{{ obtenerNombreUsuario() }}</h2>
+            </ion-text>
+            <!-- Badge dinámico según el rol -->
+            <ion-badge [color]="esAdmin() ? 'primary' : 'medium'" mode="ios">
+              {{ esAdmin() ? 'Administrador' : 'Personal Staff' }}
+            </ion-badge>
+          </div>
+        </div>
+
         <ion-list class="lista-menu" lines="none">
           <ion-menu-toggle auto-hide="false">
             
