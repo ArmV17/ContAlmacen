@@ -1,0 +1,58 @@
+<ion-content [fullscreen]="true" class="background-login">
+  <div class="login-wrapper">
+    
+    <!-- Logo y Título de la App -->
+    <div class="header-section ion-text-center">
+      <div class="logo-circle">
+        <ion-icon name="business-outline"></ion-icon>
+      </div>
+      <h1 class="app-name">CAMPS</h1>
+      <p class="app-subtitle">Control de Almacén y Préstamos</p>
+    </div>
+
+    <!-- Formulario de Acceso -->
+    <ion-card class="login-card ion-no-margin">
+      <ion-card-content>
+        <div class="form-container">
+          
+          <ion-item lines="none" class="input-item">
+            <ion-icon name="person-outline" slot="start"></ion-icon>
+            <ion-input 
+              label="Número de Empleado" 
+              labelPlacement="floating" 
+              type="text" 
+              [(ngModel)]="numEmpleado"
+              placeholder="Ej. 3925">
+            </ion-input>
+          </ion-item>
+
+          <ion-item lines="none" class="input-item ion-margin-top">
+            <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
+            <ion-input 
+              label="Contraseña" 
+              labelPlacement="floating" 
+              type="password" 
+              [(ngModel)]="password"
+              placeholder="••••••••">
+            </ion-input>
+          </ion-item>
+
+          <ion-button 
+            expand="block" 
+            shape="round" 
+            class="btn-login ion-margin-top" 
+            (click)="entrar()">
+            INGRESAR
+            <ion-icon slot="end" name="arrow-forward-outline"></ion-icon>
+          </ion-button>
+
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="footer-info ion-text-center">
+      <p>Departamento de Suelos - UAAAN</p>
+    </div>
+
+  </div>
+</ion-content>

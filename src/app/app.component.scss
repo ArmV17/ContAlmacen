@@ -41,3 +41,15 @@
     ion-icon { color: #3498db; }
   }
 }
+
+.menu-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 20px 15px;
+}
+
+.logout-btn {
+  margin-top: 10px;
+  --background: transparent;
+  font-weight: bold;
+}

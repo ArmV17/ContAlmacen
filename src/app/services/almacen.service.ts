@@ -41,6 +41,26 @@ export class AlmacenService {
     return CryptoJS.SHA256(password).toString();
   }
 
+  async login(numEmpleado: string, passwordPlana: string) {
+    try {
+      const docRef = doc(this.firestore, 'trabajadores', numEmpleado);
+      const snap = await getDoc(docRef);
+
+      if (snap.exists()) {
+        const user = snap.data();
+        const passwordHasheada = this.hashearPassword(passwordPlana);
+
+        // Comparamos el hash
+        if (user['password'] === passwordHasheada) {
+          // Retornamos el rol para saber a dónde mandarlo
+          return { exito: true, rol: user['rol'], nombre: this.desencriptarTexto(user['nombre']) };
+        }
+      }
+      return { exito: false, mensaje: 'Credenciales incorrectas' };
+    } catch (error) {
+      return { exito: false, mensaje: 'Error de conexión' };
+    }
+  }
   // ==========================================
   // DASHBOARD & DEVOLUCIONES
   // ==========================================
