@@ -4,10 +4,7 @@
       <ion-menu-button color="light"></ion-menu-button>
     </ion-buttons>
     <ion-title>Resumen de Almacén</ion-title>
-    <ion-buttons slot="end">
-      <ion-icon *ngIf="alertasEnviadasHoy" name="mail-unread-outline" color="success" style="margin-right: 15px; font-size: 20px;"></ion-icon>
-    </ion-buttons>
-  </ion-toolbar>
+    </ion-toolbar>
 </ion-header>
 
 <ion-content class="fondo-claro ion-padding">
@@ -16,7 +13,6 @@
   </ion-refresher>
 
   <div class="contenedor-maximo">
-    
     <ion-grid class="ion-no-padding">
       <ion-row>
         <ion-col size="6">
@@ -42,15 +38,10 @@
     <div class="seccion-lista">
       <div class="header-lista">
         <h2 class="subtitulo">Últimos Movimientos</h2>
-        <ion-badge *ngIf="alertasEnviadasHoy" color="success" mode="ios">Alertas enviadas</ion-badge>
+        <ion-badge *ngIf="totalVencidos > 0" color="danger" mode="ios">Atención requerida</ion-badge>
       </div>
       
       <ion-list class="lista-transparente">
-        <div *ngIf="prestamosActivos.length === 0" class="ion-padding ion-text-center">
-          <ion-icon name="alert-circle-outline" style="font-size: 48px; color: #cbd5e1;"></ion-icon>
-          <p style="color: #94a3b8;">No hay préstamos activos registrados</p>
-        </div>
-
         <ion-item *ngFor="let prestamo of prestamosActivos" class="item-limpio" lines="none">
           <div class="icono-contenedor" slot="start" [ngClass]="{'bg-vencido': prestamo.estado === 'Vencido'}">
             <ion-icon name="build-outline"></ion-icon>
@@ -63,7 +54,7 @@
               <span> • {{ prestamo.receptor_tipo }}</span>
             </p>
             <p class="fecha-info">
-              Entrega pactada: {{ prestamo.fecha_devolucion_pactada?.toDate() | date:'dd/MM/yyyy' }}
+              Entrega: {{ prestamo.fecha_devolucion_pactada?.toDate() | date:'dd/MM/yyyy' }}
             </p>
           </ion-label>
           
@@ -75,4 +66,11 @@
       </ion-list>
     </div>
   </div>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button color="dark" (click)="lanzarAlertasManuales()">
+      <ion-icon name="mail-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
 </ion-content>

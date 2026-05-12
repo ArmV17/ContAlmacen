@@ -10,5 +10,5 @@ export const environment = {
   measurementId: "G-TVDK5JZX12"
 },
   llaveCifrado: 'ContAlmacen_S3cr3t_K3y_2026_xyz!',
-  urlGoogleScript: 'https://script.google.com/macros/s/AKfycbx_E9NxOinpGZ72BCl7831BnQKJzu2EcKoVeQI7IbW2nQCS4XstzljNL8moKOhPvR_O/exec'
+  urlGoogleScript: 'https://script.google.com/macros/s/AKfycbxd90bTTVyWCjdYeZbEpo8cOdKmf5jEy6CFyy5riBLIqbNOkZ35SzUByWbKRQ8d0Db3/exec'
 };

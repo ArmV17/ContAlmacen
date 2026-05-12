@@ -1,11 +1,9 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common'; 
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ToastController, LoadingController } from '@ionic/angular'; 
 import { addIcons } from 'ionicons';
-import { buildOutline, menu, alertCircleOutline, mailUnreadOutline } from 'ionicons/icons';
-
-// Importamos el servicio actualizado para Firebase
+import { buildOutline, menu, alertCircleOutline, mailOutline, sendOutline } from 'ionicons/icons';
 import { AlmacenService } from '../../services/almacen.service';
 
 @Component({
@@ -17,94 +15,99 @@ import { AlmacenService } from '../../services/almacen.service';
 })
 export class DashboardPage {
 
-  // Lista de préstamos procesada para mostrar en la interfaz
   prestamosActivos: any[] = []; 
-  
-  // Contadores para las tarjetas informativas (KPIs)
   totalActivos: number = 0;
   totalVencidos: number = 0;
 
-  // Control de notificaciones
-  alertasEnviadasHoy: boolean = false;
-
-  constructor(private almacenService: AlmacenService) { 
-    // Registramos los iconos necesarios (añadimos mailUnreadOutline para el indicador)
-    addIcons({ buildOutline, menu, alertCircleOutline, mailUnreadOutline });
+  constructor(
+    private almacenService: AlmacenService,
+    private toastController: ToastController,
+    private loadingController: LoadingController
+  ) { 
+    addIcons({ buildOutline, menu, alertCircleOutline, mailOutline, sendOutline });
   }
 
-  /**
-   * Se ejecuta cada vez que el usuario entra a la pestaña del Dashboard.
-   */
   async ionViewWillEnter() {
     await this.cargarDashboard();
-    // Ejecutamos la lógica de notificaciones automáticas
-    await this.verificarNotificacionesDelDia();
   }
 
-  /**
-   * Obtiene los datos del servicio de Firebase y calcula los totales.
-   */
   async cargarDashboard() {
     try {
       const datos = await this.almacenService.obtenerPrestamosDashboard();
       this.prestamosActivos = datos;
-
-      // Calculamos los totales
       this.totalActivos = this.prestamosActivos.filter(p => p.estado === 'Activo').length;
       this.totalVencidos = this.prestamosActivos.filter(p => p.estado === 'Vencido').length;
-
-      console.log('Dashboard cargado con éxito:', this.prestamosActivos.length, 'registros.');
     } catch (error) {
-      console.error('Error al cargar los datos del Dashboard:', error);
-      this.prestamosActivos = [];
-      this.totalActivos = 0;
-      this.totalVencidos = 0;
+      console.error('Error dashboard:', error);
     }
   }
 
   /**
-   * Lógica proactiva: Revisa si hay que mandar correos hoy
+   * FUNCIÓN PARA MOSTRAR MENSAJES (Soluciona el error TS2339)
    */
-  async verificarNotificacionesDelDia() {
-    const hoyStr = new Date().toISOString().split('T')[0];
-    
-    // 1. Revisamos en Firebase si ya se enviaron hoy
-    this.alertasEnviadasHoy = await this.almacenService.comprobarSiYaSeNotificoHoy(hoyStr);
+  async mostrarMensaje(mensaje: string, color: string) {
+    const toast = await this.toastController.create({
+      message: mensaje,
+      duration: 3000,
+      color: color,
+      position: 'bottom'
+    });
+    await toast.present();
+  }
 
-    if (!this.alertasEnviadasHoy) {
-      console.log("Iniciando verificación automática de entregas para hoy...");
-      
-      // 2. Buscamos en Firebase préstamos que vencen hoy
-      const prestamosHoy = await this.almacenService.obtenerPrestamosParaHoy(hoyStr);
+  async lanzarAlertasManuales() {
+    const loading = await this.loadingController.create({
+      message: 'Analizando fechas y enviando correos...',
+    });
+    await loading.present();
 
-      if (prestamosHoy.length > 0) {
-        for (const p of prestamosHoy) {
-          // Si el registro tiene correo, disparamos a Google Script
-          if (p.receptor_correo) {
-            await this.almacenService.enviarAlertaGoogle({
-              to_email: p.receptor_correo,
-              nombre: p.receptor_nombre,
-              herramienta: p.herramienta_nombre,
-              fecha_entrega: hoyStr
-            });
-          }
-        }
-        // 3. Marcamos como "Notificado" en Firebase para que no se repita al volver a entrar
-        await this.almacenService.registrarNotificacionExitosa(hoyStr);
-        this.alertasEnviadasHoy = true;
-        console.log("Alertas diarias enviadas con éxito.");
+    try {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0); // Normalizamos a las 00:00 para comparar solo días
+
+      // 1. Filtramos y mapeamos en un solo paso
+      const contactosParaEnviar = this.prestamosActivos
+        .filter(p => {
+          const fechaPactada = p.fecha_devolucion_pactada.toDate();
+          fechaPactada.setHours(0, 0, 0, 0);
+          
+          // REGLA: Si la fecha es hoy O es menor que hoy (Vencido), se incluye.
+          return fechaPactada.getTime() <= hoy.getTime();
+        })
+        .map(p => {
+          const fechaPactada = p.fecha_devolucion_pactada.toDate();
+          fechaPactada.setHours(0, 0, 0, 0);
+
+          return {
+            correo: p.receptor_correo,
+            nombre: p.receptor_nombre,
+            herramienta: p.herramienta_nombre,
+            esRetraso: fechaPactada.getTime() < hoy.getTime() // Menor que hoy = Vencido
+          };
+        });
+
+      // 2. Si después del filtro no hay nadie, avisamos y salimos
+      if (contactosParaEnviar.length === 0) {
+        await this.mostrarMensaje('No hay entregas para hoy ni equipos vencidos', 'medium');
+        loading.dismiss();
+        return;
       }
-    } else {
-      console.log("Las notificaciones de hoy ya fueron procesadas anteriormente.");
+
+      // 3. Enviamos solo la lista filtrada
+      await this.almacenService.enviarAlertasMasivas(contactosParaEnviar);
+      
+      await this.mostrarMensaje(`¡Proceso completado! Se notificó a ${contactosParaEnviar.length} personas.`, 'success');
+
+    } catch (error) {
+      console.error(error);
+      await this.mostrarMensaje('Error al procesar las alertas', 'danger');
+    } finally {
+      loading.dismiss();
     }
   }
 
-  /**
-   * Refresco manual
-   */
   async doRefresh(event: any) {
     await this.cargarDashboard();
-    await this.verificarNotificacionesDelDia();
     event.target.complete();
   }
 }

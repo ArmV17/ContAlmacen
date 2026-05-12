@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { 
   Firestore, 
   collection, 
@@ -20,8 +21,10 @@ import * as CryptoJS from 'crypto-js';
 })
 export class AlmacenService {
 
-  constructor(private firestore: Firestore) { }
-
+  constructor(
+    private firestore: Firestore,
+    private http: HttpClient 
+  ) { }
   // ==========================================
   // SEGURIDAD Y CRIPTOGRAFÍA
   // ==========================================
@@ -244,6 +247,95 @@ export class AlmacenService {
       return { exito: false };
     }
   }
+
+  // ==========================================
+  // SISTEMA DE ALERTAS MANUALES (GOOGLE SCRIPT)
+  // ==========================================
+  /**
+   * Función para el registro inicial (antes llamada enviarAlertaGoogle)
+   * Se usa dentro de registrarNuevoPrestamoDetallado.
+   */
+  async enviarAlertaRegistroInicial(datos: any) {
+    const urlScript = environment.urlGoogleScript; 
+    const payload = {
+      to_email: datos.to_email,
+      nombre: datos.nombre,
+      herramienta: datos.herramienta,
+      fecha_entrega: datos.fecha_entrega 
+    };
+
+    try {
+      await fetch(urlScript, {
+        method: 'POST',
+        mode: 'no-cors', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      return { exito: true };
+    } catch (error) {
+      console.error("Error al registrar en Google Sheets:", error);
+      return { exito: false };
+    }
+  }
+
+  // ==========================================
+  // SISTEMA DE ALERTAS (GOOGLE SCRIPT)
+  // ==========================================
+
+  /**
+   * Esta es la función que te pide la línea 228
+   */
+  async enviarAlertaGoogle(datos: any) {
+    const urlScript = environment.urlGoogleScript; 
+    const payload = {
+      to_email: datos.to_email,
+      nombre: datos.nombre,
+      herramienta: datos.herramienta,
+      fecha_entrega: datos.fecha_entrega 
+    };
+
+    try {
+      // Usamos fetch directo para no pelear con inyecciones de HttpClient
+      await fetch(urlScript, {
+        method: 'POST',
+        mode: 'no-cors', 
+        body: JSON.stringify(payload)
+      });
+      return { exito: true };
+    } catch (error) {
+      console.error("Error en Alerta Inicial:", error);
+      return { exito: false };
+    }
+  }
+
+  /**
+   * Esta es la función que llama el Dashboard manualmente
+   */
+  async notificarEntregaAGoogle() {
+    const url = environment.urlGoogleScript;
+    const payload = { accion: "enviar_manual" };
+
+    return await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async enviarAlertasMasivas(lista: any[]) {
+    const url = environment.urlGoogleScript;
+    const payload = {
+      accion: "enviar_manual", // Coincide con el IF del script
+      lista_contactos: lista   // Coincide con contents.lista_contactos
+    };
+
+    return await fetch(url, {
+      method: 'POST',
+      mode: 'no-cors', // Importante para Google Scripts
+      body: JSON.stringify(payload)
+    });
+  }
+
   /**
    * Método auxiliar para contar préstamos (Asegúrate de que use el campo genérico receptor_id)
    */
@@ -425,117 +517,6 @@ async obtenerMaestros() {
       return { exito: true };
     } catch (e: any) {
       return { exito: false, mensaje: e.message };
-    }
-  }
-
-  // ==========================================
-  // SISTEMA DE ALERTAS (GOOGLE SCRIPT)
-  // ==========================================
-
-  /**
-   * Envía la petición al Google Apps Script para disparar el correo
-   */
-  async enviarAlertaGoogle(datos: any) {
-    const urlScript = environment.urlGoogleScript; 
-    
-    const payload = {
-      to_email: datos.to_email,
-      nombre: datos.nombre,
-      herramienta: datos.herramienta,
-      fecha_entrega: datos.fecha_entrega // Formato YYYY-MM-DD
-    };
-
-    try {
-      // Usamos mode: 'no-cors' porque Google Apps Script no devuelve cabeceras CORS estándar
-      await fetch(urlScript, {
-        method: 'POST',
-        mode: 'no-cors', 
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      return { exito: true };
-    } catch (error) {
-      console.error("Error al contactar el script de Google:", error);
-      return { exito: false };
-    }
-  }
-
-  /**
-   * Obtiene préstamos de Firestore cuya fecha pactada de entrega es HOY
-   */
-  async obtenerPrestamosParaHoy(fechaISO: string) {
-    try {
-      const colRef = collection(this.firestore, 'prestamos');
-      
-      // Creamos el rango del día (00:00:00 a 23:59:59)
-      const inicioDia = new Date(fechaISO + 'T00:00:00');
-      const finDia = new Date(fechaISO + 'T23:59:59');
-
-      const q = query(
-        colRef, 
-        // Solo revisamos los que siguen en manos del alumno
-        where('estado', '==', 'Activo'),
-        where('fecha_devolucion_pactada', '>=', inicioDia),
-        where('fecha_devolucion_pactada', '<=', finDia)
-      );
-
-      const snapshot = await getDocs(q);
-      
-      // Mapeamos los datos necesarios para el correo
-      return await Promise.all(snapshot.docs.map(async d => {
-        const data: any = d.data();
-        
-        // Buscamos el correo del receptor (sea alumno o maestro)
-        // Intentamos obtenerlo del documento del alumno/maestro si no está en el préstamo
-        let correo = data.receptor_correo;
-        if (!correo) {
-          const colBusqueda = data.receptor_tipo === 'Alumno' ? 'alumnos' : 'maestros';
-          const userSnap = await getDoc(doc(this.firestore, colBusqueda, data.receptor_id));
-          if (userSnap.exists()) {
-            correo = (userSnap.data() as any).correo;
-          }
-        }
-
-        return { 
-          id: d.id, 
-          receptor_nombre: data.receptor_nombre,
-          receptor_correo: correo,
-          herramienta_nombre: data.herramienta_nombre
-        };
-      }));
-    } catch (error) {
-      console.error("Error al buscar préstamos de hoy:", error);
-      return [];
-    }
-  }
-
-  /**
-   * Verifica en la colección 'logs_notificaciones' si ya se enviaron alertas hoy
-   */
-  async comprobarSiYaSeNotificoHoy(fecha: string): Promise<boolean> {
-    try {
-      const docRef = doc(this.firestore, 'logs_notificaciones', fecha);
-      const snap = await getDoc(docRef);
-      return snap.exists();
-    } catch (e) {
-      return false;
-    }
-  }
-
-  /**
-   * Registra en Firestore que las alertas de hoy ya fueron procesadas
-   */
-  async registrarNotificacionExitosa(fecha: string) {
-    try {
-      const docRef = doc(this.firestore, 'logs_notificaciones', fecha);
-      return await setDoc(docRef, { 
-        enviado: true, 
-        fecha_ejecucion: new Date(),
-        sistema: 'Dashboard Almacen UTC' 
-      });
-    } catch (e) {
-      console.error("Error al registrar log de notificación:", e);
     }
   }
 }
