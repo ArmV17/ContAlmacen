@@ -291,6 +291,57 @@
   }
 }
 
+.contenedor-escanner-minimal {
+  --background: #f9f9f9;
+  --border-radius: 10px;
+  --padding-start: 16px;
+  border: 1px solid #eeeeee;
+  margin-bottom: 8px;
+
+  .input-texto-codigo {
+    font-size: 1.1rem; 
+    font-weight: 400;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    color: #444444;
+  }
+
+  .boton-anadir-clean {
+    // Dimensiones proporcionales
+    height: 32px; 
+    margin-top: 14px;
+    margin-right: 4px;
+    
+    // Estética Outline
+    --border-width: 1px;
+    --border-radius: 6px;
+    --color: #2dd36f;
+    --border-color: #2dd36f;
+    --background: transparent;
+    
+    // Tipografía
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-transform: none; // Mantiene el texto amigable (no todo en mayúsculas)
+
+    ion-icon {
+      font-size: 1.1rem;
+    }
+
+    &:hover {
+      --background: rgba(45, 211, 111, 0.05);
+    }
+  }
+}
+
+// Estilo para el texto descriptivo debajo (Araña ARA-01)
+.info-herramienta-preview {
+  padding: 2px 18px;
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+}
+
 /* Fix para que los selectores Popover se vean bien en PC */
 ion-popover {
   --width: 300px;

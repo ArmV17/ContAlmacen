@@ -6,7 +6,8 @@ import { addIcons } from 'ionicons';
 import { 
   qrCodeOutline, arrowUndoOutline, calendarOutline, 
   checkmarkDoneCircleOutline, personOutline, buildOutline,
-  barcodeOutline, ellipseOutline, checkmarkCircle
+  barcodeOutline, ellipseOutline, checkmarkCircle, searchOutline,
+  timeOutline, checkmarkDoneOutline
 } from 'ionicons/icons';
 import { AlmacenService } from '../../services/almacen.service';
 
@@ -32,7 +33,8 @@ export class DevolucionesPage implements OnInit {
     addIcons({ 
       qrCodeOutline, arrowUndoOutline, calendarOutline, 
       checkmarkDoneCircleOutline, personOutline, buildOutline,
-      barcodeOutline, ellipseOutline, checkmarkCircle
+      barcodeOutline, ellipseOutline, checkmarkCircle, searchOutline,
+      timeOutline, checkmarkDoneOutline
     });
   }
 
@@ -41,7 +43,7 @@ export class DevolucionesPage implements OnInit {
   }
 
   /**
-   * Obtiene todos los préstamos activos y los agrupa por Receptor + Fecha
+   * Obtiene todos los préstamos activos y los agrupa por Receptor
    */
   async cargarYAgruparPrestamos() {
     this.cargando = true;
@@ -51,94 +53,137 @@ export class DevolucionesPage implements OnInit {
       const grupos: { [key: string]: any } = {};
 
       data.forEach((p: any) => {
-        const fechaCorta = this.formatearFechaCorta(p.fecha_prestamo);
-        const llave = `${p.receptor_id}_${fechaCorta}`;
+        const llave = p.receptor_id;
 
         if (!grupos[llave]) {
           grupos[llave] = {
             receptor_id: p.receptor_id,
             receptor_nombre: p.receptor_nombre,
             receptor_tipo: p.receptor_tipo,
-            fecha_display: p.fecha_prestamo,
-            inputValidacion: '', // Texto que escribe el almacenista
-            todoValidado: false, // Habilita el botón de Recibir
+            inputValidacion: '', 
+            todoValidado: false,
+            alMenosUnaValidada: false,
             datos_devolucion: []
           };
         }
         
-        // Estructura de cada item dentro del grupo
         grupos[llave].datos_devolucion.push({
           prestamoId: p.id,
           herramientaId: p.herramienta_id_db,
           codigo: p.herramienta_codigo,
           nombre: p.herramienta_nombre,
-          validado: false // Cambia a true al escanear/digitar
+          validado: false 
         });
       });
 
       this.prestamosAgrupados = Object.values(grupos);
       this.prestamosRespaldo = [...this.prestamosAgrupados];
     } catch (error) {
-      console.error("Error al agrupar préstamos:", error);
+      console.error("Error al cargar deudores:", error);
     } finally {
       this.cargando = false;
     }
   }
 
   /**
-   * Compara el código ingresado con las herramientas del grupo
+   * Valida la herramienta. 
+   * Convierte a MAYÚSCULAS automáticamente al escribir o escanear con el Alacrity.
    */
   validarHerramientaEnGrupo(grupo: any) {
-    const codigoIngresado = grupo.inputValidacion.trim().toUpperCase();
-    if (!codigoIngresado) return;
+    // Normalización inmediata a Mayúsculas
+    grupo.inputValidacion = grupo.inputValidacion.toUpperCase().trim();
+    const codigo = grupo.inputValidacion;
 
-    // Buscamos una coincidencia en el grupo que no haya sido validada aún
-    const herramienta = grupo.datos_devolucion.find((h: any) => 
-      h.codigo.toUpperCase() === codigoIngresado && !h.validado
-    );
+    if (!codigo) return;
+
+    // Buscamos la herramienta en el préstamo de esta persona
+    const herramienta = grupo.datos_devolucion.find((h: any) => h.codigo === codigo);
 
     if (herramienta) {
-      herramienta.validado = true;
-      grupo.inputValidacion = ''; // Limpiamos para el siguiente escaneo
-      this.mostrarMensaje(`Validado: ${herramienta.nombre}`, 'success');
+      if (!herramienta.validado) {
+        herramienta.validado = true;
+        this.mostrarMensaje(`Validado: ${herramienta.nombre}`, 'success');
+      }
       
-      // Verificamos si ya terminamos con todas las herramientas de este grupo
-      grupo.todoValidado = grupo.datos_devolucion.every((h: any) => h.validado);
+      // Limpiamos el campo para el siguiente escaneo automático
+      grupo.inputValidacion = '';
+      this.actualizarEstadosGrupo(grupo);
     }
   }
 
   /**
-   * Procesa la devolución masiva del grupo validado
+   * Actualiza los estados de los botones del grupo
    */
-  async recibirTodo(grupo: any) {
+  actualizarEstadosGrupo(grupo: any) {
+    grupo.alMenosUnaValidada = grupo.datos_devolucion.some((h: any) => h.validado);
+    grupo.todoValidado = grupo.datos_devolucion.every((h: any) => h.validado);
+  }
+
+  /**
+   * Devolución Parcial/Individual: Entrega solo una herramienta específica
+   */
+  async devolverUna(grupo: any, herramienta: any) {
+    this.cargando = true;
+    try {
+      const res = await this.almacenService.registrarDevolucion(herramienta.prestamoId, herramienta.herramientaId);
+      if (res.exito) {
+        this.mostrarMensaje(`Entregada: ${herramienta.nombre}`, 'success');
+        
+        // La quitamos de la lista visual
+        grupo.datos_devolucion = grupo.datos_devolucion.filter((h: any) => h.prestamoId !== herramienta.prestamoId);
+        this.actualizarEstadosGrupo(grupo);
+        
+        // Si no quedan más herramientas, borramos el grupo de la vista
+        if (grupo.datos_devolucion.length === 0) {
+          this.prestamosAgrupados = this.prestamosAgrupados.filter(g => g.receptor_id !== grupo.receptor_id);
+        }
+      }
+    } catch (e) {
+      this.mostrarMensaje('Error al procesar devolución', 'danger');
+    } finally {
+      this.cargando = false;
+    }
+  }
+
+  /**
+   * Devolución de Selección: Entrega todas las marcadas en verde.
+   * Si faltan herramientas, estas se quedan en la lista como pendientes.
+   */
+  async recibirSeleccion(grupo: any) {
+    const seleccionadas = grupo.datos_devolucion.filter((h: any) => h.validado);
+    if (seleccionadas.length === 0) return;
+
     this.cargando = true;
     let exitos = 0;
 
     try {
-      for (const item of grupo.datos_devolucion) {
-        const res = await this.almacenService.registrarDevolucion(item.prestamoId, item.herramientaId);
-        if (res.exito) exitos++;
+      for (const h of seleccionadas) {
+        const res = await this.almacenService.registrarDevolucion(h.prestamoId, h.herramientaId);
+        if (res.exito) {
+          exitos++;
+          // Quitamos las herramientas procesadas de la lista
+          grupo.datos_devolucion = grupo.datos_devolucion.filter((item: any) => item.prestamoId !== h.prestamoId);
+        }
       }
 
-      if (exitos > 0) {
-        this.mostrarMensaje(`¡Éxito! Se recibieron ${exitos} herramientas.`, 'success');
-        await this.cargarYAgruparPrestamos(); // Refrescar lista
+      this.mostrarMensaje(`Se entregaron ${exitos} herramientas correctamente`, 'success');
+      
+      // Si el deudor ya no debe nada, quitamos el grupo
+      if (grupo.datos_devolucion.length === 0) {
+        this.prestamosAgrupados = this.prestamosAgrupados.filter(g => g.receptor_id !== grupo.receptor_id);
       }
+      
+      this.actualizarEstadosGrupo(grupo);
     } catch (error) {
-      this.mostrarMensaje('Error al procesar la devolución', 'danger');
+      this.mostrarMensaje('Error en proceso masivo', 'danger');
     } finally {
       this.cargando = false;
     }
   }
 
   /**
-   * Auxiliares
+   * Filtrar deudores por ID o Nombre
    */
-  formatearFechaCorta(f: any): string {
-    const d = f?.toDate ? f.toDate() : new Date(f);
-    return d.toISOString().split('T')[0];
-  }
-
   filtrarLista() {
     const busqueda = this.busquedaId.trim().toLowerCase();
     if (!busqueda) {
@@ -152,9 +197,7 @@ export class DevolucionesPage implements OnInit {
   }
 
   escanearCodigo(event?: any) {
-    if (event) {
-      event.stopPropagation(); // Evita que el clic llegue a la lista
-    }
+    if (event) event.stopPropagation();
     this.mostrarMensaje('Iniciando escáner...', 'primary');
   }
 
@@ -166,5 +209,10 @@ export class DevolucionesPage implements OnInit {
       position: 'bottom'
     });
     toast.present();
+  }
+
+  obtenerConteoValidados(grupo: any): number {
+    if (!grupo || !grupo.datos_devolucion) return 0;
+    return grupo.datos_devolucion.filter((h: any) => h.validado).length;
   }
 }

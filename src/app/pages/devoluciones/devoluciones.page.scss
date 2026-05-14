@@ -1,5 +1,5 @@
 /* ==========================================================================
-   ESTILOS BASE Y CONTENEDORES (Sincronizados con el Sistema)
+   ESTILOS BASE Y CONTENEDORES
    ========================================================================== */
 .toolbar-elegante { 
   --background: #1e293b; 
@@ -16,7 +16,7 @@
 }
 
 /* ==========================================================================
-   BUSCADOR Y FORMULARIO
+   BUSCADOR Y TARJETAS
    ========================================================================== */
 .tarjeta-formulario {
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
@@ -28,9 +28,8 @@
 
 .input-limpio {
   --background: #f8fafc;
-  --border-radius: 10px;
+  --border-radius: 12px;
   --padding-start: 15px;
-  margin-bottom: 10px;
   border: 1px solid #e2e8f0;
   
   ion-input {
@@ -38,10 +37,17 @@
     --color: #2c3e50;
     --placeholder-color: #94a3b8;
   }
+
+  &.mini {
+    --min-height: 45px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    margin-bottom: 12px;
+  }
 }
 
 /* ==========================================================================
-   LISTADO DE DEVOLUCIONES AGRUPADAS
+   LISTADO DE DEVOLUCIONES
    ========================================================================== */
 .subtitulo-gestion {
   margin: 25px 10px 15px 5px;
@@ -52,194 +58,127 @@
   letter-spacing: 1px;
 }
 
-.lista-transparente {
-  background: transparent;
-  padding: 0;
+.item-gestion {
+  --background: #ffffff;
+  --border-radius: 18px;
+  --padding-top: 15px;
+  --padding-bottom: 15px;
+  margin-bottom: 15px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
 
-  .item-gestion {
-    --background: #ffffff;
-    --border-radius: 16px;
-    --padding-start: 18px;
-    --padding-top: 15px;
-    --padding-bottom: 15px;
-    margin-bottom: 15px;
-    border: 1px solid #f1f5f9;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease;
+  .nombre-maestro {
+    font-weight: 700 !important;
+    font-size: 1.1rem;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
 
-    &:active {
-      transform: scale(0.98);
-    }
+  .info-secundaria {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
 
-    .nombre-maestro {
-      font-weight: 700 !important;
-      font-size: 1.15rem;
-      color: #1e293b;
-      margin-bottom: 6px;
-    }
-
-    .info-secundaria {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-
-      .badge-id {
-        --background: #f1f5f9;
-        --color: #475569;
-        font-weight: 700;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 0.75rem;
-      }
-
-      .separador {
-        color: #cbd5e1;
-      }
-
-      .tipo-badge {
-        font-size: 0.85rem;
-        color: #3b82f6;
-        font-weight: 700;
-        text-transform: uppercase;
-      }
-    }
-
-    /* Contenedor de herramientas agrupadas */
-    .materias-preview {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      color: #334155;
-      background: #f8fafc;
-      padding: 10px;
-      border-radius: 10px;
-      margin-top: 10px;
-      white-space: normal; // Permite salto de línea si hay muchas herramientas
-      
-      ion-icon {
-        font-size: 1.1rem;
-        color: #64748b;
-        margin-top: 2px;
-      }
-
-      strong {
-        color: #1e293b;
-      }
-    }
-
-    .correo-maestro {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: #64748b;
-      font-size: 0.85rem;
-      margin-top: 10px;
-
-      ion-icon {
-        font-size: 1rem;
-        color: #94a3b8;
-      }
-    }
-
-    /* Botón Recibir */
-    .boton-recibir {
-      --border-radius: 12px;
-      --box-shadow: 0 4px 8px rgba(45, 211, 111, 0.2);
+    .badge-id {
+      --background: #f1f5f9;
+      --color: #475569;
       font-weight: 700;
-      height: 45px;
-      margin-left: 15px;
-      font-size: 0.85rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
 
-      ion-icon {
-        font-size: 1.2rem;
-      }
+    .tipo-badge {
+      font-size: 0.8rem;
+      color: #3b82f6;
+      font-weight: 700;
     }
   }
 }
 
 /* ==========================================================================
-   ESTADOS VACÍOS Y ANIMACIONES
+   VALIDACIÓN Y HERRAMIENTAS (ESTILO ALACRITY)
    ========================================================================== */
-.mensaje-vacio {
-  text-align: center;
-  margin-top: 60px;
-  padding: 20px;
-
-  ion-icon {
-    font-size: 80px;
-    color: #cbd5e1;
-    margin-bottom: 15px;
-    opacity: 0.6;
-  }
-
-  p {
-    color: #64748b;
-    font-weight: 600;
-    font-size: 1.1rem;
-  }
-}
-
-.animated {
-  animation-duration: 0.5s;
-  animation-fill-mode: both;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.fadeIn { animation-name: fadeIn; }
-.fadeInUp { animation-name: fadeInUp; }
-
-.seccion-validacion {
-  margin-top: 12px;
-  background: #f1f5f9;
-  padding: 10px;
-  border-radius: 12px;
-
-  .input-limpio.mini {
-    --min-height: 40px;
-    margin-bottom: 8px;
-    border: 1px solid #cbd5e1;
-    background: #ffffff;
-  }
+.seccion-validacion-devolucion {
+  margin-top: 15px;
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #edf2f7;
 
   .lista-check-herramientas {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
+    margin-top: 5px;
+  }
+}
 
-    .check-item {
+.check-item-devolucion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+
+  &.validado {
+    background: #f0fdf4;
+    border-color: #2dd36f;
+    box-shadow: 0 2px 8px rgba(45, 211, 111, 0.15);
+
+    .nombre-h { color: #166534; font-weight: 600; }
+    .codigo-h { color: #10b981; }
+  }
+
+  .info-h {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    
+    ion-icon { font-size: 1.2rem; }
+
+    .textos-h {
       display: flex;
-      align-items: center;
-      padding: 4px 0;
-      
-      .texto-herramienta {
-        font-size: 0.9rem;
-        margin-left: 8px;
-        
-        strong {
-          color: #3b82f6; // El código en azul para identificarlo rápido
-          background: #eff6ff;
-          padding: 2px 4px;
-          border-radius: 4px;
-        }
-      }
-
-      &.validado {
-        .texto-herramienta {
-          text-decoration: line-through;
-          color: #94a3b8;
-          strong { color: #94a3b8; background: #f1f5f9; }
-        }
-      }
+      flex-direction: column;
+      .nombre-h { font-size: 0.95rem; color: #334155; }
+      .codigo-h { font-size: 0.8rem; color: #64748b; font-weight: 700; }
     }
   }
 }
+
+/* ==========================================================================
+   BOTONES
+   ========================================================================== */
+.boton-recibir-grupo {
+  --border-radius: 12px;
+  font-weight: 800;
+  height: 50px;
+  margin-left: 10px;
+  min-width: 110px;
+  --box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  font-size: 0.85rem;
+}
+
+/* ==========================================================================
+   ANIMACIONES
+   ========================================================================== */
+.animated {
+  animation-duration: 0.4s;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale3d(0.3, 0.3, 0.3); }
+  50% { opacity: 1; }
+}
+
+.fadeIn { animation-name: fadeIn; }
+.zoomIn { animation-name: zoomIn; }
