@@ -157,26 +157,36 @@ export class InventarioPage {
 
   generarPDFInventario() {
     const doc = new jsPDF();
-    const fecha = new Date().toLocaleDateString('es-MX'); // Formato México
+    const fecha = new Date().toLocaleDateString('es-MX');
     const hora = new Date().toLocaleTimeString('es-MX');
+    
+    // --- NUEVO: DEFINIR QUIÉN GENERA EL PDF ---
+    const generadoPor = "Jose Leonardo Villa Padron"; 
 
     // --- CONFIGURACIÓN DE ENCABEZADO ---
     doc.setFontSize(18);
-    doc.setTextColor(40);
+    doc.setTextColor(44, 62, 80); // Color azul noche profesional
     doc.text('REPORTE DE INVENTARIO', 14, 20);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`Fecha de emisión: ${fecha} | ${hora}`, 14, 28);
-    doc.text('Universidad Autónoma Agraria Antonio Narro', 14, 33);
+    doc.text(`Universidad Autónoma Agraria Antonio Narro`, 14, 27);
+    
+    // --- LÍNEAS DE EMISIÓN Y GENERADOR ---
+    doc.setFontSize(9);
+    doc.text(`Generado por: ${generadoPor}`, 14, 34);
+    doc.text(`Fecha de emisión: ${fecha} | ${hora}`, 14, 39);
+
+    // Línea divisoria estética
+    doc.setDrawColor(44, 62, 80);
+    doc.setLineWidth(0.5);
+    doc.line(14, 42, 196, 42);
 
     const cuerpoTabla: any[] = [];
 
     // --- LÓGICA DE PROCESAMIENTO DE DATOS ---
     this.herramientasAgrupadas.forEach((herramienta: any) => {
-      
       herramienta.detallesPorTipo.forEach((detalle: any) => {
-        
         let nombreBase = herramienta.nombre.trim();
         let tipoTexto = detalle.tipo ? detalle.tipo.trim() : '';
         let nombreFinal = nombreBase;
@@ -184,52 +194,33 @@ export class InventarioPage {
         const nombreLower = nombreBase.toLowerCase();
         const tipoLower = tipoTexto.toLowerCase();
 
-        // Validar que el tipo exista y no sea el valor por defecto
         if (tipoTexto && tipoLower !== 'normal' && tipoLower !== 'sin tipo' && tipoLower !== '') {
-          
-          // 1. Evitar redundancia (Si el nombre ya contiene el tipo, no lo repetimos)
           if (!nombreLower.includes(tipoLower)) {
-            
-            // 2. Lógica de conectores inteligentes
             let conector = ' de ';
-            
-            // Caso A: Si es un adjetivo descriptivo
             const adjetivos = ['largo', 'larga', 'corto', 'corta', 'grande', 'chico', 'chica', 'nuevo', 'viejo', 'usado'];
-            if (adjetivos.includes(tipoLower)) {
-              conector = ' ';
-            }
-
-            // Caso B: Si el tipo ya empieza con "de " o "del "
-            if (tipoLower.startsWith('de ') || tipoLower.startsWith('del ')) {
-              conector = ' ';
-            }
-            
-            // Caso C: Si el tipo empieza con un número (ej. "3 metros")
-            // Agregamos " de " solo si el nombre base no termina ya en preposición
-            if (!isNaN(parseInt(tipoTexto.charAt(0))) && !nombreLower.endsWith(' de')) {
-              conector = ' de ';
-            }
+            if (adjetivos.includes(tipoLower)) { conector = ' '; }
+            if (tipoLower.startsWith('de ') || tipoLower.startsWith('del ')) { conector = ' '; }
+            if (!isNaN(parseInt(tipoTexto.charAt(0))) && !nombreLower.endsWith(' de')) { conector = ' de '; }
 
             nombreFinal = `${nombreBase}${conector}${tipoTexto}`;
           }
         }
 
-        // 3. Añadir a la lista del PDF
         cuerpoTabla.push([
           nombreFinal,
-          detalle.items.length // Cantidad de unidades
+          detalle.items.length 
         ]);
       });
     });
 
     // --- GENERACIÓN DE LA TABLA ---
     autoTable(doc, {
-      startY: 40,
+      startY: 48, // Aumentado para dar espacio a la info del emisor
       head: [['Descripción de la Herramienta', 'Cantidad']],
       body: cuerpoTabla,
       theme: 'striped',
       headStyles: {
-        fillColor: [44, 62, 80], // Azul noche profesional
+        fillColor: [44, 62, 80],
         textColor: [255, 255, 255],
         fontSize: 11,
         halign: 'left'
@@ -245,18 +236,18 @@ export class InventarioPage {
       didDrawPage: (data) => {
           const totalPaginas = (doc as any).internal.pages.length - 1;
           const str = 'Página ' + totalPaginas;
-
           const pageSize = doc.internal.pageSize;
           const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
 
           doc.setFontSize(9);
           doc.setTextColor(150);
           doc.text(str, data.settings.margin.left, pageHeight - 10);
+          
+          // Opcional: repetir el nombre del emisor en el pie de página
+          doc.text(`Reporte generado por ${generadoPor}`, 140, pageHeight - 10);
         }
     });
 
-    // --- GUARDAR ARCHIVO ---
-    // Reemplazamos las barras de la fecha para evitar problemas en Windows/Android
     const nombreArchivo = `Reporte_Inventario_${fecha.replace(/\//g, '-')}.pdf`;
     doc.save(nombreArchivo);
   }

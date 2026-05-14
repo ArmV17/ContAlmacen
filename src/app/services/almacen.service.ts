@@ -64,22 +64,42 @@ export class AlmacenService {
   // ==========================================
   // DASHBOARD & DEVOLUCIONES
   // ==========================================
+  // ==========================================
+  // DASHBOARD & DEVOLUCIONES
+  // ==========================================
   async obtenerPrestamosDashboard() {
     try {
       const colRef = collection(this.firestore, 'prestamos');
-      const q = query(colRef, where('estado', '==', 'Activo'));
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(colRef); 
 
       if (snapshot.empty) return [];
 
-      // 1. Obtenemos el momento exacto de este instante
       const ahora = new Date();
       const ahoraMS = ahora.getTime();
 
       return await Promise.all(snapshot.docs.map(async (d) => {
         const data: any = d.data();
         let aluData = { nombre: data.receptor_nombre || 'Desconocido' };
-        let invData = { nombre_herramienta: data.herramienta_nombre || 'Herramienta' };
+        let correoProfesor = ''; // Para la notificación
+        let deptoLimpio = data.autorizado_por_depto || 'SUELOS';
+
+        // 1. DESENCRIPTAR DEPARTAMENTO SI VIENE CIFRADO
+        if (deptoLimpio && deptoLimpio.startsWith('U2Fsd')) {
+          try {
+            deptoLimpio = this.desencriptarTexto(deptoLimpio);
+          } catch (e) { console.error("Error en depto"); }
+        }
+
+        // 2. BUSCAR EL CORREO DEL PROFESOR (Indispensable para que se mande la alerta)
+        try {
+          if (data.autorizado_por_id) {
+            const profSnap = await getDoc(doc(this.firestore, 'maestros', data.autorizado_por_id));
+            if (profSnap.exists()) {
+              const profData: any = profSnap.data();
+              correoProfesor = profData.correo || '';
+            }
+          }
+        } catch (e) { }
 
         // --- Búsqueda de detalles de alumno ---
         try {
@@ -93,34 +113,21 @@ export class AlmacenService {
           }
         } catch (e) { }
 
-        // --- LÓGICA DE VENCIMIENTO A LAS 3:00 PM ---
+        // --- LÓGICA DE ESTADO ---
         let estadoVisual = data.estado;
-        if (data.fecha_devolucion_pactada) {
+        if (data.estado !== 'Devuelto' && data.fecha_devolucion_pactada) {
           const fechaPactada = data.fecha_devolucion_pactada.toDate();
-          
-          // Creamos la fecha límite: el día pactado a las 15:00:00 (3 PM)
-          const fechaLimite = new Date(
-            fechaPactada.getFullYear(),
-            fechaPactada.getMonth(),
-            fechaPactada.getDate(),
-            15, 0, 0, 0 // 15:00 horas
-          );
-
-          // Si el momento actual ya pasó las 3 PM de ese día -> Vencido
-          // Si todavía no son las 3 PM -> Activo
-          if (ahoraMS > fechaLimite.getTime()) {
-            estadoVisual = 'Vencido';
-          } else {
-            estadoVisual = 'Activo';
-          }
+          const fechaLimite = new Date(fechaPactada.getFullYear(), fechaPactada.getMonth(), fechaPactada.getDate(), 15, 0, 0, 0);
+          estadoVisual = ahoraMS > fechaLimite.getTime() ? 'Vencido' : 'Activo';
         }
 
         return { 
           id: d.id, 
           ...data, 
+          autorizado_por_depto: deptoLimpio, // Se sobreescribe con el texto ya plano
+          autorizado_por_correo: correoProfesor, // Importante para la alerta
           estado: estadoVisual,
-          alumnos: aluData, 
-          inventario: invData 
+          alumnos: aluData
         };
       }));
     } catch (error) {

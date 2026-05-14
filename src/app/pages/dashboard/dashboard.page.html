@@ -4,7 +4,36 @@
       <ion-menu-button color="light"></ion-menu-button>
     </ion-buttons>
     <ion-title>Resumen de Almacén</ion-title>
-    </ion-toolbar>
+    
+    <!-- Botones de Exportación y Alertas en el Header -->
+    <ion-buttons slot="end">
+      <ion-button (click)="lanzarAlertasManuales()">
+        <ion-icon slot="icon-only" name="mail-outline" color="light"></ion-icon>
+      </ion-button>
+      
+      <!-- Trigger para el Popover de PDF -->
+      <ion-button id="click-trigger">
+        <ion-icon slot="icon-only" name="download-outline" color="light"></ion-icon>
+      </ion-button>
+      
+      <ion-popover trigger="click-trigger" triggerAction="click">
+        <ng-template>
+          <ion-content class="ion-padding">
+            <ion-list lines="none">
+              <ion-item button (click)="generarPDFGeneral()">
+                <ion-icon name="document-text-outline" slot="start"></ion-icon>
+                <ion-label>PDF General</ion-label>
+              </ion-item>
+              <ion-item button (click)="generarPDFVencidos()">
+                <ion-icon name="alert-circle-outline" slot="start" color="danger"></ion-icon>
+                <ion-label color="danger">PDF Vencidos</ion-label>
+              </ion-item>
+            </ion-list>
+          </ion-content>
+        </ng-template>
+      </ion-popover>
+    </ion-buttons>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content class="fondo-claro ion-padding">
@@ -13,21 +42,21 @@
   </ion-refresher>
 
   <div class="contenedor-maximo">
+    <!-- INDICADORES PRINCIPALES (KPIs) -->
     <ion-grid class="ion-no-padding">
       <ion-row>
         <ion-col size="6">
           <ion-card class="tarjeta-limpia">
             <ion-card-header>
-              <ion-card-subtitle class="texto-secundario">Activos</ion-card-subtitle>
-              <ion-card-title class="texto-primario">{{ totalActivos }}</ion-card-title>
+              <ion-card-subtitle class="texto-secundario">Préstamos Totales</ion-card-subtitle>
+              <ion-card-title class="texto-primario">{{ prestamosAgrupados.length }}</ion-card-title>
             </ion-card-header>
           </ion-card>
         </ion-col>
-
         <ion-col size="6">
           <ion-card class="tarjeta-limpia alerta">
             <ion-card-header>
-              <ion-card-subtitle class="texto-secundario">Vencidos</ion-card-subtitle>
+              <ion-card-subtitle class="texto-secundario">Artículos Vencidos</ion-card-subtitle>
               <ion-card-title class="texto-peligro">{{ totalVencidos }}</ion-card-title>
             </ion-card-header>
           </ion-card>
@@ -35,42 +64,152 @@
       </ion-row>
     </ion-grid>
 
-    <div class="seccion-lista">
+    <!-- 1. SECCIÓN DE VENCIDOS -->
+    <div class="seccion-lista animated fadeIn" *ngIf="vencidosAgrupados.length > 0">
       <div class="header-lista">
-        <h2 class="subtitulo">Últimos Movimientos</h2>
-        <ion-badge *ngIf="totalVencidos > 0" color="danger" mode="ios">Atención requerida</ion-badge>
+        <h2 class="subtitulo peligro">Préstamos Vencidos</h2>
+        <ion-badge color="danger" mode="ios">{{ vencidosAgrupados.length }} registros</ion-badge>
       </div>
       
       <ion-list class="lista-transparente">
-        <ion-item *ngFor="let prestamo of prestamosActivos" class="item-limpio" lines="none">
-          <div class="icono-contenedor" slot="start" [ngClass]="{'bg-vencido': prestamo.estado === 'Vencido'}">
-            <ion-icon name="build-outline"></ion-icon>
+        <ion-item *ngFor="let grupo of vencidosAgrupados" class="item-limpio-agrupado vencido ion-margin-bottom" lines="none">
+          <div class="icono-contenedor bg-vencido" slot="start">
+            <ion-icon [name]="grupo.receptor_tipo?.toLowerCase() === 'profesor' ? 'school' : 'person'"></ion-icon>
           </div>
           
           <ion-label>
-            <h3 class="herramienta-nombre">{{ prestamo.herramienta_nombre || 'Herramienta' }}</h3>
-            <p class="alumno-info">
-              <strong>{{ prestamo.receptor_nombre }}</strong>
-              <span> • {{ prestamo.receptor_tipo }}</span>
-            </p>
-            <p class="fecha-info">
-              Entrega: {{ prestamo.fecha_devolucion_pactada?.toDate() | date:'dd/MM/yyyy' }}
-            </p>
+            <div class="header-item-flex">
+              <h3 class="receptor-nombre">{{ grupo.receptor_nombre }}</h3>
+              <ion-badge 
+                class="badge-tipo"
+                [color]="grupo.receptor_tipo?.toLowerCase() === 'profesor' ? 'tertiary' : 'medium'" 
+                mode="ios">
+                {{ grupo.receptor_tipo }}
+              </ion-badge>
+            </div>
+
+            <!-- DETALLES ACADÉMICOS: Profesor y Departamento alineados -->
+            <div class="detalles-academicos">
+              <div class="fila-academica-flex">
+                <p class="info-secundaria">
+                  <ion-icon name="briefcase-outline"></ion-icon>
+                  <span *ngIf="grupo.receptor_tipo?.toLowerCase() !== 'profesor'">
+                    A cargo: <strong>{{ grupo.autorizado_por_nombre || 'N/A' }}</strong>
+                  </span>
+                  <span *ngIf="grupo.receptor_tipo?.toLowerCase() === 'profesor'">
+                    Docente Titular
+                  </span>
+                </p>
+                
+                <p class="info-secundaria">
+                  <ion-icon name="business-outline"></ion-icon>
+                  <strong>{{ grupo.autorizado_por_depto || 'S/D' }}</strong>
+                </p>
+              </div>
+            </div>
+            
+            <div class="mini-lista-herramientas">
+              <span *ngFor="let h of grupo.herramientas; let last = last" class="tag-herramienta vencida">
+                {{ h.nombre }}{{ !last ? ',' : '' }}
+              </span>
+            </div>
+
+            <div class="info-adicional-dashboard">
+              <div class="fila-detalles-flex">
+                <p class="empleado-prestó">
+                  <ion-icon name="person-circle-outline"></ion-icon> 
+                  Prestado por: <strong>{{ grupo.empleado_nombre }}</strong>
+                </p>
+                <p class="fecha-info texto-peligro">
+                  Venció el: {{ grupo.fecha_devolucion_pactada | date:'dd/MM/yyyy' }}
+                </p>
+              </div>
+            </div>
           </ion-label>
           
-          <ion-badge slot="end" class="etiqueta-estado" 
-            [ngClass]="{'estado-vencido': prestamo.estado === 'Vencido', 'estado-ok': prestamo.estado === 'Activo'}">
-            {{ prestamo.estado }}
-          </ion-badge>
+          <ion-badge slot="end" class="etiqueta-estado estado-vencido">VENCIDO</ion-badge>
         </ion-item>
       </ion-list>
     </div>
+
+    <!-- 2. SECCIÓN DE ACTIVOS -->
+    <div class="seccion-lista animated fadeIn" *ngIf="activosAgrupados.length > 0">
+      <div class="header-lista">
+        <h2 class="subtitulo">Préstamos al Corriente</h2>
+      </div>
+      
+      <ion-list class="lista-transparente">
+        <ion-item *ngFor="let grupo of activosAgrupados" class="item-limpio-agrupado ion-margin-bottom" lines="none">
+          <div class="icono-contenedor" slot="start">
+            <ion-icon [name]="grupo.receptor_tipo?.toLowerCase() === 'profesor' ? 'school-outline' : 'person-outline'"></ion-icon>
+          </div>
+          
+          <ion-label>
+            <div class="header-item-flex">
+              <h3 class="receptor-nombre">{{ grupo.receptor_nombre }}</h3>
+              <ion-badge 
+                class="badge-tipo"
+                [color]="grupo.receptor_tipo?.toLowerCase() === 'profesor' ? 'tertiary' : 'medium'" 
+                mode="ios">
+                {{ grupo.receptor_tipo }}
+              </ion-badge>
+            </div>
+
+            <!-- DETALLES ACADÉMICOS: Profesor y Departamento alineados -->
+            <div class="detalles-academicos">
+              <div class="fila-academica-flex">
+                <p class="info-secundaria">
+                  <ion-icon name="briefcase-outline"></ion-icon>
+                  <span *ngIf="grupo.receptor_tipo?.toLowerCase() !== 'profesor'">
+                    A cargo: <strong>{{ grupo.autorizado_por_nombre || 'N/A' }}</strong>
+                  </span>
+                  <span *ngIf="grupo.receptor_tipo?.toLowerCase() === 'profesor'">
+                    Docente Titular
+                  </span>
+                </p>
+                
+                <p class="info-secundaria">
+                  <ion-icon name="business-outline"></ion-icon>
+                  <strong>{{ grupo.autorizado_por_depto || 'S/D' }}</strong>
+                </p>
+              </div>
+            </div>
+            
+            <div class="mini-lista-herramientas">
+              <span *ngFor="let h of grupo.herramientas; let last = last" class="tag-herramienta">
+                {{ h.nombre }}{{ !last ? ',' : '' }}
+              </span>
+            </div>
+            
+            <div class="info-adicional-dashboard">
+              <div class="fila-detalles-flex">
+                <p class="empleado-prestó">
+                  <ion-icon name="person-circle-outline"></ion-icon> 
+                  Prestado por: <strong>{{ grupo.empleado_nombre }}</strong>
+                </p>
+                <p class="fecha-info">
+                  Entrega: {{ grupo.fecha_devolucion_pactada | date:'dd/MM/yyyy' }}
+                </p>
+              </div>
+            </div>
+          </ion-label>
+          
+          <ion-badge slot="end" class="etiqueta-estado estado-ok">ACTIVO</ion-badge>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <!-- MENSAJE SI EL ALMACÉN ESTÁ VACÍO -->
+    <div *ngIf="prestamosAgrupados.length === 0" class="mensaje-vacio">
+      <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+      <p>No hay herramientas fuera del almacén.</p>
+    </div>
   </div>
 
+  <!-- Botón FAB para alertas rápidas -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button color="dark" (click)="lanzarAlertasManuales()">
       <ion-icon name="mail-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>
-
 </ion-content>
