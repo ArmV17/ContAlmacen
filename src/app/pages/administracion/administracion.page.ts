@@ -41,6 +41,9 @@ export class AdministracionPage {
   maestros: any[] = [];
   tiposExistentes: string[] = [];
   listaDepartamentos: string[] = [];
+  departamentosFiltrados: string[] = [];
+  carrerasExistentes: string[] = []; 
+  carrerasFiltradas: string[] = [];
 
   // --- PROPIEDADES PARA SUGERENCIAS ---
   nombresFiltrados: string[] = []; 
@@ -85,6 +88,9 @@ export class AdministracionPage {
     this.tiposExistentes = await this.almacenService.obtenerTiposDeHerramientas();
     this.maestros = await this.almacenService.obtenerMaestros();
     
+    // Mapeamos el catálogo dinámico de carreras al descargar los alumnos
+    this.actualizarCatalogoCarreras(this.alumnos);
+
     // Solo cargamos empleados si el usuario tiene el permiso
     if (this.esSuperAdmin) {
       this.empleados = await this.almacenService.obtenerEmpleados();
@@ -110,6 +116,24 @@ export class AdministracionPage {
     }
   }
 
+  actualizarSugerenciasDepartamento() {
+    const busqueda = this.maestroNuevo.departamento?.toLowerCase().trim() || '';
+
+    if (!busqueda) {
+      this.departamentosFiltrados = [];
+      return;
+    }
+
+    this.departamentosFiltrados = this.listaDepartamentos.filter(d => 
+      d.toLowerCase().includes(busqueda) && d.toLowerCase() !== busqueda
+    ).slice(0, 4);
+  }
+
+  seleccionarSugerenciaDepartamento(depto: string) {
+    this.maestroNuevo.departamento = depto.toUpperCase(); 
+    this.departamentosFiltrados = []; 
+  }
+
   validarCorreo(email: string): boolean {
     const pattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
     return pattern.test(email);
@@ -123,7 +147,6 @@ export class AdministracionPage {
       this.nombresFiltrados = [];
       return;
     }
-    // Obtiene nombres únicos del inventario actual que coincidan
     const nombresUnicos = [...new Set(this.herramientas.map(h => h.nombre_herramienta))];
     this.nombresFiltrados = nombresUnicos.filter(n => n.toLowerCase().includes(texto));
   }
@@ -134,18 +157,64 @@ export class AdministracionPage {
       this.tiposFiltrados = [];
       return;
     }
+    
     const coincidencias = this.herramientas.filter(h => 
       h.nombre_herramienta?.trim().toLowerCase() === nombreEscrito
     );
-    this.tiposFiltrados = [...new Set(coincidencias.map(h => h.tipo_herramienta?.trim()).filter(t => t && t !== ''))];
+    
+    const tiposLimpias = coincidencias
+      .map(h => h.tipo_herramienta?.trim())
+      .filter(t => t && t !== '');
+
+    this.tiposFiltrados = [...new Set(tiposLimpias)] as string[];
   }
 
-  // Al seleccionar una sugerencia de nombre
   seleccionarSugerenciaNombre(nombre: string) {
     this.herramientaNueva.nombre = nombre;
     this.nombresFiltrados = [];
     this.generarCodigoAutomatico();
     this.actualizarSugerenciasTipo();
+  }
+
+  seleccionarSugerenciaTipo(tipo: string) {
+    this.herramientaNueva.tipo = tipo;
+    this.tiposFiltrados = []; 
+  }
+
+  actualizarCatalogoCarreras(alumnos: any[]) {
+    const carrerasLimpias = alumnos
+      .map(a => a.carrera ? a.carrera.trim() : '')
+      .filter(c => c !== '');
+    
+    this.carrerasExistentes = [...new Set(carrerasLimpias)].sort() as string[];
+  }
+
+  actualizarSugerenciasCarrera() {
+    const busqueda = this.alumnoNuevo.carrera?.toLowerCase().trim() || '';
+    
+    if (!busqueda) {
+      this.carrerasFiltradas = [];
+      return;
+    }
+
+    this.carrerasFiltradas = this.carrerasExistentes.filter(c => 
+      c.toLowerCase().includes(busqueda) && c.toLowerCase() !== busqueda
+    ).slice(0, 4); 
+  }
+
+  seleccionarSugerenciaCarrera(carrera: string) {
+    this.alumnoNuevo.carrera = carrera;
+    this.carrerasFiltradas = []; 
+  }
+
+  async cargarDepartamentosDinamicos() {
+    try {
+      const maestros = await this.almacenService.obtenerMaestros();
+      const deptos = maestros.map((m: any) => m.departamento).filter((d: string) => d && d !== 'SIN ÁREA');
+      this.listaDepartamentos = [...new Set(deptos)] as string[];
+    } catch (error) {
+      console.error("Error al poblar el datalist de departamentos:", error);
+    }
   }
 
   get listaFiltrada() {
@@ -157,7 +226,7 @@ export class AdministracionPage {
     return [];
   }
 
-    // --- FUNCIÓN DE APOYO PARA LIMPIEZA DE TEXTO ---
+  // --- FUNCIÓN DE APOYO PARA LIMPIEZA DE TEXTO ---
   private formatearTexto(texto: string): string {
     if (!texto) return '';
     const limpio = texto.trim().toLowerCase();
@@ -172,7 +241,6 @@ export class AdministracionPage {
       return;
     }
 
-    // El prefijo siempre en MAYÚSCULAS para el ID
     const prefijo = nombre.substring(0, 3).toUpperCase();
     const coincidencias = this.herramientas.filter(h => 
       h.num_herramienta.startsWith(prefijo)
@@ -188,13 +256,12 @@ export class AdministracionPage {
       return;
     }
 
-    // --- APLICAR FORMATO ANTES DE GUARDAR ---
     const nombreLimpio = this.formatearTexto(this.herramientaNueva.nombre);
     const tipoLimpio = this.formatearTexto(this.herramientaNueva.tipo);
 
     if (this.editandoHerramienta) {
       const res = await this.almacenService.registrarHerramienta({
-        codigo: this.herramientaNueva.codigo, // El código ya viene en mayúsculas
+        codigo: this.herramientaNueva.codigo,
         nombre: nombreLimpio,
         tipo: tipoLimpio
       });
@@ -206,7 +273,6 @@ export class AdministracionPage {
       }
 
     } else {
-      // --- LÓGICA DE REGISTRO MASIVO (NUEVAS) ---
       const totalAInsertar = this.herramientaNueva.cantidad;
       let insertados = 0;
 
@@ -214,9 +280,9 @@ export class AdministracionPage {
         this.generarCodigoAutomatico(); 
 
         const dataParaFirebase = {
-          codigo: this.herramientaNueva.codigo, // Generado como "ABC-01"
-          nombre: nombreLimpio,               // Guardado como "Nombre"
-          tipo: tipoLimpio                    // Guardado como "Tipo"
+          codigo: this.herramientaNueva.codigo, 
+          nombre: nombreLimpio,               
+          tipo: tipoLimpio 
         };
 
         const res = await this.almacenService.registrarHerramienta(dataParaFirebase);
@@ -233,7 +299,7 @@ export class AdministracionPage {
       this.mostrarMensaje(`Se registraron ${insertados} piezas correctamente`, 'success');
     }
 
-    this.forzarInputTipo = false; // Resetear el control de "Otro tipo"
+    this.forzarInputTipo = false; 
     this.cancelarEdicionHerramienta();
     await this.cargarDatos();
   }
@@ -270,6 +336,7 @@ export class AdministracionPage {
 
     this.editandoHerramienta = false;
     this.nombresFiltrados = [];
+    this.tiposFiltrados = [];
     this.forzarInputTipo = false;
   }
 
@@ -285,20 +352,17 @@ export class AdministracionPage {
     if (res.exito) {
       this.mostrarMensaje(`Estado actualizado: ${nuevoEstado}`, 'success');
       this.cancelarEdicionHerramienta();
-      await this.cargarDatos(); // Recarga la lista
+      await this.cargarDatos(); 
     } else {
       this.mostrarMensaje('Error al actualizar estado', 'danger');
     }
   }
 
   async toggleMantenimiento(h: any) {
-    // Cambiamos el estado localmente para reacción inmediata
     const nuevoEstado = (h.estado === 'Mantenimiento') ? 'Disponible' : 'Mantenimiento';
 
-    // ESENCIAL: El objeto debe tener los nombres de campos que espera tu base de datos
-    // y el 'codigo' debe ser igual al ID del documento en Firebase (ARA-01)
     const dataActualizada = {
-      codigo: h.num_herramienta, // Esto se usará como ID del documento
+      codigo: h.num_herramienta, 
       nombre: h.nombre_herramienta,
       tipo: h.tipo_herramienta || '',
       estado: nuevoEstado
@@ -306,9 +370,7 @@ export class AdministracionPage {
 
     try {
       const res = await this.almacenService.registrarHerramienta(dataActualizada);
-      
       if (res.exito) {
-        // Si el servicio tuvo éxito, actualizamos la vista
         h.estado = nuevoEstado;
         this.mostrarMensaje(`Estado de ${h.num_herramienta} actualizado a ${nuevoEstado}`, 'success');
       } else {
@@ -350,8 +412,6 @@ export class AdministracionPage {
     const tipo = herramienta.tipo_herramienta;
     
     const nombreFormateado = tipo ? `${nombre} ${tipo} ${codigo}` : `${nombre} ${codigo}`;
-    
-    // caption: Este parámetro de quickchart cambia el texto que sale abajo del QR
     const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(codigo)}&size=300&caption=${encodeURIComponent(nombreFormateado)}`;
 
     try {
@@ -383,7 +443,6 @@ export class AdministracionPage {
       return;
     }
 
-    // APLICAR FORMATO
     this.alumnoNuevo.nombre = this.formatearNombrePropio(nombre);
     this.alumnoNuevo.carrera = this.formatearNombrePropio(carrera);
 
@@ -409,6 +468,7 @@ export class AdministracionPage {
   cancelarEdicionAlumno() {
     this.alumnoNuevo = { matricula: '', nombre: '', carrera: '', correo: '' };
     this.editandoAlumno = false;
+    this.carrerasFiltradas = []; 
   }
 
   // --- GESTIÓN DE MAESTROS ---
@@ -436,7 +496,6 @@ export class AdministracionPage {
       return;
     }
 
-    // APLICAR FORMATO A NOMBRE Y MATERIAS
     this.maestroNuevo.nombre = this.formatearNombrePropio(nombre);
     this.maestroNuevo.departamento = departamento.toUpperCase().trim();
     this.maestroNuevo.materias = this.maestroNuevo.materias.map(m => this.formatearNombrePropio(m));
@@ -469,6 +528,7 @@ export class AdministracionPage {
     this.maestroNuevo = { numMaestro: '', nombre: '', correo: '', materias: [], departamento: '' };
     this.materiaTemp = '';
     this.editandoMaestro = false;
+    this.departamentosFiltrados = [];
   }
 
   async guardarEmpleado() {
@@ -477,7 +537,6 @@ export class AdministracionPage {
         return;
     }
 
-    // APLICAR FORMATO AL NOMBRE
     this.empleadoNuevo.nombre = this.formatearNombrePropio(this.empleadoNuevo.nombre);
 
     const res = await this.almacenService.registrarEmpleado(this.empleadoNuevo);
@@ -500,42 +559,42 @@ export class AdministracionPage {
   }
 
   async confirmarEliminar(tabla: string, idVal: string, nombre: string) {
-      const alert = await this.alertController.create({
-        header: 'Confirmar eliminación',
-        message: `¿Estás seguro de eliminar a <strong>${nombre}</strong>?`,
-        buttons: [
-          { text: 'Cancelar', role: 'cancel' },
-          { 
-            text: 'Eliminar', 
-            cssClass: 'boton-alerta-eliminar',
-            handler: async () => {
-              const res = await this.almacenService.eliminarRegistro(tabla, idVal);
-              if (res.exito) {
-                if (this.segmentoActual === 'alumnos') this.alumnos = this.alumnos.filter(a => a.matricula !== idVal);
-                else if (this.segmentoActual === 'maestros') this.maestros = this.maestros.filter(m => m.num_maestro !== idVal);
-                else if (this.segmentoActual === 'herramientas') this.herramientas = this.herramientas.filter(h => h.num_herramienta !== idVal);
-                else if (this.segmentoActual === 'empleados') this.empleados = this.empleados.filter(e => e.num_empleado !== idVal);
+    const alert = await this.alertController.create({
+      header: 'Confirmar eliminación',
+      // 🚀 CORREGIDO: Sin etiquetas HTML intermedias
+      message: `¿Estás seguro de eliminar a ${nombre}?`,
+      buttons: [
+        { text: 'Cancelar', role: 'cancel' },
+        { 
+          text: 'Eliminar', 
+          cssClass: 'boton-alerta-eliminar',
+          handler: async () => {
+            const res = await this.almacenService.eliminarRegistro(tabla, idVal);
+            if (res.exito) {
+              if (this.segmentoActual === 'alumnos') this.alumnos = this.alumnos.filter(a => a.matricula !== idVal);
+              else if (this.segmentoActual === 'maestros') this.maestros = this.maestros.filter(m => m.num_maestro !== idVal);
+              else if (this.segmentoActual === 'herramientas') this.herramientas = this.herramientas.filter(h => h.num_herramienta !== idVal);
+              else if (this.segmentoActual === 'empleados') this.empleados = this.empleados.filter(e => e.num_empleado !== idVal);
 
-                this.mostrarMensaje('Registro eliminado con éxito', 'success');
-              } else this.mostrarMensaje('Error: registro vinculado a un préstamo', 'danger');
-            }
+              this.mostrarMensaje('Registro eliminado con éxito', 'success');
+            } else this.mostrarMensaje('Error: registro vinculado a un préstamo', 'danger');
           }
-        ]
-      });
-      await alert.present();
-    }
+        }
+      ]
+    });
+    await alert.present();
+  }
 
-    async mostrarMensaje(m: string, c: string) {
-      const t = await this.toastController.create({ 
-        message: m, 
-        duration: 2000, 
-        color: c, 
-        position: 'bottom' 
-      });
-      t.present();
-    }
+  async mostrarMensaje(m: string, c: string) {
+    const t = await this.toastController.create({ 
+      message: m, 
+      duration: 2000, 
+      color: c, 
+      position: 'bottom' 
+    });
+    t.present();
+  }
 
-  // Convierte "JUAN PEREZ" o "juan perez" en "Juan Perez"
   formatearNombrePropio(texto: string): string {
     if (!texto) return '';
     return texto

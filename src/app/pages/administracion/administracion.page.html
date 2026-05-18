@@ -36,7 +36,6 @@
 <ion-content class="fondo-claro ion-padding">
   <div class="contenedor-maximo">
 
-    <!-- SECCIÓN ALUMNOS -->
     <div *ngIf="segmentoActual === 'alumnos'">
       <ion-card class="tarjeta-formulario">
         <ion-card-header>
@@ -55,10 +54,23 @@
           </ion-item>
 
           <ion-item class="input-limpio" lines="none">
-            <ion-input label="Carrera" labelPlacement="stacked" [(ngModel)]="alumnoNuevo.carrera" placeholder="Ej: Mantenimiento Industrial"></ion-input>
+            <ion-input 
+              label="Carrera" 
+              labelPlacement="stacked" 
+              [(ngModel)]="alumnoNuevo.carrera" 
+              (ionInput)="actualizarSugerenciasCarrera()"
+              placeholder="Ej: Mantenimiento Industrial">
+            </ion-input>
           </ion-item>
 
-          <!-- SUSTITUIDO: Nivel por Correo Electrónico -->
+          <div class="ion-padding-start ion-padding-bottom" *ngIf="carrerasFiltradas && carrerasFiltradas.length > 0">
+            <p style="font-size: 0.8rem; color: var(--ion-color-medium); margin-bottom: 5px;">Sugerencias de carreras:</p>
+            <ion-chip *ngFor="let c of carrerasFiltradas" (click)="seleccionarSugerenciaCarrera(c)" color="primary" outline="true">
+              <ion-label>{{ c }}</ion-label>
+              <ion-icon name="add-circle-outline"></ion-icon>
+            </ion-chip>
+          </div>
+
           <ion-item class="input-limpio" lines="none">
             <ion-input 
               label="Correo Electrónico" 
@@ -75,7 +87,7 @@
           </ion-button>
           
           <ion-button *ngIf="editandoAlumno" expand="block" fill="clear" color="medium" (click)="cancelarEdicionAlumno()">
-            Cancelar Edición
+            Cancel Edición
           </ion-button>
         </ion-card-content>
       </ion-card>
@@ -85,7 +97,6 @@
         <ion-item *ngFor="let a of listaFiltrada" lines="none" class="item-gestion">
           <ion-label>
             <h3>{{ a.nombre }}</h3>
-            <!-- ACTUALIZADO: Mostrar correo en lugar de nivel -->
             <p>{{ a.matricula }} • {{ a.carrera }} • <strong>{{ a.correo }}</strong></p>
           </ion-label>
           
@@ -101,8 +112,7 @@
       </ion-list>
     </div>
 
-    <!-- SECCIÓN MAESTROS -->
-     <div *ngIf="segmentoActual === 'maestros'">
+    <div *ngIf="segmentoActual === 'maestros'">
       <ion-card class="tarjeta-formulario">
         <ion-card-header>
           <ion-card-title class="titulo-seccion">
@@ -142,19 +152,22 @@
           </ion-item>
 
           <ion-item class="input-limpio" lines="none">
-            <ion-label position="stacked">Departamento / Área</ion-label>
             <ion-input 
-              type="text"
-              list="departamentosExistentes"
+              label="Departamento / Área" 
+              labelPlacement="stacked" 
               [(ngModel)]="maestroNuevo.departamento" 
-              placeholder="Ej: Industrial, Mecatrónica..."
-              (ionInput)="formatearDepartamento($event)">
+              (ionInput)="actualizarSugerenciasDepartamento()"
+              placeholder="Ej: Suelos, Botánica, Mecatrónica...">
             </ion-input>
-            
-            <datalist id="departamentosExistentes">
-              <option *ngFor="let dep of listaDepartamentos" [value]="dep"></option>
-            </datalist>
           </ion-item>
+
+          <div class="ion-padding-start ion-padding-bottom" *ngIf="departamentosFiltrados && departamentosFiltrados.length > 0">
+            <p style="font-size: 0.8rem; color: var(--ion-color-medium); margin-bottom: 5px;">Sugerencias de áreas:</p>
+            <ion-chip *ngFor="let dep of departamentosFiltrados" (click)="seleccionarSugerenciaDepartamento(dep)" color="primary" outline="true">
+              <ion-label>{{ dep }}</ion-label>
+              <ion-icon name="add-circle-outline"></ion-icon>
+            </ion-chip>
+          </div>
 
           <div class="seccion-materias ion-margin-top">
             <ion-item class="input-limpio" lines="none">
@@ -195,7 +208,6 @@
 
       <ion-list class="lista-gestion">
         <ion-item *ngFor="let m of listaFiltrada" lines="none" class="item-gestion">
-          
           <ion-label>
             <div class="encabezado-maestro">
               <h3 class="nombre-maestro">{{ m.nombre }}</h3>
@@ -235,7 +247,6 @@
         </ion-card-header>
 
         <ion-card-content>
-          
           <div *ngIf="editandoHerramienta">
             <ion-list lines="none" class="lista-detalles">
               <ion-item class="item-info">
@@ -265,7 +276,6 @@
           </div>
 
           <div *ngIf="!editandoHerramienta">
-            
             <ion-item class="input-limpio" lines="none">
               <ion-input 
                 label="Nombre de la Herramienta" 
@@ -308,38 +318,29 @@
               </ion-note>
             </ion-item>
 
-            <ion-item class="input-limpio ion-margin-top" lines="none">
-              <ion-select 
-                *ngIf="tiposFiltrados.length > 0 && !forzarInputTipo"
-                label="Tipo (Sugerido)" 
-                labelPlacement="stacked" 
-                [(ngModel)]="herramientaNueva.tipo" 
-                interface="popover"
-                (ionChange)="checarNuevoTipo($event)"
-                placeholder="Selecciona">
-                <ion-select-option *ngFor="let tipo of tiposFiltrados" [value]="tipo">{{ tipo }}</ion-select-option>
-                <ion-select-option value="NUEVO_TIPO">-- Otro / Nuevo --</ion-select-option>
-              </ion-select>
-
+            <ion-item class="input-limpio" lines="none">
               <ion-input 
-                *ngIf="tiposFiltrados.length === 0 || forzarInputTipo"
-                label="Escribe el tipo" 
+                label="Tipo de Herramienta" 
                 labelPlacement="stacked" 
                 [(ngModel)]="herramientaNueva.tipo" 
-                placeholder="Ej: Reforzada, Eléctrica, etc.">
-                
-                <ion-button slot="end" fill="clear" *ngIf="tiposFiltrados.length > 0" (click)="forzarInputTipo = false">
-                  <ion-icon name="list-outline" slot="icon-only"></ion-icon>
-                </ion-button>
+                (ionInput)="actualizarSugerenciasTipo()"
+                placeholder="Ej: De punta, Plantadora (o selecciona un tipo)">
               </ion-input>
             </ion-item>
+
+            <div class="ion-padding-start ion-padding-bottom" *ngIf="tiposFiltrados && tiposFiltrados.length > 0">
+              <p style="font-size: 0.8rem; color: var(--ion-color-medium); margin-bottom: 5px;">Tipos registrados para esta herramienta:</p>
+              <ion-chip *ngFor="let tipo of tiposFiltrados" (click)="seleccionarSugerenciaTipo(tipo)" color="primary" outline="true">
+                <ion-label>{{ tipo }}</ion-label>
+                <ion-icon name="add-circle-outline"></ion-icon>
+              </ion-chip>
+            </div>
 
             <ion-button expand="block" class="boton-guardar ion-margin-top" (click)="guardarHerramienta()">
               <ion-icon name="save-outline" slot="start"></ion-icon> 
               Guardar Registros
             </ion-button>
           </div>
-
         </ion-card-content>
       </ion-card>
 
