@@ -1,6 +1,5 @@
 const fs = require('fs');
 
-// Vercel inyectará los valores reales aquí mediante process.env
 const envConfigFile = `export const environment = {
   production: true,
   firebase: {
@@ -16,6 +15,8 @@ const envConfigFile = `export const environment = {
   urlGoogleScript: "${process.env.URL_GOOGLE_SCRIPT}"
 };`;
 
-// Escribe el archivo con las llaves reales justo antes de compilar
+// 🔥 EL TRUCO ESTÁ AQUÍ: Obligamos a Vercel a escribir las llaves en AMBOS archivos
+fs.writeFileSync('./src/environments/environment.ts', envConfigFile);
 fs.writeFileSync('./src/environments/environment.prod.ts', envConfigFile);
-console.log('✅ Archivo environment.prod.ts generado con éxito usando las variables de Vercel.');
+
+console.log('✅ Archivos de entorno inyectados con éxito para la compilación.');
