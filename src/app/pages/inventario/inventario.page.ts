@@ -1,24 +1,21 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+
+// 👇 IMPORTACIÓN BLINDADA: Componentes Standalone exactos para tu HTML
+import { 
+  IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, 
+  IonButton, IonIcon, IonSearchbar, IonContent, IonAccordionGroup, 
+  IonAccordion, IonItem, IonLabel 
+} from '@ionic/angular/standalone';
+
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { addIcons } from 'ionicons';
 import { 
-  constructOutline, 
-  barcodeOutline, 
-  searchOutline, 
-  fingerPrintOutline, 
-  hammerOutline,
-  chevronDownOutline,
-  chevronUpOutline,
-  chevronDownCircle,
-  chevronUpCircle,
-  cloudUploadOutline,
-  imageOutline ,
-  cameraOutline,
-  downloadOutline
+  constructOutline, barcodeOutline, searchOutline, fingerPrintOutline, 
+  hammerOutline, chevronDownOutline, chevronUpOutline, chevronDownCircle,
+  chevronUpCircle, cloudUploadOutline, imageOutline, cameraOutline, downloadOutline
 } from 'ionicons/icons';
 import { AlmacenService } from '../../services/almacen.service';
 
@@ -27,7 +24,13 @@ import { AlmacenService } from '../../services/almacen.service';
   templateUrl: './inventario.page.html',
   styleUrls: ['./inventario.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule]
+  // 👇 DECLARACIÓN EXPLÍCITA (Aquí está la clave para que Vercel no borre estilos)
+  imports: [
+    CommonModule, FormsModule,
+    IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, 
+    IonButton, IonIcon, IonSearchbar, IonContent, IonAccordionGroup, 
+    IonAccordion, IonItem, IonLabel
+  ]
 })
 export class InventarioPage {
 
@@ -37,19 +40,9 @@ export class InventarioPage {
 
   constructor(private almacenService: AlmacenService) {
     addIcons({ 
-      constructOutline, 
-      barcodeOutline, 
-      searchOutline, 
-      fingerPrintOutline, 
-      hammerOutline,
-      chevronDownOutline,
-      chevronUpOutline,
-      chevronDownCircle,
-      chevronUpCircle,
-      cloudUploadOutline,
-      imageOutline ,
-      cameraOutline,
-      downloadOutline
+      constructOutline, barcodeOutline, searchOutline, fingerPrintOutline, 
+      hammerOutline, chevronDownOutline, chevronUpOutline, chevronDownCircle,
+      chevronUpCircle, cloudUploadOutline, imageOutline, cameraOutline, downloadOutline
     });
   }
 
@@ -72,7 +65,7 @@ export class InventarioPage {
         mapa.set(nombre, {
           nombre: nombre,
           totalDisponibles: 0,
-          imagenAI: h.url_imagen || 'assets/ai_icon.png', // Si hay URL en la DB la usa, si no, el icono
+          imagenAI: h.url_imagen || 'assets/ai_icon.png',
           detallesPorTipo: [] 
         });
       }
@@ -98,14 +91,11 @@ export class InventarioPage {
     this.herramientasAgrupadas = Array.from(mapa.values());
   }
 
-  // --- LÓGICA DE FILTRADO OPTIMIZADA ---
   get inventarioFiltrado() {
     const t = this.textoBuscar.toLowerCase().trim();
-    
     if (!t) return this.herramientasAgrupadas;
 
     const resultados: any[] = [];
-
     this.herramientasAgrupadas.forEach(grupo => {
       const coincideNombre = grupo.nombre.toLowerCase().includes(t);
       const nuevoGrupo = { ...grupo, detallesPorTipo: [] as any[] };
@@ -114,16 +104,11 @@ export class InventarioPage {
       grupo.detallesPorTipo.forEach((detalle: any) => {
         const nombreYTipo = `${grupo.nombre} ${detalle.tipo}`.toLowerCase();
         const coincideNombreTipo = nombreYTipo.includes(t);
-
-        // Filtramos unidades por estado
-        const itemsPorEstado = detalle.items.filter((item: any) => 
-          item.estado.toLowerCase().includes(t)
-        );
+        const itemsPorEstado = detalle.items.filter((item: any) => item.estado.toLowerCase().includes(t));
 
         if (coincideNombreTipo || itemsPorEstado.length > 0) {
           nuevoGrupo.detallesPorTipo.push({
             ...detalle,
-            // Si buscamos por estado, mostramos solo esos items. Si no, mostramos todos los de ese tipo.
             items: itemsPorEstado.length > 0 ? itemsPorEstado : detalle.items,
             disponibles: detalle.items.filter((i: any) => i.estado.toLowerCase() === 'disponible').length
           });
@@ -134,21 +119,11 @@ export class InventarioPage {
       if (coincideNombre && !hayCoincidenciaInterna) {
         resultados.push(grupo);
       } else if (hayCoincidenciaInterna) {
-        // Recalculamos stock disponible basado en los tipos filtrados
         nuevoGrupo.totalDisponibles = nuevoGrupo.detallesPorTipo.reduce((acc: number, det: any) => acc + det.disponibles, 0);
         resultados.push(nuevoGrupo);
       }
     });
-
     return resultados;
-  }
-
-  obtenerTodasLasUnidades(herramienta: any) {
-    const todas: any[] = [];
-    herramienta.detallesPorTipo.forEach((detalle: any) => {
-      todas.push(...detalle.items);
-    });
-    return todas;
   }
 
   buscarHerramienta(event: any) {
