@@ -1,7 +1,17 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common'; 
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ToastController, LoadingController } from '@ionic/angular'; 
+
+// 👇 1. IMPORTACIONES STANDALONE DE TODOS LOS COMPONENTES DE TU HTML
+import { 
+  ToastController, LoadingController,
+  IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, 
+  IonButton, IonIcon, IonPopover, IonContent, IonList, IonItem, 
+  IonLabel, IonRefresher, IonRefresherContent, IonGrid, IonRow, 
+  IonCol, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, 
+  IonBadge, IonFab, IonFabButton
+} from '@ionic/angular/standalone'; 
+
 import { addIcons } from 'ionicons';
 import { 
   buildOutline, menu, alertCircleOutline, mailOutline, 
@@ -19,7 +29,15 @@ import autoTable from 'jspdf-autotable';
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule]
+  // 👇 2. DECLARACIÓN EXPLÍCITA PARA QUE VERCEL NO BORRE EL DISEÑO
+  imports: [
+    CommonModule, FormsModule,
+    IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, 
+    IonButton, IonIcon, IonPopover, IonContent, IonList, IonItem, 
+    IonLabel, IonRefresher, IonRefresherContent, IonGrid, IonRow, 
+    IonCol, IonCard, IonCardHeader, IonCardSubtitle, IonCardTitle, 
+    IonBadge, IonFab, IonFabButton
+  ]
 })
 export class DashboardPage {
 
@@ -59,10 +77,8 @@ export class DashboardPage {
         const nombreEmp = p.empleado_almacen || 'Admin Almacén';
         const estadoP = p.estado || 'Activo';
         
-        // --- LÓGICA DE DESENCRIPTACIÓN PARA EL DEPARTAMENTO ---
         let deptoVisual = p.autorizado_por_depto || 'S/D';
         
-        // Si el texto empieza con el patrón típico de CryptoJS (U2Fsd...), lo desencriptamos
         if (deptoVisual && deptoVisual.startsWith('U2Fsd')) {
           try {
             deptoVisual = this.almacenService.desencriptarTexto(deptoVisual);
@@ -71,7 +87,6 @@ export class DashboardPage {
           }
         }
 
-        // Llave de agrupación por receptor e ID
         const llave = `${p.receptor_id}_${nombreEmp}_${estadoP}`;
 
         if (!grupos[llave]) {
@@ -81,7 +96,6 @@ export class DashboardPage {
             receptor_tipo: p.receptor_tipo || 'Alumno',
             receptor_correo: p.receptor_correo,
             receptor_info_extra: p.receptor_info_extra || 'N/A',
-            // Usamos la variable desencriptada
             autorizado_por_nombre: p.autorizado_por_nombre || 'N/A',
             autorizado_por_depto: deptoVisual, 
             empleado_nombre: nombreEmp, 
@@ -108,95 +122,86 @@ export class DashboardPage {
   }
 
   async lanzarAlertasManuales() {
-  const loading = await this.loadingController.create({ 
-    message: 'Preparando notificaciones...' 
-  });
-  await loading.present();
+    const loading = await this.loadingController.create({ 
+      message: 'Preparando notificaciones...' 
+    });
+    await loading.present();
 
-  try {
-    // 1. Obtenemos la fecha de HOY y le quitamos la hora (00:00:00)
-    const hoy = new Date();
-    const hoyTimestamp = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).getTime();
+    try {
+      const hoy = new Date();
+      const hoyTimestamp = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).getTime();
 
-    const mapaAgrupado: { [key: string]: any } = {};
+      const mapaAgrupado: { [key: string]: any } = {};
 
-    this.prestamosOriginales.forEach(p => {
-      // Ignorar si ya se devolvió
-      if (p.estado === 'Devuelto') return;
+      this.prestamosOriginales.forEach(p => {
+        if (p.estado === 'Devuelto') return;
 
-      // Obtener correo
-      const correoDestino = p.receptor_correo || p.correo;
-      if (!correoDestino || correoDestino.includes('sin_correo')) return;
+        const correoDestino = p.receptor_correo || p.correo;
+        if (!correoDestino || correoDestino.includes('sin_correo')) return;
 
-      // 2. Procesar fecha del préstamo y QUITARLE LA HORA para comparar
-      const fechaDoc = p.fecha_devolucion_pactada.toDate();
-      const fechaPrestamoTimestamp = new Date(fechaDoc.getFullYear(), fechaDoc.getMonth(), fechaDoc.getDate()).getTime();
+        const fechaDoc = p.fecha_devolucion_pactada.toDate();
+        const fechaPrestamoTimestamp = new Date(fechaDoc.getFullYear(), fechaDoc.getMonth(), fechaDoc.getDate()).getTime();
 
-      // 3. COMPARACIÓN FLEXIBLE:
-      // Si la fecha del préstamo es MENOR que hoy (Vencido) 
-      // o IGUAL que hoy (Entregar hoy)
-      if (fechaPrestamoTimestamp <= hoyTimestamp) {
-        
-        if (!mapaAgrupado[correoDestino]) {
-          mapaAgrupado[correoDestino] = {
-            correo: correoDestino,
-            to_email: correoDestino, // Doble seguridad por si el script usa uno u otro
-            nombre: p.receptor_nombre,
-            correoProfesor: p.autorizado_por_correo || '', 
-            nombreProfesor: p.autorizado_por_nombre || 'Docente Encargado',
-            vencidas: [],
-            hoy: [],
-            tieneRetraso: false
-          };
+        if (fechaPrestamoTimestamp <= hoyTimestamp) {
+          
+          if (!mapaAgrupado[correoDestino]) {
+            mapaAgrupado[correoDestino] = {
+              correo: correoDestino,
+              to_email: correoDestino,
+              nombre: p.receptor_nombre,
+              correoProfesor: p.autorizado_por_correo || '', 
+              nombreProfesor: p.autorizado_por_nombre || 'Docente Encargado',
+              vencidas: [],
+              hoy: [],
+              tieneRetraso: false
+            };
+          }
+
+          if (fechaPrestamoTimestamp < hoyTimestamp) {
+            mapaAgrupado[correoDestino].vencidas.push(`• ${p.herramienta_nombre}`);
+            mapaAgrupado[correoDestino].tieneRetraso = true;
+          } else {
+            mapaAgrupado[correoDestino].hoy.push(`• ${p.herramienta_nombre}`);
+          }
+        }
+      });
+
+      const listaFinalParaEnviar = Object.values(mapaAgrupado).map((c: any) => {
+        let htmlDiseno = "";
+        if (c.hoy.length > 0) {
+          htmlDiseno += `<b>ENTREGAR HOY:</b><br>${c.hoy.join('<br>')}<br>`;
+        }
+        if (c.vencidas.length > 0) {
+          htmlDiseno += `<b style="color:red;">VENCIDO:</b><br>${c.vencidas.join('<br>')}`;
         }
 
-        // Clasificar para el mensaje
-        if (fechaPrestamoTimestamp < hoyTimestamp) {
-          mapaAgrupado[correoDestino].vencidas.push(`• ${p.herramienta_nombre}`);
-          mapaAgrupado[correoDestino].tieneRetraso = true;
-        } else {
-          mapaAgrupado[correoDestino].hoy.push(`• ${p.herramienta_nombre}`);
-        }
-      }
-    });
+        return {
+          correo: c.correo,
+          to_email: c.correo,
+          nombre: c.nombre,
+          correoProfesor: c.correoProfesor, 
+          nombreProfesor: c.nombreProfesor,
+          herramienta: htmlDiseno, 
+          esRetraso: c.tieneRetraso
+        };
+      });
 
-    const listaFinalParaEnviar = Object.values(mapaAgrupado).map((c: any) => {
-      let htmlDiseno = "";
-      if (c.hoy.length > 0) {
-        htmlDiseno += `<b>ENTREGAR HOY:</b><br>${c.hoy.join('<br>')}<br>`;
-      }
-      if (c.vencidas.length > 0) {
-        htmlDiseno += `<b style="color:red;">VENCIDO:</b><br>${c.vencidas.join('<br>')}`;
+      if (listaFinalParaEnviar.length === 0) {
+        this.mostrarMensaje('No se detectaron préstamos para hoy o vencidos', 'medium');
+        loading.dismiss();
+        return;
       }
 
-      return {
-        correo: c.correo,
-        to_email: c.correo,
-        nombre: c.nombre,
-        correoProfesor: c.correoProfesor, 
-        nombreProfesor: c.nombreProfesor,
-        herramienta: htmlDiseno, 
-        esRetraso: c.tieneRetraso
-      };
-    });
+      await this.almacenService.enviarAlertasMasivas(listaFinalParaEnviar);
+      this.mostrarMensaje(`Se enviaron ${listaFinalParaEnviar.length} notificaciones`, 'success');
 
-    if (listaFinalParaEnviar.length === 0) {
-      this.mostrarMensaje('No se detectaron préstamos para hoy o vencidos', 'medium');
+    } catch (error) {
+      console.error("Error en envío masivo:", error);
+      this.mostrarMensaje('Error al conectar con el servidor', 'danger');
+    } finally {
       loading.dismiss();
-      return;
     }
-
-    // Envío final
-    await this.almacenService.enviarAlertasMasivas(listaFinalParaEnviar);
-    this.mostrarMensaje(`Se enviaron ${listaFinalParaEnviar.length} notificaciones`, 'success');
-
-  } catch (error) {
-    console.error("Error en envío masivo:", error);
-    this.mostrarMensaje('Error al conectar con el servidor', 'danger');
-  } finally {
-    loading.dismiss();
   }
-}
 
   generarPDFGeneral() {
     const doc = new jsPDF('l', 'mm', 'a4'); 
@@ -223,7 +228,7 @@ export class DashboardPage {
       }
     });
 
-    const filas = Array.from(mapaAgrupado.values()).map(g => [
+    const filas = Array.from(mapaAgrupado.values()).map((g: any) => [
       g.nombre, g.id, g.info, g.herramientas.join(', '), g.fecha, g.prestó, g.estado
     ]);
 

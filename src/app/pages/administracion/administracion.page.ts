@@ -1,14 +1,23 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ToastController, AlertController } from '@ionic/angular';
+
+// 👇 IMPORTACIÓN MASIVA DE COMPONENTES STANDALONE PARA EVITAR QUE VERCEL LOS BORRE
+import { 
+  IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, 
+  IonSegment, IonSegmentButton, IonLabel, IonSearchbar, IonContent, 
+  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonItem, 
+  IonInput, IonChip, IonIcon, IonButton, IonNote, IonList, 
+  IonBadge, IonSelect, IonSelectOption, ToastController, AlertController
+} from '@ionic/angular/standalone';
+
 import { addIcons } from 'ionicons';
 import { 
   menu, personAddOutline, buildOutline, idCardOutline, 
   saveOutline, trashOutline, createOutline, addCircleOutline, 
-  closeCircle, qrCodeOutline, barcodeOutline, informationCircleOutline, helpCircleOutline,
-  lockClosedOutline, peopleCircleOutline, hammer, hammerOutline, checkmarkCircleOutline,
-  checkmarkCircle
+  closeCircle, qrCodeOutline, barcodeOutline, informationCircleOutline, 
+  helpCircleOutline, lockClosedOutline, peopleCircleOutline, hammer, 
+  checkmarkCircleOutline, checkmarkCircle, closeCircleOutline
 } from 'ionicons/icons';
 
 import { AlmacenService } from '../../services/almacen.service';
@@ -18,23 +27,27 @@ import { AlmacenService } from '../../services/almacen.service';
   templateUrl: './administracion.page.html',
   styleUrls: ['./administracion.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule]
+  // 👇 DECLARACIÓN EXPLÍCITA DE COMPONENTES
+  imports: [
+    CommonModule, FormsModule,
+    IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, 
+    IonSegment, IonSegmentButton, IonLabel, IonSearchbar, IonContent, 
+    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonItem, 
+    IonInput, IonChip, IonIcon, IonButton, IonNote, IonList, 
+    IonBadge, IonSelect, IonSelectOption
+  ]
 })
 export class AdministracionPage {
 
-  // --- PROPIEDADES DE SEGURIDAD ---
   esSuperAdmin: boolean = false;
-
   segmentoActual: string = 'alumnos';
   textoBuscar: string = '';
 
-  // Estados de modo edición
   editandoAlumno: boolean = false;
   editandoMaestro: boolean = false;
   editandoHerramienta: boolean = false;
   editandoEmpleado: boolean = false;
   
-  // Listas de datos
   alumnos: any[] = [];
   herramientas: any[] = [];
   empleados: any[] = [];
@@ -45,16 +58,13 @@ export class AdministracionPage {
   carrerasExistentes: string[] = []; 
   carrerasFiltradas: string[] = [];
 
-  // --- PROPIEDADES PARA SUGERENCIAS ---
   nombresFiltrados: string[] = []; 
   tiposFiltrados: string[] = [];
 
-  // Modelos para formularios
   alumnoNuevo = { matricula: '', nombre: '', carrera: '', correo: '' };
   empleadoNuevo = { numEmpleado: '', nombre: '', password: '', rol: 'Staff' };
   herramientaNueva = { codigo: '', nombre: '', tipo: '', cantidad: 1, estado: 'Disponible' };
 
-  // Modelos para Maestros
   maestroNuevo = { numMaestro: '', nombre: '', correo: '', materias: [] as string[], departamento: ''};
   materiaTemp: string = ''; 
 
@@ -66,19 +76,16 @@ export class AdministracionPage {
     addIcons({ 
       menu, personAddOutline, buildOutline, idCardOutline, 
       saveOutline, trashOutline, createOutline, addCircleOutline, 
-      closeCircle, qrCodeOutline, informationCircleOutline, helpCircleOutline,
-      lockClosedOutline, peopleCircleOutline, barcodeOutline, hammer, hammerOutline, checkmarkCircleOutline, checkmarkCircle
+      closeCircle, qrCodeOutline, barcodeOutline, informationCircleOutline, 
+      helpCircleOutline, lockClosedOutline, peopleCircleOutline, 
+      hammer, checkmarkCircleOutline, checkmarkCircle, closeCircleOutline
     });
   }
 
   async ionViewWillEnter() {
-    // Verificamos identidad para permisos especiales de CAMPS
     const nombreGuardado = localStorage.getItem('userName');
     const rolGuardado = localStorage.getItem('userRol');
-
-    // Solo habilitamos si es Admin y se llama "Admin D.Suelos"
     this.esSuperAdmin = (rolGuardado === 'Admin' && nombreGuardado === 'Admin D.suelos');
-
     this.cargarDatos();
   }
 
@@ -87,17 +94,12 @@ export class AdministracionPage {
     this.herramientas = await this.almacenService.obtenerInventario();
     this.tiposExistentes = await this.almacenService.obtenerTiposDeHerramientas();
     this.maestros = await this.almacenService.obtenerMaestros();
-    
-    // Mapeamos el catálogo dinámico de carreras al descargar los alumnos
     this.actualizarCatalogoCarreras(this.alumnos);
-
-    // Solo cargamos empleados si el usuario tiene el permiso
     if (this.esSuperAdmin) {
       this.empleados = await this.almacenService.obtenerEmpleados();
     } else {
-      this.empleados = []; // Vaciamos por seguridad si no es SuperAdmin
+      this.empleados = [];
     }
-
     this.obtenerDepartamentosUnicos();
   }
 
