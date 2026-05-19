@@ -1,18 +1,28 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ToastController, LoadingController, Platform, MenuController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AlmacenService } from '../../services/almacen.service';
 import { addIcons } from 'ionicons';
 import { personOutline, lockClosedOutline, arrowForwardOutline, businessOutline } from 'ionicons/icons';
+
+// 👇 1. IMPORTAMOS TODO DESDE EL PAQUETE STANDALONE
+import { 
+  ToastController, LoadingController, Platform, MenuController,
+  IonContent, IonIcon, IonCard, IonCardContent, IonItem, IonInput, IonButton 
+} from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule]
+  // 👇 2. DECLARAMOS CADA ETIQUETA QUE USASTE EN TU HTML (En lugar de IonicModule)
+  imports: [
+    CommonModule, 
+    FormsModule,
+    IonContent, IonIcon, IonCard, IonCardContent, IonItem, IonInput, IonButton
+  ]
 })
 export class LoginPage implements OnInit {
 
@@ -33,7 +43,6 @@ export class LoginPage implements OnInit {
 
   ngOnInit() {
     // 1. SOLUCIÓN A IMAGE_8EE21E.JPG: Auto-Login
-    // Si el usuario ya tiene sesión, lo mandamos directo adentro
     const rolGuardado = localStorage.getItem('userRol');
     if (rolGuardado) {
       this.redigirPorRol(rolGuardado);
@@ -50,9 +59,6 @@ export class LoginPage implements OnInit {
     this.menuCtrl.close();
   }
 
-  /**
-   * Evita que el usuario use las flechas del navegador para "navegar" en el login
-   */
   bloquearRetroceso() {
     window.history.pushState(null, '', window.location.href);
     window.onpopstate = () => {
@@ -60,11 +66,8 @@ export class LoginPage implements OnInit {
     };
   }
 
-  /**
-   * Navegación inteligente basada en el rol del trabajador
-   */
   redigirPorRol(rol: string) {
-    this.menuCtrl.enable(true); // Activamos el menú antes de entrar
+    this.menuCtrl.enable(true); 
     if (rol === 'Admin') {
       this.router.navigate(['/administracion'], { replaceUrl: true });
     } else {
@@ -85,17 +88,13 @@ export class LoginPage implements OnInit {
     await loading.present();
 
     try {
-      // Intentamos el acceso con los datos de la colección 'trabajadores'
       const res = await this.almacenService.login(this.numEmpleado, this.password);
 
       if (res.exito) {
-        // Guardamos los datos de sesión
         localStorage.setItem('userRol', res.rol || 'Staff');
         localStorage.setItem('userName', res.nombre || 'Usuario');
 
-        // Ejecutamos la redirección
         this.redigirPorRol(res.rol || 'Staff');
-
         this.mostrarMensaje(`Bienvenido, ${res.nombre || 'Usuario'}`, 'success');
       } else {
         this.mostrarMensaje(res.mensaje || 'Datos de acceso incorrectos', 'danger');
