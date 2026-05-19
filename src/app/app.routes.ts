@@ -10,7 +10,7 @@ export const routes: Routes = [
   {
     path: 'login',
     // Si ya tiene sesión, el loginGuard lo rebota al Dashboard/Administración
-    //canActivate: [loginGuard], // <-- APÁGALO TEMPORALMENTE
+    canActivate: [loginGuard],
     loadComponent: () => import('./pages/login/login.page').then( m => m.LoginPage)
   },
   {
