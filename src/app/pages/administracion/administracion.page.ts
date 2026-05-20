@@ -414,7 +414,13 @@ export class AdministracionPage {
     const tipo = herramienta.tipo_herramienta;
     
     const nombreFormateado = tipo ? `${nombre} ${tipo} ${codigo}` : `${nombre} ${codigo}`;
-    const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(codigo)}&size=300&caption=${encodeURIComponent(nombreFormateado)}`;
+    
+    // 1. Obtenemos tu dominio dinámicamente (en Vercel será https://tu-app.vercel.app)
+    const dominio = window.location.origin;
+    const logoUrl = `${dominio}/assets/icon/Logo.png`;
+    
+    // 2. Construimos la URL agregando ecLevel=H y centerImageUrl
+    const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(codigo)}&size=300&caption=${encodeURIComponent(nombreFormateado)}&ecLevel=H&centerImageUrl=${encodeURIComponent(logoUrl)}`;
 
     try {
       const response = await fetch(qrUrl);

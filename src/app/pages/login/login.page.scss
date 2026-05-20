@@ -84,3 +84,16 @@
     font-size: 12px;
   }
 }
+
+.logo-esquina {
+  position: absolute;
+  top: 25px;         
+  right: 25px;       
+  width: 90px;       
+  height: auto;
+  z-index: 100;      
+  
+  filter: invert(1) brightness(2); 
+
+  transition: filter 0.3s ease;
+}
