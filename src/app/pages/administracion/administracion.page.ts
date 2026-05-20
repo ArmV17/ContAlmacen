@@ -391,10 +391,6 @@ export class AdministracionPage {
     
     const nombreFormateado = tipo ? `${nombre} ${tipo} ${codigo}` : `${nombre} ${codigo}`;
     
-    // 1. Configuramos la API: 
-    // - scale=4 (alta resolución)
-    // - height=10 (hace que las barras sean cortas de altura)
-    // - Sin 'includetext' para nosotros hacer el texto personalizado
     const barraUrl = `https://bwipjs-api.metafloor.com/?bcid=code128&text=${encodeURIComponent(codigo)}&scale=4&height=10&backgroundcolor=ffffff`;
     
     const dominio = window.location.origin;
@@ -405,11 +401,9 @@ export class AdministracionPage {
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('No se pudo inicializar el contexto');
 
-      // 2. Lienzo Horizontal (Apaisado) ideal para códigos de barras
       canvas.width = 450;
       canvas.height = 240;
 
-      // Pintar fondo blanco
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -428,18 +422,14 @@ export class AdministracionPage {
         cargarImagen(logoUrl).catch(() => null) 
       ]);
 
-      // --- SECCIÓN SUPERIOR: LOGO Y TEXTOS ---
       const inicioYTexto = 25;
-      const tamanoLogo = 65;
-      
-      // Calculamos dónde empieza el bloque superior para centrarlo un poco
+      const tamanoLogo = 70;
       const margenIzquierdo = 40;
 
       if (imgLogo) {
         ctx.drawImage(imgLogo, margenIzquierdo, inicioYTexto, tamanoLogo, tamanoLogo);
       }
 
-      // Textos (Mismos estilos que tu QR)
       const inicioXTexto = imgLogo ? (margenIzquierdo + tamanoLogo + 20) : margenIzquierdo;
       ctx.textAlign = 'left';
 
@@ -447,42 +437,27 @@ export class AdministracionPage {
       const textoHerramienta = tipo ? `${nombre} (${tipo})` : `${nombre}`;
       const textoID = `ID: ${codigo}`;
 
-      // Fila 1: Departamento (Principal)
       ctx.fillStyle = '#1e293b'; 
       ctx.font = 'bold 18px Arial'; 
+
       ctx.fillText(textoDepto, inicioXTexto, inicioYTexto + 20);
-
-      // Fila 2: Nombre de la herramienta (Secundario)
-      ctx.fillStyle = '#64748b'; 
-      ctx.font = 'bold 14px Arial';
-      ctx.fillText(textoHerramienta, inicioXTexto, inicioYTexto + 42);
-
-      // Fila 3: ID 
-      ctx.fillStyle = '#64748b'; 
-      ctx.font = 'bold 14px Arial'; 
-      ctx.fillText(textoID, inicioXTexto, inicioYTexto + 60);
+      ctx.fillText(textoHerramienta, inicioXTexto, inicioYTexto + 45);
+      ctx.fillText(textoID, inicioXTexto, inicioYTexto + 70);
 
 
-      // --- SECCIÓN INFERIOR: CÓDIGO DE BARRAS ---
-      
-      // Calculamos el tamaño del código de barras para que encaje bien
-      // Maximo ancho permitido (dejando 30px de margen por lado)
       const maxAnchoBarra = canvas.width - 60; 
       
       let barraWidth = imgBarra.width;
       let barraHeight = imgBarra.height;
 
-      // Si el código es muy largo y supera el ancho, lo escalamos para que quepa
       if (barraWidth > maxAnchoBarra) {
         const proporcion = maxAnchoBarra / barraWidth;
         barraWidth = maxAnchoBarra;
         barraHeight = barraHeight * proporcion;
       }
 
-      // Centramos el código de barras horizontalmente
       const posXBarra = (canvas.width - barraWidth) / 2;
-      // Lo posicionamos debajo del logo (dejando un respiro)
-      const posYBarra = inicioYTexto + tamanoLogo + 30; 
+      const posYBarra = inicioYTexto + tamanoLogo + 35; 
 
       ctx.drawImage(imgBarra, posXBarra, posYBarra, barraWidth, barraHeight);
 
@@ -512,7 +487,6 @@ export class AdministracionPage {
     
     const nombreFormateado = tipo ? `${nombre} ${tipo} ${codigo}` : `${nombre} ${codigo}`;
     
-    // URL para el código QR puro
     const qrUrl = `https://quickchart.io/qr?text=${encodeURIComponent(codigo)}&size=300&ecLevel=H`;
     const dominio = window.location.origin;
     const logoUrl = `${dominio}/assets/icon/Logo.png`;
@@ -522,10 +496,9 @@ export class AdministracionPage {
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('No se pudo inicializar el contexto del lienzo');
 
-      canvas.width = 340;
-      canvas.height = 440;
+      canvas.width = 360;
+      canvas.height = 460;
 
-      // Pintamos el fondo blanco
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -544,63 +517,39 @@ export class AdministracionPage {
         cargarImagen(logoUrl).catch(() => null) 
       ]);
 
-      // Dibujamos el QR centrado arriba
-      ctx.drawImage(imgQR, 20, 15, 300, 300);
+      ctx.drawImage(imgQR, 30, 20, 300, 300);
 
-      // --- CÁLCULO DINÁMICO PARA 3 LÍNEAS DE TEXTO ---
-      
       const textoDepto = `Depto: Suelos`;
       const textoHerramienta = tipo ? `${nombre} (${tipo})` : `${nombre}`;
       const textoID = `ID: ${codigo}`;
 
-      // 2. Medimos el ancho CON LOS ESTILOS INTERCAMBIADOS
-      ctx.font = 'bold 18px Arial'; // Ahora Depto es el grande
+      ctx.font = 'bold 18px Arial'; 
       const anchoTextoDepto = ctx.measureText(textoDepto).width;
-
-      ctx.font = 'bold 14px Arial'; // Herramienta ahora es secundario
       const anchoTextoNombre = ctx.measureText(textoHerramienta).width;
-      
-      ctx.font = 'bold 14px Arial'; // ID se mantiene igual
       const anchoTextoID = ctx.measureText(textoID).width;
       
       const maxAnchoTexto = Math.max(anchoTextoNombre, anchoTextoDepto, anchoTextoID);
 
-      // 3. Dimensiones del bloque inferior
-      const tamanoLogo = 65; 
+      const tamanoLogo = 70;
       const separacion = 15; 
-      const inicioY = 335;   
+      const inicioY = 345;   
 
-      // 4. Centrado horizontal exacto
       const anchoTotalBloque = imgLogo ? (tamanoLogo + separacion + maxAnchoTexto) : maxAnchoTexto;
       const inicioXBloque = (canvas.width - anchoTotalBloque) / 2;
 
-      // --- DIBUJAR COMPONENTES ---
-
-      // Dibujamos el logo a la izquierda
       if (imgLogo) {
         ctx.drawImage(imgLogo, inicioXBloque, inicioY, tamanoLogo, tamanoLogo);
       }
 
-      // Dibujamos el bloque de textos a la derecha
       const inicioXTexto = imgLogo ? (inicioXBloque + tamanoLogo + separacion) : inicioXBloque;
       ctx.textAlign = 'left';
       
-      // 👇 NUEVO ORDEN Y ESTILOS DE TEXTOS 👇
-
-      // Fila 1 (ARRIBA): Departamento asume el rol principal
-      ctx.fillStyle = '#1e293b'; // Tono oscuro principal
+      ctx.fillStyle = '#1e293b'; 
       ctx.font = 'bold 18px Arial'; 
+
       ctx.fillText(textoDepto, inicioXTexto, inicioY + 20);
-
-      // Fila 2 (EN MEDIO): Nombre de la herramienta asume rol secundario
-      ctx.fillStyle = '#64748b'; // Tono gris azulado (igual al ID)
-      ctx.font = 'bold 14px Arial';
-      ctx.fillText(textoHerramienta, inicioXTexto, inicioY + 42);
-
-      // Fila 3 (ABAJO): Identificador único (ID)
-      ctx.fillStyle = '#64748b'; 
-      ctx.font = 'bold 14px Arial'; 
-      ctx.fillText(textoID, inicioXTexto, inicioY + 60);
+      ctx.fillText(textoHerramienta, inicioXTexto, inicioY + 45);
+      ctx.fillText(textoID, inicioXTexto, inicioY + 70);
 
       // Guardar y descargar
       canvas.toBlob((blob) => {
