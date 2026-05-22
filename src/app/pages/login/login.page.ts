@@ -6,9 +6,8 @@ import { AlmacenService } from '../../services/almacen.service';
 import { addIcons } from 'ionicons';
 import { personOutline, lockClosedOutline, arrowForwardOutline, businessOutline } from 'ionicons/icons';
 
-// 👇 1. IMPORTAMOS TODO DESDE EL PAQUETE STANDALONE
 import { 
-  ToastController, LoadingController, Platform, MenuController,
+  ToastController, LoadingController, Platform, MenuController, AlertController, // 👇 AGREGAMOS AlertController
   IonContent, IonIcon, IonCard, IonCardContent, IonItem, IonInput, IonButton 
 } from '@ionic/angular/standalone';
 
@@ -17,7 +16,6 @@ import {
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
   standalone: true,
-  // 👇 2. DECLARAMOS CADA ETIQUETA QUE USASTE EN TU HTML (En lugar de IonicModule)
   imports: [
     CommonModule, 
     FormsModule,
@@ -35,26 +33,22 @@ export class LoginPage implements OnInit {
     private toastController: ToastController,
     private loadingController: LoadingController,
     private platform: Platform,
-    private menuCtrl: MenuController
+    private menuCtrl: MenuController,
+    private alertController: AlertController
   ) {
-    // Iconos para la identidad visual de CAMPS
     addIcons({ personOutline, lockClosedOutline, arrowForwardOutline, businessOutline });
   }
 
   ngOnInit() {
-    // 1. SOLUCIÓN A IMAGE_8EE21E.JPG: Auto-Login
     const rolGuardado = localStorage.getItem('userRol');
     if (rolGuardado) {
       this.redigirPorRol(rolGuardado);
       return;
     }
-
-    // 2. Bloqueo de historial para evitar retrocesos vacíos
     this.bloquearRetroceso();
   }
 
   ionViewWillEnter() {
-    // Forzamos que el menú lateral esté desactivado y cerrado en el Login
     this.menuCtrl.enable(false);
     this.menuCtrl.close();
   }
@@ -91,11 +85,31 @@ export class LoginPage implements OnInit {
       const res = await this.almacenService.login(this.numEmpleado, this.password);
 
       if (res.exito) {
+        
+        // 👇 1. VERIFICACIÓN DEL CANDADO DE SEGURIDAD
+        if (res.en_linea === true) {
+          await loading.dismiss(); // Quitamos el circulito de carga
+          const alert = await this.alertController.create({
+            header: 'Acceso Denegado',
+            message: 'Esta cuenta ya tiene una sesión iniciada en otro dispositivo. Por seguridad, cierra la otra sesión primero.',
+            buttons: ['Entendido'],
+            cssClass: 'alerta-peligro' // Opcional, si tienes estilos para alertas
+          });
+          await alert.present();
+          return; // 🛑 Detenemos el código aquí, NO entra.
+        }
+
+        // 👇 2. CERRAMOS EL CANDADO PARA QUE NADIE MÁS ENTRE
+        await this.almacenService.actualizarEstadoSesion(this.numEmpleado, true);
+
+        // Guardamos los datos de la sesión local
         localStorage.setItem('userRol', res.rol || 'Staff');
         localStorage.setItem('userName', res.nombre || 'Usuario');
+        // 👇 3. GUARDAMOS EL NUM_EMPLEADO PARA SABER A QUIÉN ABRIRLE EL CANDADO AL SALIR
+        localStorage.setItem('numEmpleado', this.numEmpleado);
 
         this.redigirPorRol(res.rol || 'Staff');
-        this.mostrarMensaje(`Bienvenido, ${res.nombre || 'Usuario'}`, 'success');
+        this.mostrarMensaje(`Bienvenido a CAMPS, ${res.nombre || 'Usuario'}`, 'success');
       } else {
         this.mostrarMensaje(res.mensaje || 'Datos de acceso incorrectos', 'danger');
       }
@@ -103,7 +117,8 @@ export class LoginPage implements OnInit {
       console.error('Error en Login:', error);
       this.mostrarMensaje('No se pudo conectar con el servidor', 'danger');
     } finally {
-      loading.dismiss();
+      // Usamos un try-catch silencioso para evitar errores si el loading ya se cerró arriba
+      try { await loading.dismiss(); } catch (e) {}
     }
   }
 

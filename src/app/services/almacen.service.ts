@@ -50,10 +50,13 @@ export class AlmacenService {
         const user = snap.data();
         const passwordHasheada = this.hashearPassword(passwordPlana);
 
-        // Comparamos el hash
         if (user['password'] === passwordHasheada) {
-          // Retornamos el rol para saber a dónde mandarlo
-          return { exito: true, rol: user['rol'], nombre: this.desencriptarTexto(user['nombre']) };
+          return { 
+            exito: true, 
+            rol: user['rol'], 
+            nombre: this.desencriptarTexto(user['nombre']),
+            en_linea: user['en_linea'] || false  
+          };
         }
       }
       return { exito: false, mensaje: 'Credenciales incorrectas' };
@@ -61,9 +64,16 @@ export class AlmacenService {
       return { exito: false, mensaje: 'Error de conexión' };
     }
   }
-  // ==========================================
-  // DASHBOARD & DEVOLUCIONES
-  // ==========================================
+
+  async actualizarEstadoSesion(numEmpleado: string, estado: boolean) {
+    try {
+      const docRef = doc(this.firestore, 'trabajadores', numEmpleado);
+      
+      await updateDoc(docRef, { en_linea: estado });
+    } catch (error) {
+      console.error('Error actualizando el candado en Firebase:', error);
+    }
+  }
   // ==========================================
   // DASHBOARD & DEVOLUCIONES
   // ==========================================
