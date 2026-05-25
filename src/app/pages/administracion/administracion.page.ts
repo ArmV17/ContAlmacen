@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import * as XLSX from 'xlsx';
 
 // 👇 IMPORTACIÓN MASIVA DE COMPONENTES STANDALONE PARA EVITAR QUE VERCEL LOS BORRE
 import { 
@@ -8,7 +9,8 @@ import {
   IonSegment, IonSegmentButton, IonLabel, IonSearchbar, IonContent, 
   IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonItem, 
   IonInput, IonChip, IonIcon, IonButton, IonNote, IonList, 
-  IonBadge, IonSelect, IonSelectOption, ToastController, AlertController
+  IonBadge, IonSelect, IonSelectOption, ToastController, AlertController,
+  LoadingController
 } from '@ionic/angular/standalone';
 
 import { addIcons } from 'ionicons';
@@ -17,7 +19,8 @@ import {
   saveOutline, trashOutline, createOutline, addCircleOutline, 
   closeCircle, qrCodeOutline, barcodeOutline, informationCircleOutline, 
   helpCircleOutline, lockClosedOutline, peopleCircleOutline, hammer, 
-  checkmarkCircleOutline, checkmarkCircle, closeCircleOutline
+  checkmarkCircleOutline, checkmarkCircle, closeCircleOutline,
+  gridOutline
 } from 'ionicons/icons';
 
 import { AlmacenService } from '../../services/almacen.service';
@@ -71,14 +74,16 @@ export class AdministracionPage {
   constructor(
     private almacenService: AlmacenService,
     private toastController: ToastController,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private loadingController: LoadingController
   ) {
     addIcons({ 
       menu, personAddOutline, buildOutline, idCardOutline, 
       saveOutline, trashOutline, createOutline, addCircleOutline, 
       closeCircle, qrCodeOutline, barcodeOutline, informationCircleOutline, 
       helpCircleOutline, lockClosedOutline, peopleCircleOutline, 
-      hammer, checkmarkCircleOutline, checkmarkCircle, closeCircleOutline
+      hammer, checkmarkCircleOutline, checkmarkCircle, closeCircleOutline,
+      gridOutline
     });
   }
 
@@ -101,6 +106,69 @@ export class AdministracionPage {
       this.empleados = [];
     }
     this.obtenerDepartamentosUnicos();
+  }
+
+  async alSeleccionarArchivoExcel(event: any) {
+    const archivo = event.target.files[0];
+    if (!archivo) return;
+
+    const loading = await this.loadingController.create({
+      message: 'Leyendo archivo Excel...',
+      spinner: 'crescent'
+    });
+    await loading.present();
+
+    const reader = new FileReader();
+
+    reader.onload = async (e: any) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const nombreHoja = workbook.SheetNames[0];
+        const hoja = workbook.Sheets[nombreHoja];
+        const filas: any[] = XLSX.utils.sheet_to_json(hoja);
+
+        if (filas.length === 0) {
+          await loading.dismiss();
+          this.mostrarMensaje('El archivo Excel está vacío', 'warning');
+          return;
+        }
+
+        loading.message = `Preparando ${filas.length} alumnos...`;
+
+        const alumnosProcesados = filas.map(fila => {
+          return {
+            matricula: (fila['Matricula'] || fila['MATRICULA'] || fila['id'] || '').toString().trim(),
+            nombre: this.formatearNombrePropio(fila['Nombre'] || fila['NOMBRE'] || fila['Nombre Completo'] || ''),
+            carrera: this.formatearNombrePropio(fila['Carrera'] || fila['CARRERA'] || 'No especificada'),
+            correo: (fila['Correo'] || fila['CORREO'] || fila['Email'] || '').trim() || 'sin_correo@utc.edu.mx'
+          };
+        }).filter(al => al.matricula && al.nombre);
+
+        if (alumnosProcesados.length === 0) {
+           await loading.dismiss();
+           this.mostrarMensaje('No se encontraron datos válidos en el archivo', 'warning');
+           return;
+        }
+
+        loading.message = `Subiendo ${alumnosProcesados.length} alumnos a Firebase...`;
+
+        const resultado = await this.almacenService.cargarAlumnosMasivo(alumnosProcesados);
+
+        await loading.dismiss();
+        this.mostrarMensaje(`Carga exitosa: ${resultado.exitosos}. Fallidos: ${resultado.fallidos}`, 'success');
+
+        this.cargarDatos();
+
+      } catch (error) {
+        await loading.dismiss();
+        console.error('Error al procesar el Excel:', error);
+        this.mostrarMensaje('Error al leer el formato del archivo', 'danger');
+      }
+    };
+
+    reader.readAsArrayBuffer(archivo);
+    event.target.value = ''; 
   }
 
   obtenerDepartamentosUnicos() {

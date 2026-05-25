@@ -4,11 +4,11 @@
   "author": "Ionic Framework",
   "homepage": "https://ionicframework.com/",
   "scripts": {
-  "ng": "ng",
-  "start": "ng serve",
-  "build": "node set-env.js && ng build --configuration production",
-  "watch": "ng build --watch --configuration development",
-  "test": "ng test"
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "node set-env.js && ng build --configuration production",
+    "watch": "ng build --watch --configuration development",
+    "test": "ng test"
   },
   "private": true,
   "dependencies": {
@@ -35,6 +35,7 @@
     "jspdf-autotable": "^5.0.7",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "xlsx": "^0.18.5",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {

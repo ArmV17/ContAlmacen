@@ -172,6 +172,27 @@ export class AlmacenService {
     });
   }
 
+  async cargarAlumnosMasivo(listaAlumnos: any[]): Promise<{ exitosos: number, fallidos: number }> {
+    let exitosos = 0;
+    let fallidos = 0;
+
+    for (const alumno of listaAlumnos) {
+      try {
+        await setDoc(doc(this.firestore, 'alumnos', alumno.matricula.toString()), {
+          matricula: alumno.matricula.toString(),
+          nombre: this.encriptarTexto(alumno.nombre),
+          carrera: alumno.carrera || 'No especificada',
+          correo: alumno.correo || 'sin_correo@utc.edu.mx'
+        });
+        exitosos++;
+      } catch (error) {
+        console.error(`Error al registrar matrícula ${alumno.matricula}:`, error);
+        fallidos++;
+      }
+    }
+
+    return { exitosos, fallidos };
+  }
   // ==========================================
   // INVENTARIO e ILUSTRACIONES
   // ==========================================

@@ -92,6 +92,15 @@
         </ion-card-content>
       </ion-card>
 
+      <div class="ion-padding-horizontal">
+        <input type="file" #fileInput (change)="alSeleccionarArchivoExcel($event)" accept=".xlsx, .xls, .csv" style="display: none">
+        
+        <ion-button expand="block" class="ion-margin-bottom" (click)="fileInput.click()" 
+                    style="--background: #1D6F42; --background-hover: #144c2d; --background-activated: #144c2d; font-weight: bold;">
+          <ion-icon slot="start" name="grid-outline"></ion-icon>
+          Carga desde Excel
+        </ion-button>
+      </div>
       <h2 class="subtitulo-gestion">Gestión de Alumnos</h2>
       <ion-list class="lista-gestion">
         <ion-item *ngFor="let a of listaFiltrada" lines="none" class="item-gestion">
