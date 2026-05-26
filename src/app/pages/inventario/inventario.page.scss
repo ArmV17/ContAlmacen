@@ -1,11 +1,51 @@
-/* --- Estilos Base y Layout --- */
-.toolbar-elegante {
-  --background: #1e293b;
-  --color: #ffffff;
+/* ==========================================================================
+   VARIABLES GLOBALES CAMPS 2026 (INVENTARIO)
+   ========================================================================== */
+:host {
+  --primary-accent: #2563eb; 
+  --primary-glow: rgba(37, 99, 235, 0.25);
+  --success-accent: #10b981;
+  --success-glow: rgba(16, 185, 129, 0.25);
+  --danger-accent: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.25);
+  --warning-accent: #f59e0b;
+  --bg-app: #f4f6f9; 
+  --surface-card: #ffffff;
+  --text-main: #0f172a; 
+  --text-muted: #64748b; 
+  --text-light: #94a3b8;
+  --spring-physics: cubic-bezier(0.175, 0.885, 0.32, 1.15); 
 }
 
+/* ==========================================================================
+   1. CABECERA (UNIFICADA CON ADMINISTRACIÓN)
+   ========================================================================== */
+.toolbar-elegante {
+  --background: rgba(15, 23, 42, 0.95); /* El azul marino oscuro elegante */
+  --color: #ffffff;
+  --border-width: 0 !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* Título con la tipografía y peso exacto de Admin */
+  ion-title {
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: -0.3px;
+    text-transform: capitalize;
+  }
+
+  /* Aseguramos que los iconos de navegación contrasten bien */
+  ion-back-button, ion-menu-button {
+    --color: #ffffff;
+    --color-activated: #cbd5e1;
+  }
+}
+
+/* Fondo principal que se alinea con la navbar */
 .fondo-claro {
-  --background: #f4f5f8;
+  --background: var(--bg-app);
 }
 
 .contenedor-maximo {
@@ -13,26 +53,34 @@
   margin: 0 auto;
 }
 
-/* --- Estilo del Buscador --- */
+/* ==========================================================================
+   2. BARRA DE BÚSQUEDA Y TÍTULOS
+   ========================================================================== */
+/* Ajuste específico para que el buscador luzca integrado */
 .barra-busqueda-container {
-  padding: 10px 16px;
+  padding: 0 16px 12px 16px !important; // Padding ajustado para integración total
   
   ion-searchbar {
     --border-radius: 12px;
-    --box-shadow: none;
-    --background: rgba(255, 255, 255, 0.1);
-    --color: white;
-    --icon-color: #cbd5e1;
-    --placeholder-color: #cbd5e1;
+    --background: rgba(255, 255, 255, 0.08); // Fondo translúcido para combinar con la toolbar oscura
+    --color: #ffffff;
+    --placeholder-color: rgba(255, 255, 255, 0.5);
+    --icon-color: rgba(255, 255, 255, 0.6);
+    --clear-button-color: #ffffff;
+    box-shadow: none; // Eliminamos la sombra externa porque ya está dentro de la toolbar oscura
   }
 }
 
-/* --- Modo Búsqueda: Títulos y Grupos --- */
+/* Para evitar el margen superior del título si estás usando este header */
+ion-toolbar.toolbar-elegante {
+  --min-height: 56px;
+}
+
 .titulo-herramienta-busqueda {
   font-size: 1.1rem;
   font-weight: 800;
-  color: #1e293b;
-  margin: 25px 0 12px 5px;
+  color: var(--text-main);
+  margin: 25px 0 12px 16px;
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
@@ -41,39 +89,87 @@
   margin-bottom: 30px;
 }
 
-/* --- Cabecera del Acordeón (Modo Normal) --- */
+/* ==========================================================================
+   3. ACORDEÓN: TARJETAS PRINCIPALES (MICRO-SUPERFICIES)
+   ========================================================================== */
+.tarjeta-herramienta {
+  margin: 0 16px 16px 16px; /* Márgenes laterales para que no toque los bordes */
+  border-radius: 20px;
+  background: var(--surface-card);
+  border: 1px solid rgba(0,0,0,0.02);
+  box-shadow: 0 8px 24px -8px rgba(0,0,0,0.04);
+  overflow: hidden;
+  transition: all 0.4s var(--spring-physics);
+
+  /* Hover Card */
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px -8px rgba(0,0,0,0.08);
+  }
+
+  /* Estado Expandido (Glow Azul) */
+  &.accordion-expanded {
+    border-color: var(--primary-accent);
+    box-shadow: 0 12px 30px -10px var(--primary-glow);
+    transform: scale(1.01);
+  }
+
+  &::part(header) {
+    --ion-accordion-toggle-icon-display: flex; 
+    --ion-accordion-toggle-icon-color: var(--text-light); 
+    --ion-accordion-toggle-icon-font-size: 24px;
+  }
+}
+
 .header-acordeon {
   --min-height: 85px;
-  --padding-start: 12px;
-  --padding-end: 4px; 
-  --background: #ffffff;
+  --padding-start: 16px;
+  --padding-end: 8px; 
+  --background: transparent;
 
+  /* Modificamos el ícono principal si no usas avatar de imagen */
+  .contenedor-icono-principal {
+    width: 50px;
+    height: 50px;
+    background: rgba(37, 99, 235, 0.08); /* Azul transparente */
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    border: 1px solid rgba(37, 99, 235, 0.15);
+    
+    ion-icon {
+      font-size: 26px;
+      color: var(--primary-accent);
+    }
+  }
+
+  /* Si sigues usando avatar de imagen, lo actualizamos también */
   .avatar-herramienta {
     width: 55px;
     height: 55px;
     border-radius: 14px;
     overflow: hidden;
-    border: 1px solid #e2e8f0;
-    margin-right: 12px;
+    border: 1px solid rgba(0,0,0,0.05);
+    margin-right: 16px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     
-    ion-img {
-      object-fit: cover;
-      width: 100%;
-      height: 100%;
-    }
+    ion-img { object-fit: cover; width: 100%; height: 100%; }
   }
 
   .nombre-principal {
     margin: 0;
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--text-main);
     letter-spacing: -0.4px;
   }
 }
 
-/* --- Controles Derecha (Stock Dashboard) --- */
+/* ==========================================================================
+   4. INDICADOR DE STOCK (GLOWING BADGES)
+   ========================================================================== */
 .controles-derecha {
   display: flex;
   align-items: center;
@@ -85,99 +181,85 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    padding: 6px 14px;
-    border-radius: 12px;
-    min-width: 85px;
+    background: rgba(16, 185, 129, 0.08); /* Verde suave por defecto */
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 8px 16px;
+    border-radius: 14px;
+    min-width: 90px;
+    box-shadow: 0 4px 12px var(--success-glow); /* Glow Verde */
 
     .stock-label {
-      font-size: 0.6rem;
-      font-weight: 900;
-      color: #64748b;
-      letter-spacing: 0.8px;
-      margin-bottom: 2px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--success-accent);
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
     }
 
     .stock-numero {
-      font-size: 1.2rem;
+      font-size: 1.4rem;
       font-weight: 800;
-      color: #1e293b;
+      color: #065f46; /* Verde muy oscuro */
       line-height: 1;
     }
 
+    /* Alerta de Sin Stock (Glow Rojo) */
     &.sin-stock {
-      background: #fef2f2;
-      border-color: #fee2e2;
-      .stock-label { color: #ef4444; }
-      .stock-numero { color: #b91c1c; }
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.2);
+      box-shadow: 0 4px 12px var(--danger-glow);
+      
+      .stock-label { color: var(--danger-accent); }
+      .stock-numero { color: #7f1d1d; /* Rojo muy oscuro */ }
     }
   }
 }
 
-/* --- Acordeón Estilo Card --- */
-.tarjeta-herramienta {
-  margin-bottom: 15px;
-  border-radius: 18px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
-  &.accordion-expanded {
-    border-color: #3b82f6;
-    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.1);
-  }
-
-  &::part(header) {
-    --ion-accordion-toggle-icon-display: flex; 
-    --ion-accordion-toggle-icon-color: #94a3b8; 
-    --ion-accordion-toggle-icon-font-size: 20px;
-  }
-}
-
-/* --- Contenedor Desplegable (Modo Normal) --- */
+/* ==========================================================================
+   5. INTERIOR DEL ACORDEÓN: FILAS DE UNIDADES
+   ========================================================================== */
 .contenedor-desplegable {
-  background: #f8fafc;
-  padding: 16px;
-  border-top: 1px solid #f1f5f9;
+  background: var(--bg-app); /* Fondo ligeramente gris para separar */
+  padding: 20px 16px;
+  border-top: 1px dashed rgba(0,0,0,0.06);
 }
 
-/* --- Agrupación por Tipos --- */
 .bloque-tipo {
-  margin-bottom: 18px;
+  margin-bottom: 24px;
   &:last-child { margin-bottom: 0; }
 }
 
 .separador-tipo {
-  display: block; // Asegura que ocupe toda la línea
-  padding: 10px 14px;
-  font-size: 0.85rem; // Tamaño más grande y legible
-  font-weight: 900; // Máximo grosor
-  color: #1e293b; // Color oscuro para contraste, o usa #3b82f6 para azul
+  display: block; 
+  padding: 8px 12px;
+  font-size: 0.8rem; 
+  font-weight: 900; 
+  color: var(--primary-accent); 
   text-transform: uppercase;
-  letter-spacing: 2px; // Más espacio entre letras para estilo moderno
-  background: #f1f5f9; // Fondo gris muy suave para separar bloques
-  border-left: 4px solid #3b82f6; // Línea azul a la izquierda para destacar
-  border-radius: 4px;
-  margin: 15px 0 10px 0;
+  letter-spacing: 1.5px; 
+  background: transparent; 
+  border-left: 3px solid var(--primary-accent); 
+  border-radius: 0 4px 4px 0;
+  margin: 10px 0 16px 0;
 }
 
-/* --- Formato de Fila de Unidad --- */
+/* Fila de Herramienta Individual */
 .fila-unidad {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #ffffff;
-  padding: 14px 20px;
-  margin-bottom: 10px;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-  transition: transform 0.2s;
+  background: var(--surface-card);
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.03);
+  box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s var(--spring-physics);
 
-  &:active {
-    transform: scale(0.98);
+  &:hover {
+    transform: translateX(4px);
+    border-color: rgba(37, 99, 235, 0.15);
   }
 
   .info-izquierda {
@@ -186,93 +268,130 @@
   }
 
   .contenedor-icono-herramienta {
-    background: #f0f7ff; 
-    border-radius: 10px;
-    padding: 10px;
+    background: rgba(37, 99, 235, 0.06); 
+    border-radius: 12px;
+    padding: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 15px;
+    margin-right: 16px;
 
     ion-icon { 
-      color: #3b82f6; 
-      font-size: 1.4rem; 
+      color: var(--primary-accent); 
+      font-size: 1.5rem; 
       margin: 0 !important;
     }
   }
 
   .codigo-unidad {
-    font-weight: 700;
-    color: #1e293b;
-    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-main);
+    font-size: 1.05rem;
+    letter-spacing: -0.2px;
   }
-} // <--- ESTA LLAVE FALTABA AQUÍ
+}
 
+/* ==========================================================================
+   6. ESTADOS DE LA HERRAMIENTA INDIVIDUAL
+   ========================================================================== */
 .estado-contenedor {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f8fafc;
-  padding: 6px 12px;
-  border-radius: 20px;
-  border: 1px solid #f1f5f9;
+  background: rgba(0,0,0,0.02);
+  padding: 6px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,0.04);
 
   .punto-estado {
     width: 8px;
     height: 8px;
     border-radius: 50%;
+    /* Efecto "Led" en el puntito */
+    box-shadow: 0 0 8px currentColor;
     
-    &.disponible { 
-      background-color: #22c55e; 
-    }
-    &.ocupado, &.prestado { 
-      background-color: #ef4444; 
-    }
-    &.mantenimiento { 
-      background-color: #f59e0b; 
-    }
+    &.disponible { background-color: var(--success-accent); color: var(--success-accent); }
+    &.ocupado, &.prestado { background-color: var(--danger-accent); color: var(--danger-accent); }
+    &.mantenimiento { background-color: var(--warning-accent); color: var(--warning-accent); }
   }
 
   .texto-estado {
     font-size: 0.75rem;
     font-weight: 800;
     text-transform: uppercase;
-    color: #475569;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
   }
 }
 
-/* --- Utilidades Extras --- */
+/* ==========================================================================
+   7. UTILIDADES EXTRAS Y ESTADO VACÍO
+   ========================================================================== */
 .btn-upload-mini {
-  --color: #94a3b8;
+  --color: var(--text-light);
   --padding-start: 0;
   --padding-end: 0;
   margin: 0 10px;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
+  transition: all 0.3s var(--spring-physics);
   
-  &:hover { --color: #3b82f6; }
+  &:hover { 
+    --color: var(--primary-accent); 
+    transform: scale(1.1);
+  }
 }
 
 .mensaje-vacio-busqueda {
   text-align: center;
-  padding: 50px 20px;
-  color: #94a3b8;
-  ion-icon { font-size: 64px; opacity: 0.4; margin-bottom: 15px; }
-  p { font-size: 1.1rem; font-weight: 600; }
+  padding: 60px 20px;
+  
+  ion-icon { 
+    font-size: 70px; 
+    color: var(--text-light);
+    margin-bottom: 20px; 
+    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.04));
+  }
+  
+  p { 
+    font-size: 1.15rem; 
+    font-weight: 700; 
+    color: var(--text-muted);
+    letter-spacing: -0.2px;
+  }
 }
 
-.contenedor-icono-principal {
-  width: 45px;
-  height: 45px;
-  background: #ffffff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 15px;
-  border: 2px solid #3b82f6;
-  
-  ion-icon {
-    font-size: 24px;
-    color: #3b82f6;
-  }
+/* Solución a líneas blancas de Ionic en las listas */
+ion-list {
+  background: transparent !important;
+  --background: transparent !important;
+}
+ion-item {
+  --border-width: 0 !important;
+  --inner-border-width: 0 !important;
+}
+
+ion-list {
+  background: transparent !important;
+  --background: transparent !important;
+  border: none !important;
+}
+
+ion-item {
+  --border-width: 0 !important;
+  --inner-border-width: 0 !important;
+  --border-color: transparent !important;
+  border: none !important;
+}
+
+ion-toolbar {
+  --border-width: 0 !important;
+  border-bottom: none !important;
+}
+
+.tarjeta-herramienta {
+  border: none !important;
+}
+
+ion-item-divider {
+  display: none !important;
 }

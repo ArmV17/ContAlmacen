@@ -1,76 +1,156 @@
+/* ==========================================
+   VARIABLES GLOBALES CAMPS 2026
+   ========================================== */
+:host {
+  /* La paleta que te gustó: Azul eléctrico y tonos Pizarra (Slate) */
+  --primary-accent: #2563eb; 
+  --primary-glow: rgba(37, 99, 235, 0.25);
+  --bg-app: #f4f6f9; /* Off-White que descansa la vista */
+  --text-main: #0f172a; /* Slate oscuro, más suave que el negro puro */
+  --text-muted: #64748b; 
+  
+  /* La "física" del 2026: Una curva de animación con rebote sutil */
+  --spring-physics: cubic-bezier(0.175, 0.885, 0.32, 1.15); 
+}
+
+/* 👇 INTEGRACIÓN DE NAVBAR (ELIMINA LA LÍNEA BLANCA VERTICAL) 👇 */
+ion-split-pane {
+  --border: none !important; /* Elimina la línea rígida por defecto de Ionic */
+}
+
+ion-menu {
+  --border: none !important;
+  border-right: none !important;
+  /* Sombra levísima hacia la derecha para separar sutilmente el contenido blanco 
+     sin cortar la continuidad de la barra superior oscura */
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.03);
+}
+
+/* ==========================================
+   CABECERAS (DEEP FROSTED GLASS)
+   ========================================== */
 .toolbar-elegante {
-  --background: #1e293b;
+  --background: rgba(15, 23, 42, 0.95); /* Translúcido oscuro */
   --color: #ffffff;
+  --border-width: 0 !important; /* Limpia cualquier borde interno extra de Ionic */
+  
+  /* Efecto de cristal esmerilado avanzado (Desenfoque + Saturación) */
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Línea unificada inferior */
 }
 
 .fondo-claro {
-  --background: #f4f5f8;
+  --background: var(--bg-app);
 }
 
-.lista-menu {
-  background: transparent;
-  margin-top: 15px;
-}
-
-.item-menu {
-  --background: transparent;
-  --color: #64748b;
-  font-weight: 500;
-  margin-bottom: 5px;
-  border-radius: 0 20px 20px 0; /* Curva solo del lado derecho */
-  margin-right: 15px;
-  cursor: pointer;
-
-  ion-icon {
-    color: #94a3b8;
-  }
-
-  /* Efecto al pasar el mouse por encima */
-  &:hover {
-    --background: rgba(52, 152, 219, 0.05);
-    --color: #3498db;
-    ion-icon { color: #3498db; }
-  }
-
-  /* Efecto cuando estamos en esa página */
-  &.seleccionado {
-    --background: rgba(52, 152, 219, 0.1);
-    --color: #3498db;
-    font-weight: 600;
-    border-left: 4px solid #3498db;
-    ion-icon { color: #3498db; }
-  }
-}
-
-.menu-divider {
-  height: 1px;
-  background: #e2e8f0;
-  margin: 20px 15px;
-}
-
-.logout-btn {
-  margin-top: 10px;
-  --background: transparent;
-  font-weight: bold;
-}
-
+/* ==========================================
+   ÁREA DEL PERFIL (LUZ INTERIOR)
+   ========================================== */
 .user-profile-section {
-  padding: 30px 20px;
-  background: rgba(var(--ion-color-primary-rgb), 0.04);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  margin-bottom: 10px;
+  padding: 40px 20px 30px;
+  /* Gradiente radial: simula una luz suave viniendo de la esquina superior izquierda */
+  background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.08) 0%, transparent 60%), transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
 
   .user-name {
-    margin: 0 0 6px 0;
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #1e1e1e;
-    text-transform: capitalize; // Asegura que se vea como nombre propio
+    margin: 0 0 8px 0;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-main);
+    text-transform: capitalize;
+    letter-spacing: -0.5px; 
   }
   
   ion-badge {
     font-size: 0.75rem;
-    padding: 4px 10px;
-    letter-spacing: 0.3px;
+    padding: 6px 14px;
+    letter-spacing: 0.5px;
+    border-radius: 10px; 
+    font-weight: 600;
+    background: var(--primary-accent);
+    box-shadow: 0 4px 12px var(--primary-glow); 
+  }
+}
+
+/* ==========================================
+   MENÚ INTERACTIVO (EFECTO CÁPSULA 2.0)
+   ========================================== */
+.lista-menu {
+  background: transparent;
+  padding: 0 16px; 
+}
+
+.item-menu {
+  --background: transparent;
+  --color: var(--text-muted);
+  --min-height: 54px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  border-radius: 16px; 
+  border: 1px solid transparent; 
+  cursor: pointer;
+  
+  /* Movimiento fluido */
+  transition: all 0.4s var(--spring-physics);
+
+  ion-icon {
+    color: #94a3b8;
+    font-size: 1.4rem;
+    transition: all 0.4s var(--spring-physics);
+  }
+
+  /* Efecto Hover */
+  &:hover {
+    --background: rgba(37, 99, 235, 0.04);
+    transform: translateX(6px) scale(1.01); 
+    
+    ion-icon { 
+      color: var(--primary-accent); 
+    }
+  }
+
+  /* Estado Activo */
+  &.seleccionado {
+    --background: rgba(37, 99, 235, 0.08);
+    --color: var(--primary-accent);
+    font-weight: 700;
+    border: 1px solid rgba(37, 99, 235, 0.15);
+    box-shadow: 0 8px 24px -6px var(--primary-glow);
+    
+    ion-icon { 
+      color: var(--primary-accent);
+      transform: scale(1.2); 
+    }
+  }
+}
+
+/* ==========================================
+   DIVISOR Y ZONA DE PELIGRO (LOGOUT)
+   ========================================== */
+.menu-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,0,0,0.06), transparent); 
+  margin: 28px 20px;
+}
+
+.logout-btn {
+  margin-top: 10px;
+  margin-inline: 16px; 
+  --background: rgba(239, 68, 68, 0.06); 
+  --color: #ef4444; 
+  border-radius: 16px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all 0.4s var(--spring-physics);
+
+  &:hover {
+    --background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 16px -4px rgba(239, 68, 68, 0.2);
   }
 }

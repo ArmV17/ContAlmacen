@@ -1,16 +1,37 @@
 /* ==========================================================================
-   1. ESTILOS BASE Y CONTENEDORES
+   VARIABLES GLOBALES CAMPS 2026 (NUEVO PRÉSTAMO)
+   ========================================================================== */
+:host {
+  --primary-accent: #2563eb; 
+  --primary-glow: rgba(37, 99, 235, 0.25);
+  --success-accent: #10b981;
+  --success-glow: rgba(16, 185, 129, 0.25);
+  --bg-app: #f4f6f9; 
+  --surface-card: #ffffff;
+  --text-main: #0f172a; 
+  --text-muted: #64748b; 
+  --text-light: #94a3b8;
+  --spring-physics: cubic-bezier(0.175, 0.885, 0.32, 1.15); 
+}
+
+/* ==========================================================================
+   1. CABECERA (DEEP FROSTED GLASS) Y CONTENEDOR
+   ========================================================================== */
+/* ==========================================================================
+   1. CABECERA (DEEP FROSTED GLASS) Y CONTENEDOR
    ========================================================================== */
 .toolbar-elegante {
-  --background: #1e293b; 
+  --background: rgba(15, 23, 42, 0.95);
   --color: #ffffff;
-  --border-style: none;
-  padding: 5px 10px;
+  --border-width: 0 !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
   ion-title {
-    font-weight: 700;
-    font-size: 1.1rem;
-    letter-spacing: -0.2px;
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: -0.3px;
   }
 
   ion-back-button, ion-menu-button {
@@ -19,330 +40,321 @@
 }
 
 .fondo-claro {
-  --background: #f4f5f8;
+  --background: var(--bg-app);
 }
 
 .contenedor-maximo {
-  max-width: 700px;
+  max-width: 750px; /* Un poco más ancho para acomodar el diseño moderno */
   margin: 0 auto;
-  padding-top: 20px;
+  padding-top: 24px;
   padding-bottom: 40px;
 }
 
 /* ==========================================================================
-   2. TARJETAS Y SELECTOR (SEGMENT)
+   2. TARJETAS FLOTANTES Y SELECTOR (SEGMENT)
    ========================================================================== */
 .tarjeta-formulario {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-  border-radius: 16px;
-  background: #ffffff;
-  margin-bottom: 20px;
-  border: none;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+  border-radius: 20px;
+  background: var(--surface-card);
+  margin-bottom: 24px;
+  border: 1px solid rgba(0,0,0,0.02);
   overflow: hidden;
+  transition: transform 0.4s var(--spring-physics);
 
+  /* Segment Control tipo Cápsula 2026 */
   ion-segment {
     --background: #f1f5f9;
-    padding: 4px;
-    border-radius: 12px;
-    margin-bottom: 10px;
+    padding: 6px;
+    border-radius: 16px;
+    margin-bottom: 15px;
 
     ion-segment-button {
       --indicator-color: #ffffff;
-      --color: #64748b;
-      --color-checked: #1e293b;
+      --color: var(--text-muted);
+      --color-checked: var(--text-main);
       font-weight: 700;
       text-transform: none;
-      min-height: 40px;
+      min-height: 44px;
+      letter-spacing: 0.2px;
+      border-radius: 12px;
     }
   }
 
   .titulo-seccion {
-    font-size: 1.1rem;
-    color: #1e293b;
-    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--text-main);
+    font-weight: 800;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
+    letter-spacing: -0.2px;
 
     ion-icon {
-      color: #3b82f6;
-      font-size: 1.3rem;
+      color: var(--primary-accent);
+      font-size: 1.4rem;
     }
   }
 }
 
+/* Inputs y Selects */
 .input-limpio {
   --background: #f8fafc;
-  --border-radius: 12px;
-  --padding-start: 15px;
-  margin-bottom: 15px;
+  --border-radius: 14px;
+  --padding-start: 16px;
+  margin-bottom: 16px;
   border: 1px solid #e2e8f0;
-  transition: all 0.2s ease;
+  transition: all 0.3s var(--spring-physics);
 
   &:focus-within {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 1px #3b82f6;
+    border-color: var(--primary-accent);
+    /* Resplandor suave (Glow) al enfocarse */
+    box-shadow: 0 0 0 3px var(--primary-glow);
+    transform: translateY(-2px);
   }
 
   ion-input, ion-select {
-    font-size: 1rem;
-    --color: #2c3e50;
-    --placeholder-color: #94a3b8;
+    font-size: 1.05rem;
+    --color: var(--text-main);
+    --placeholder-color: var(--text-light);
     font-weight: 500;
   }
 }
 
 /* ==========================================================================
-   3. BANNERS DINÁMICOS
+   3. BANNERS DINÁMICOS DE IDENTIFICACIÓN
    ========================================================================== */
 .banner-alumno {
-  background: #f0fdf4;
-  border-left: 4px solid #22c55e;
-  padding: 15px;
-  border-radius: 12px;
-  margin: 15px 0;
+  background: rgba(16, 185, 129, 0.08); /* Fondo verde translúcido */
+  border-left: 4px solid var(--success-accent);
+  padding: 16px;
+  border-radius: 14px;
+  margin: 16px 0;
 
   p {
     margin: 4px 0;
-    color: #166534;
+    color: #065f46;
     font-size: 0.95rem;
-    strong { color: #14532d; }
+    strong { color: #064e3b; font-weight: 800; }
   }
 }
-
-/* Banner azul específico para cuando es Profesor */
-.banner-docente {
-  background: #eff6ff !important;
-  border-left-color: #3b82f6 !important;
-  p { color: #1e40af !important; }
-}
-
-/* ==========================================================================
-   4. BUSCADOR Y HERRAMIENTAS
-   ========================================================================== */
-.item-herramienta-encontrada {
-  --background: transparent;
-  --padding-start: 0;
-  margin-top: 10px;
-
-  .icono-herramienta-azul {
-    background: #eff6ff;
-    color: #3b82f6;
-    padding: 10px;
-    border-radius: 10px;
-    display: flex;
-    font-size: 1.2rem;
-  }
-
-  h2 {
-    font-weight: 700;
-    color: #1e293b;
-    font-size: 1rem;
-    margin: 0;
-  }
-
-  p {
-    color: #94a3b8;
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin: 2px 0 0 0;
-  }
-}
-
-.boton-anadir-plus {
-  --background: #f0fdf4;
-  --color: #16a34a;
-  --border-radius: 8px;
-  --box-shadow: none;
-  height: 32px;
-  font-weight: 800;
-  font-size: 0.75rem;
-  border: 1px solid #bbf7d0;
-
-  ion-icon {
-    font-size: 1rem;
-    margin-right: 4px;
-  }
-}
-
-/* ==========================================================================
-   5. LISTA DE PRÉSTAMO (CARRITO)
-   ========================================================================== */
-.tarjeta-lista-prestamo {
-  margin-top: 25px;
-
-  .titulo-seccion-lista {
-    font-size: 0.85rem;
-    color: #64748b;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 20px 0 10px 5px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-
-    span {
-      background: #3b82f6;
-      color: white;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 0.75rem;
-    }
-  }
-}
-
-.item-carrito-estilizado {
-  --background: #ffffff;
-  --border-radius: 12px;
-  --padding-start: 12px;
-  margin-bottom: 8px;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-
-  .icono-lista {
-    color: #3b82f6;
-    font-size: 1.2rem;
-  }
-
-  h3 {
-    font-weight: 700;
-    color: #1e293b;
-    font-size: 0.95rem;
-  }
-
-  p {
-    color: #94a3b8;
-    font-size: 0.8rem;
-  }
-
-  .boton-borrar {
-    --color: #94a3b8;
-    transition: 0.2s;
-    &:hover, &:active { --color: #ef4444; }
-  }
-}
-
-/* ==========================================================================
-   6. BOTONES Y ANIMACIONES
-   ========================================================================== */
-.boton-guardar {
-  --background: #22c55e;
-  --background-activated: #16a34a;
-  --border-radius: 14px;
-  --box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-  height: 55px;
-  font-weight: 700;
-  font-size: 1.1rem;
-  margin-top: 30px;
-
-  &[disabled] {
-    opacity: 0.4;
-    --box-shadow: none;
-  }
-}
-
-.animated {
-  animation-duration: 0.4s;
-  animation-fill-mode: both;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.fadeIn { animation-name: fadeIn; }
-.fadeInUp { animation-name: fadeInUp; }
 
 .banner-docente {
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-left-color: var(--primary-accent) !important;
+  border-radius: 14px;
+  
   .flex-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 5px;
+    gap: 12px;
+    margin-bottom: 8px;
     
     .badge-id-prestamo {
-      --background: #f1f5f9;
-      --color: #475569;
+      --background: #ffffff;
+      --color: var(--text-muted);
       font-size: 0.75rem;
-      padding: 4px 8px;
-      border-radius: 6px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-weight: 700;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
   }
 
   .detalles-compactos {
     p {
-      margin: 0 !important; // Elimina el espacio entre correo y área
-      line-height: 1.3;
-      font-size: 0.9rem;
+      margin: 0 !important; 
+      line-height: 1.4;
+      font-size: 0.95rem;
     }
-    .txt-secundario { color: #64748b; }
+    .txt-secundario { color: var(--text-muted); font-weight: 500; }
     .txt-depto { 
-      color: #3b82f6; 
-      font-weight: 700; 
+      color: var(--primary-accent); 
+      font-weight: 800; 
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
   }
 }
 
+/* ==========================================================================
+   4. SECCIÓN DEL ESCÁNER Y BÚSQUEDA
+   ========================================================================== */
 .contenedor-escanner-minimal {
-  --background: #f9f9f9;
-  --border-radius: 10px;
+  --background: #f8fafc;
+  --border-radius: 14px;
   --padding-start: 16px;
-  border: 1px solid #eeeeee;
-  margin-bottom: 8px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+  transition: all 0.3s var(--spring-physics);
+
+  &:focus-within {
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+  }
 
   .input-texto-codigo {
-    font-size: 1.1rem; 
-    font-weight: 400;
-    --padding-top: 12px;
-    --padding-bottom: 12px;
-    color: #444444;
+    font-size: 1.15rem; 
+    font-weight: 600;
+    --padding-top: 14px;
+    --padding-bottom: 14px;
+    color: var(--text-main);
   }
 
   .boton-anadir-clean {
-    // Dimensiones proporcionales
-    height: 32px; 
-    margin-top: 14px;
-    margin-right: 4px;
+    height: 36px; 
+    margin-top: 10px;
+    margin-right: 6px;
     
-    // Estética Outline
-    --border-width: 1px;
-    --border-radius: 6px;
-    --color: #2dd36f;
-    --border-color: #2dd36f;
+    --border-width: 1.5px;
+    --border-radius: 10px;
+    --color: var(--success-accent);
+    --border-color: rgba(16, 185, 129, 0.4);
     --background: transparent;
     
-    // Tipografía
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-transform: none; // Mantiene el texto amigable (no todo en mayúsculas)
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-transform: none; 
+    transition: all 0.2s ease;
 
     ion-icon {
-      font-size: 1.1rem;
+      font-size: 1.2rem;
+      margin-right: 4px;
     }
 
     &:hover {
-      --background: rgba(45, 211, 111, 0.05);
+      --background: rgba(16, 185, 129, 0.08);
+      --border-color: var(--success-accent);
     }
   }
 }
 
-// Estilo para el texto descriptivo debajo (Araña ARA-01)
 .info-herramienta-preview {
-  padding: 2px 18px;
-  font-size: 0.9rem;
-  color: #333;
-  font-weight: 500;
+  padding: 4px 20px;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  font-weight: 600;
 }
 
-/* Fix para que los selectores Popover se vean bien en PC */
+/* ==========================================================================
+   5. LISTA DE PRÉSTAMO (CARRITO FLOTANTE)
+   ========================================================================== */
+.tarjeta-lista-prestamo {
+  margin-top: 30px;
+
+  .titulo-seccion-lista {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 20px 0 14px 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    span {
+      background: var(--primary-accent);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+  }
+}
+
+.item-carrito-estilizado {
+  --background: var(--surface-card);
+  --border-radius: 14px;
+  --padding-start: 14px;
+  margin-bottom: 10px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 4px 12px -4px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateX(4px);
+    border-color: rgba(37, 99, 235, 0.2);
+  }
+
+  .icono-lista {
+    color: var(--primary-accent);
+    font-size: 1.3rem;
+  }
+
+  h3 {
+    font-weight: 800;
+    color: var(--text-main);
+    font-size: 1rem;
+    letter-spacing: -0.2px;
+  }
+
+  p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .boton-borrar {
+    --color: var(--text-light);
+    transition: 0.2s;
+    &:hover, &:active { 
+      --color: #ef4444; 
+      transform: scale(1.1);
+    }
+  }
+}
+
+/* ==========================================================================
+   6. BOTONES DE ACCIÓN (GLOWING) Y ANIMACIONES
+   ========================================================================== */
+.boton-guardar {
+  --background: var(--success-accent);
+  --background-hover: #059669; /* Verde oscuro */
+  --background-activated: #047857;
+  --border-radius: 16px;
+  --box-shadow: 0 8px 24px -6px var(--success-glow);
+  height: 60px; /* Botón de acción principal más alto */
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.2px;
+  margin-top: 36px;
+  transition: all 0.4s var(--spring-physics);
+
+  &:hover {
+    transform: translateY(-2px);
+    --box-shadow: 0 12px 30px -6px var(--success-glow);
+  }
+
+  &[disabled] {
+    opacity: 0.5;
+    --box-shadow: none;
+    transform: none;
+  }
+}
+
+/* Animaciones Fluidas */
+.animated {
+  animation-duration: 0.6s;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fadeIn { animation-name: fadeIn; animation-timing-function: var(--spring-physics); }
+.fadeInUp { animation-name: fadeInUp; animation-timing-function: var(--spring-physics); }
+
+/* Fix popovers en PC */
 ion-popover {
-  --width: 300px;
+  --width: 320px;
 }

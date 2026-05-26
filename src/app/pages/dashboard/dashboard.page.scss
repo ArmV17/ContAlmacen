@@ -1,8 +1,25 @@
 /* ==========================================================================
-   ESTILOS BASE Y CONTENEDORES
+   VARIABLES GLOBALES CAMPS 2026 (DASHBOARD)
+   ========================================================================== */
+:host {
+  --primary-accent: #2563eb; 
+  --primary-glow: rgba(37, 99, 235, 0.25);
+  --danger-accent: #ef4444;
+  --danger-glow: rgba(239, 68, 68, 0.25);
+  --success-accent: #10b981;
+  --bg-app: #f4f6f9; 
+  --text-main: #0f172a; 
+  --text-muted: #64748b; 
+  --text-light: #94a3b8;
+  --surface-card: #ffffff;
+  --spring-physics: cubic-bezier(0.175, 0.885, 0.32, 1.15); 
+}
+
+/* ==========================================================================
+   ESTILOS BASE Y CABECERA (UNIFICACIÓN CON MENÚ)
    ========================================================================== */
 .fondo-claro {
-  --background: #f4f5f8; 
+  --background: var(--bg-app); 
 }
 
 .contenedor-maximo {
@@ -10,61 +27,87 @@
   margin: 0 auto;
 }
 
+/* Continuidad del "Monitor Panorámico" */
 .toolbar-elegante {
-  --background: #1e293b; 
-  --color: #ffffff; 
+  --background: rgba(15, 23, 42, 0.95);
+  --color: #ffffff;
+  --border-width: 0 !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* 👇 AQUÍ SE APLICÓ EL MISMO ESTILO DE LETRA QUE EN NUEVO PRÉSTAMO 👇 */
+  ion-title {
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: -0.3px;
+  }
 }
 
 /* ==========================================================================
-   TARJETAS DE INDICADORES (KPIs)
+   TARJETAS DE INDICADORES (KPIs MICRO-SUPERFICIES)
    ========================================================================== */
 .tarjeta-limpia {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  border-radius: 16px;
+  /* Elevación 2026: Sombra súper difuminada + Resplandor inferior */
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+  border-radius: 20px; /* Curvas más amigables */
   margin: 10px 5px;
-  background: #ffffff;
-  border: none; 
+  background: var(--surface-card);
+  border: 1px solid rgba(0,0,0,0.02); /* Borde invisible para delimitar */
+  transition: transform 0.4s var(--spring-physics), box-shadow 0.4s ease;
   
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+  }
+
   .texto-secundario {
-    color: #8c98a4;
+    color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-size: 0.8rem;
+    letter-spacing: 1px; /* Tracking abierto para títulos pequeños */
+    font-size: 0.75rem;
+    font-weight: 700;
   }
   
   .texto-primario, .texto-peligro {
-    font-size: 2.5rem;
-    font-weight: 700;
+    font-size: 2.8rem; /* Números más grandes e impactantes */
+    font-weight: 800;
+    letter-spacing: -1.5px; /* Tracking cerrado para números gigantes */
+    margin: 4px 0;
   }
 
-  .texto-primario { color: #2c3e50; }
-  .texto-peligro { color: #e74c3c; }
+  .texto-primario { color: var(--text-main); }
+  .texto-peligro { color: var(--danger-accent); }
 
+  /* Rediseño de tarjeta de alerta */
   &.alerta {
-    box-shadow: inset 5px 0 0 #e74c3c, 0 4px 12px rgba(0,0,0,0.05);
+    background: linear-gradient(145deg, #ffffff 0%, #fef2f2 100%);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    box-shadow: 0 10px 30px -10px var(--danger-glow);
   }
 }
 
 /* ==========================================================================
-   SECCIONES DE LISTA
+   SECCIONES Y LISTAS
    ========================================================================== */
 .seccion-lista {
-  margin-top: 25px;
+  margin-top: 30px;
   padding: 0 10px;
 
   .header-lista {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 
     .subtitulo {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: #2c3e50;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.5px;
       margin: 0;
 
-      &.peligro { color: #c0392b; }
+      &.peligro { color: var(--danger-accent); }
     }
   }
 }
@@ -74,34 +117,47 @@
 }
 
 /* ==========================================================================
-   ESTILO DE TARJETAS DE PRÉSTAMO (ITEMS)
+   TARJETAS DE PRÉSTAMO (ITEMS DE LISTA FLOTANTES)
    ========================================================================== */
 .item-limpio-agrupado {
-  --background: #ffffff;
-  --border-radius: 12px;
-  margin-bottom: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  --background: var(--surface-card);
+  --border-radius: 16px;
+  margin-bottom: 14px;
+  /* Sombra flotante idéntica a los botones del menú */
+  box-shadow: 0 4px 12px -4px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.02);
+  transition: all 0.4s var(--spring-physics);
 
+  /* Hover sutil en los préstamos */
+  &:hover {
+    transform: scale(1.01) translateX(2px);
+    box-shadow: 0 8px 24px -6px rgba(0,0,0,0.08);
+  }
+
+  /* Estado crítico */
   &.vencido {
-    border-left: 4px solid #e74c3c;
+    border-left: 4px solid var(--danger-accent);
+    /* Resplandor rojo lateral */
+    box-shadow: -4px 4px 16px -4px var(--danger-glow);
   }
 
   .icono-contenedor {
-    background: #eef2f6;
-    padding: 10px;
-    border-radius: 10px;
-    color: #3498db;
+    background: rgba(37, 99, 235, 0.06);
+    padding: 12px;
+    border-radius: 12px;
+    color: var(--primary-accent);
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.3s ease;
 
     &.bg-vencido {
-      background: #fdedec;
-      color: #e74c3c;
+      background: rgba(239, 68, 68, 0.08);
+      color: var(--danger-accent);
     }
   }
 
-  /* Alineación del Nombre y el Badge lateral */
+  /* Cabecera del Item */
   .header-item-flex {
     display: flex;
     align-items: center;
@@ -109,47 +165,87 @@
     margin-bottom: 6px;
 
     .receptor-nombre {
-      font-weight: 600;
-      color: #2c3e50;
-      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+      font-size: 1.1rem;
+      letter-spacing: -0.3px;
       margin: 0;
     }
 
     .badge-tipo {
       font-size: 0.65rem;
-      padding: 4px 8px;
+      padding: 4px 10px;
       height: fit-content;
+      border-radius: 8px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
     }
   }
 }
 
-/* --- Mini lista de herramientas --- */
+/* --- Mini lista de herramientas (Píldoras) --- */
 .mini-lista-herramientas {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin: 8px 0;
+  gap: 6px;
+  margin: 10px 0;
 
   .tag-herramienta {
     font-size: 0.75rem;
-    color: #546e7a;
+    color: var(--text-muted);
     background: #f1f5f9;
-    padding: 2px 8px;
-    border-radius: 5px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: 1px solid rgba(0,0,0,0.03);
 
     &.vencida {
-      background: #fee2e2;
-      color: #b91c1c;
-      font-weight: 500;
+      background: #fef2f2;
+      color: var(--danger-accent);
+      border-color: rgba(239, 68, 68, 0.1);
     }
   }
 }
 
-/* --- Fila inferior: Empleado y Fecha (Justificados) --- */
+/* ==========================================================================
+   ALINEACIÓN ACADÉMICA Y FOOTER DE TARJETA
+   ========================================================================== */
+.detalles-academicos {
+  margin: 10px 0;
+  
+  .fila-academica-flex {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .info-secundaria {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+
+    ion-icon {
+      font-size: 1.1rem;
+      color: var(--text-light);
+    }
+
+    strong {
+      color: var(--text-main);
+      font-weight: 700;
+    }
+  }
+}
+
 .info-adicional-dashboard {
-  margin-top: 12px;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 8px;
+  margin-top: 14px;
+  border-top: 1px dashed #e2e8f0; /* Línea punteada moderna en lugar de sólida */
+  padding-top: 12px;
 
   .fila-detalles-flex {
     display: flex;
@@ -164,44 +260,49 @@
   align-items: center;
   gap: 6px;
   font-size: 0.85rem;
-  color: #475569;
+  color: var(--text-muted);
+  font-weight: 500;
   margin: 0;
 
   ion-icon {
     font-size: 1.1rem;
-    color: #94a3b8;
+    color: var(--text-light);
   }
 }
 
 .fecha-info {
   font-size: 0.85rem;
   margin: 0;
-  color: #a0aec0;
-  font-weight: 500;
+  color: var(--text-light);
+  font-weight: 600;
 
   &.texto-peligro {
-    color: #e74c3c !important;
-    font-weight: 700;
+    color: var(--danger-accent) !important;
+    font-weight: 800;
   }
 }
 
 /* ==========================================================================
-   BADGES Y ESTADOS
+   BADGES DE ESTADO ILUMINADOS (GLOW)
    ========================================================================== */
 .etiqueta-estado {
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-weight: 700;
   font-size: 0.75rem;
+  letter-spacing: 0.5px;
   
   &.estado-ok {
-    background: #e8f8f5;
-    color: #27ae60;
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success-accent);
+    /* Resplandor verde */
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
   }
   
   &.estado-vencido {
-    background: #fdedec;
-    color: #c0392b;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-accent);
+    box-shadow: 0 4px 12px var(--danger-glow);
   }
 }
 
@@ -210,74 +311,42 @@
    ========================================================================== */
 .mensaje-vacio {
   text-align: center;
-  margin-top: 60px;
+  margin-top: 80px;
   padding: 20px;
 
   ion-icon {
-    font-size: 70px;
-    color: #cbd5e1;
-    margin-bottom: 10px;
-    opacity: 0.6;
+    font-size: 80px;
+    color: var(--success-accent);
+    margin-bottom: 15px;
+    filter: drop-shadow(0 8px 24px var(--success-glow));
+    transition: all 0.4s var(--spring-physics);
   }
 
   p {
-    color: #64748b;
+    color: var(--text-muted);
     font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: -0.2px;
   }
 }
 
 .animated {
-  animation-duration: 0.5s;
+  animation-duration: 0.6s; /* Un poco más lenta y suave */
   animation-fill-mode: both;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(15px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.fadeIn { animation-name: fadeIn; }
+.fadeIn { animation-name: fadeIn; animation-timing-function: var(--spring-physics); }
 
-/* ==========================================================================
-   ALINEACIÓN ACADÉMICA (PROFESOR Y DEPTO)
-   ========================================================================== */
-.detalles-academicos {
-  margin: 8px 0;
-  
-  .fila-academica-flex {
-    display: flex;
-    justify-content: space-between; /* Empuja uno a cada lado */
-    align-items: center;
-    width: 100%;
-    gap: 10px;
-  }
-
-  .info-secundaria {
-    margin: 0;
-    font-size: 0.82rem;
-    color: #64748b;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    white-space: nowrap; /* Evita que se amontone en pantallas pequeñas */
-
-    ion-icon {
-      font-size: 1rem;
-      color: #94a3b8;
-    }
-
-    strong {
-      color: #334155;
-      font-weight: 600;
-    }
-  }
-}
-
-/* Ajuste opcional para móviles muy pequeños */
+/* Ajuste móvil */
 @media (max-width: 360px) {
   .detalles-academicos .fila-academica-flex {
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
+    gap: 6px;
   }
 }

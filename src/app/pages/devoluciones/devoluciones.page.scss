@@ -1,116 +1,172 @@
 /* ==========================================================================
-   ESTILOS BASE Y CONTENEDORES
+   VARIABLES GLOBALES CAMPS 2026 (DEVOLUCIONES)
    ========================================================================== */
-.toolbar-elegante { 
-  --background: #1e293b; 
-  --color: #ffffff; 
+:host {
+  --primary-accent: #2563eb; 
+  --primary-glow: rgba(37, 99, 235, 0.25);
+  --success-accent: #10b981;
+  --success-glow: rgba(16, 185, 129, 0.25);
+  --danger-accent: #ef4444;
+  --bg-app: #f4f6f9; 
+  --surface-card: #ffffff;
+  --text-main: #0f172a; 
+  --text-muted: #64748b; 
+  --text-light: #94a3b8;
+  --spring-physics: cubic-bezier(0.175, 0.885, 0.32, 1.15); 
+}
+
+/* ==========================================================================
+   1. CABECERA (UNIFICADA) Y CONTENEDOR
+   ========================================================================== */
+.toolbar-elegante {
+  --background: rgba(15, 23, 42, 0.95);
+  --color: #ffffff;
+  --border-width: 0 !important;
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+
+  /* Misma tipografía exacta que Dashboard y Nuevo Préstamo */
+  ion-title {
+    font-weight: 800;
+    font-size: 1.2rem;
+    letter-spacing: -0.3px;
+  }
+
+  ion-back-button, ion-menu-button {
+    --color: #ffffff;
+  }
 }
 
 .fondo-claro { 
-  --background: #f4f5f8; 
+  --background: var(--bg-app); 
 }
 
 .contenedor-maximo { 
   max-width: 800px; 
   margin: 0 auto; 
+  padding-top: 24px;
+  padding-bottom: 40px;
 }
 
 /* ==========================================================================
-   BUSCADOR Y TARJETAS
+   2. BUSCADOR Y TARJETAS FLOTANTES
    ========================================================================== */
 .tarjeta-formulario {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-  border-radius: 16px;
-  background: #ffffff;
-  margin-bottom: 20px;
-  border: none;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
+  border-radius: 20px;
+  background: var(--surface-card);
+  margin-bottom: 24px;
+  border: 1px solid rgba(0,0,0,0.02);
 }
 
 .input-limpio {
   --background: #f8fafc;
-  --border-radius: 12px;
-  --padding-start: 15px;
+  --border-radius: 14px;
+  --padding-start: 16px;
   border: 1px solid #e2e8f0;
+  transition: all 0.3s var(--spring-physics);
   
+  &:focus-within {
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+    transform: translateY(-2px);
+  }
+
   ion-input {
-    font-size: 1rem;
-    --color: #2c3e50;
-    --placeholder-color: #94a3b8;
+    font-size: 1.05rem;
+    --color: var(--text-main);
+    --placeholder-color: var(--text-light);
+    font-weight: 500;
   }
 
   &.mini {
-    --min-height: 45px;
-    background: #ffffff;
+    --min-height: 48px;
+    background: var(--surface-card);
     border: 1px solid #cbd5e1;
     margin-bottom: 12px;
+
+    &:focus-within {
+      transform: none; /* Sin rebote para los inputs pequeños, solo glow */
+    }
   }
 }
 
 /* ==========================================================================
-   LISTADO DE DEVOLUCIONES
+   3. LISTADO DE DEVOLUCIONES (TARJETAS DE ALUMNOS/MAESTROS)
    ========================================================================== */
 .subtitulo-gestion {
-  margin: 25px 10px 15px 5px;
-  font-size: 0.9rem;
+  margin: 30px 10px 15px 5px;
+  font-size: 0.85rem;
   font-weight: 800;
-  color: #64748b;
+  color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
 }
 
 .item-gestion {
-  --background: #ffffff;
-  --border-radius: 18px;
-  --padding-top: 15px;
-  --padding-bottom: 15px;
-  margin-bottom: 15px;
-  border: 1px solid #f1f5f9;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+  --background: var(--surface-card);
+  --border-radius: 20px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(0,0,0,0.02);
+  box-shadow: 0 4px 12px -4px rgba(0,0,0,0.05);
+  transition: all 0.4s var(--spring-physics);
+
+  &:hover {
+    transform: translateY(-2px) scale(1.005);
+    box-shadow: 0 8px 24px -6px rgba(0,0,0,0.08);
+  }
 
   .nombre-maestro {
-    font-weight: 700 !important;
-    font-size: 1.1rem;
-    color: #1e293b;
-    margin-bottom: 4px;
+    font-weight: 800 !important;
+    font-size: 1.15rem;
+    color: var(--text-main);
+    margin-bottom: 6px;
+    letter-spacing: -0.2px;
   }
 
   .info-secundaria {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
+    gap: 10px;
+    margin-bottom: 14px;
 
     .badge-id {
       --background: #f1f5f9;
-      --color: #475569;
+      --color: var(--text-muted);
       font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 6px;
+      font-size: 0.75rem;
+      padding: 6px 10px;
+      border-radius: 8px;
     }
 
     .tipo-badge {
       font-size: 0.8rem;
-      color: #3b82f6;
-      font-weight: 700;
+      color: var(--primary-accent);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
   }
 }
 
 /* ==========================================================================
-   VALIDACIÓN Y HERRAMIENTAS (ESTILO ALACRITY)
+   4. VALIDACIÓN DE HERRAMIENTAS (MICRO-INTERACCIONES)
    ========================================================================== */
 .seccion-validacion-devolucion {
-  margin-top: 15px;
+  margin-top: 16px;
   background: #f8fafc;
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid #edf2f7;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
 
   .lista-check-herramientas {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 5px;
+    gap: 10px;
+    margin-top: 8px;
   }
 }
 
@@ -118,67 +174,105 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 12px;
-  background: #ffffff;
-  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--surface-card);
+  border-radius: 12px;
   border: 1px solid #e2e8f0;
-  transition: all 0.3s ease;
+  transition: all 0.3s var(--spring-physics);
 
+  /* 🌟 ESTADO DEVUELTO (ÉXITO) */
   &.validado {
-    background: #f0fdf4;
-    border-color: #2dd36f;
-    box-shadow: 0 2px 8px rgba(45, 211, 111, 0.15);
+    background: rgba(16, 185, 129, 0.08);
+    border-color: var(--success-accent);
+    box-shadow: 0 4px 12px var(--success-glow);
+    transform: scale(1.01); /* Resalta sutilmente */
 
-    .nombre-h { color: #166534; font-weight: 600; }
-    .codigo-h { color: #10b981; }
+    .info-h ion-icon { color: var(--success-accent); }
+    .textos-h .nombre-h { color: #065f46; font-weight: 700; }
+    .textos-h .codigo-h { color: var(--success-accent); font-weight: 800; }
   }
 
   .info-h {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     
-    ion-icon { font-size: 1.2rem; }
+    ion-icon { 
+      font-size: 1.4rem; 
+      color: var(--text-light);
+      transition: color 0.3s ease;
+    }
 
     .textos-h {
       display: flex;
       flex-direction: column;
-      .nombre-h { font-size: 0.95rem; color: #334155; }
-      .codigo-h { font-size: 0.8rem; color: #64748b; font-weight: 700; }
+      .nombre-h { font-size: 0.95rem; color: var(--text-main); font-weight: 600; transition: color 0.3s; }
+      .codigo-h { font-size: 0.8rem; color: var(--text-muted); font-weight: 700; transition: color 0.3s; }
     }
   }
 }
 
 /* ==========================================================================
-   BOTONES
+   5. BOTÓN PRINCIPAL
    ========================================================================== */
 .boton-recibir-grupo {
-  --border-radius: 12px;
+  --background: var(--success-accent);
+  --background-hover: #059669;
+  --border-radius: 14px;
   font-weight: 800;
-  height: 50px;
+  height: 52px;
   margin-left: 10px;
-  min-width: 110px;
-  --box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  font-size: 0.85rem;
+  min-width: 120px;
+  --box-shadow: 0 8px 20px -6px var(--success-glow);
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
+  transition: all 0.4s var(--spring-physics);
+
+  &:hover {
+    transform: translateY(-2px);
+    --box-shadow: 0 12px 24px -6px var(--success-glow);
+  }
+
+  &[disabled] {
+    opacity: 0.5;
+    --box-shadow: none;
+    transform: none;
+  }
 }
 
 /* ==========================================================================
-   ANIMACIONES
+   CORRECCIÓN DE LÍNEAS BLANCAS Y LISTAS VACÍAS
+   ========================================================================== */
+ion-list {
+  background: transparent !important;
+  --background: transparent !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Oculta los bordes por defecto de los items de Ionic si no hay contenido */
+ion-item {
+  --border-width: 0 !important;
+  --inner-border-width: 0 !important;
+}
+
+/* ==========================================================================
+   6. ANIMACIONES FLUIDAS
    ========================================================================== */
 .animated {
-  animation-duration: 0.4s;
+  animation-duration: 0.5s;
   animation-fill-mode: both;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes zoomIn {
-  from { opacity: 0; transform: scale3d(0.3, 0.3, 0.3); }
+  from { opacity: 0; transform: scale(0.95); }
   50% { opacity: 1; }
 }
 
-.fadeIn { animation-name: fadeIn; }
-.zoomIn { animation-name: zoomIn; }
+.fadeIn { animation-name: fadeIn; animation-timing-function: var(--spring-physics); }
+.zoomIn { animation-name: zoomIn; animation-timing-function: var(--spring-physics); }
