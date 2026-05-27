@@ -112,63 +112,42 @@ export class AdministracionPage {
     const archivo = event.target.files[0];
     if (!archivo) return;
 
-    const loading = await this.loadingController.create({
-      message: 'Leyendo archivo Excel...',
-      spinner: 'crescent'
-    });
-    await loading.present();
-
     const reader = new FileReader();
-
     reader.onload = async (e: any) => {
-      try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const nombreHoja = workbook.SheetNames[0];
-        const hoja = workbook.Sheets[nombreHoja];
-        const filas: any[] = XLSX.utils.sheet_to_json(hoja);
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const filas: any[] = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
-        if (filas.length === 0) {
-          await loading.dismiss();
-          this.mostrarMensaje('El archivo Excel está vacío', 'warning');
-          return;
+      const alumnosNuevos: any[] = [];
+      let duplicados = 0;
+
+      for (let fila of filas) {
+        const matricula = (fila['Matricula'] || fila['MATRICULA'] || '').toString().trim();
+        
+        // Verificamos si ya existe en el array local
+        const existe = this.alumnos.find(a => a.matricula === matricula);
+        
+        if (!existe && matricula) {
+          alumnosNuevos.push({
+            matricula: matricula,
+            nombre: this.formatearNombrePropio(fila['Nombre'] || fila['NOMBRE'] || ''),
+            carrera: this.formatearNombrePropio(fila['Carrera'] || 'No especificada'),
+            correo: (fila['Correo'] || fila['CORREO'] || 'sin_correo@gmail.com').trim()
+          });
+        } else {
+          duplicados++;
         }
+      }
 
-        loading.message = `Preparando ${filas.length} alumnos...`;
-
-        const alumnosProcesados = filas.map(fila => {
-          return {
-            matricula: (fila['Matricula'] || fila['MATRICULA'] || fila['id'] || '').toString().trim(),
-            nombre: this.formatearNombrePropio(fila['Nombre'] || fila['NOMBRE'] || fila['Nombre Completo'] || ''),
-            carrera: this.formatearNombrePropio(fila['Carrera'] || fila['CARRERA'] || 'No especificada'),
-            correo: (fila['Correo'] || fila['CORREO'] || fila['Email'] || '').trim() || 'sin_correo@utc.edu.mx'
-          };
-        }).filter(al => al.matricula && al.nombre);
-
-        if (alumnosProcesados.length === 0) {
-           await loading.dismiss();
-           this.mostrarMensaje('No se encontraron datos válidos en el archivo', 'warning');
-           return;
-        }
-
-        loading.message = `Subiendo ${alumnosProcesados.length} alumnos a Firebase...`;
-
-        const resultado = await this.almacenService.cargarAlumnosMasivo(alumnosProcesados);
-
-        await loading.dismiss();
-        this.mostrarMensaje(`Carga exitosa: ${resultado.exitosos}. Fallidos: ${resultado.fallidos}`, 'success');
-
+      if (alumnosNuevos.length > 0) {
+        const resultado = await this.almacenService.cargarAlumnosMasivo(alumnosNuevos);
+        this.mostrarMensaje(`Registrados: ${resultado.exitosos}. Duplicados ignorados: ${duplicados}`, 'success');
         this.cargarDatos();
-
-      } catch (error) {
-        await loading.dismiss();
-        console.error('Error al procesar el Excel:', error);
-        this.mostrarMensaje('Error al leer el formato del archivo', 'danger');
+      } else {
+        this.mostrarMensaje(`No se subió nada. ${duplicados} registros ya existían.`, 'warning');
       }
     };
-
     reader.readAsArrayBuffer(archivo);
-    event.target.value = ''; 
   }
 
   obtenerDepartamentosUnicos() {
@@ -641,6 +620,7 @@ export class AdministracionPage {
   async guardarAlumno() {
     const { matricula, nombre, carrera, correo } = this.alumnoNuevo;
 
+    // 1. Validaciones básicas
     if (!matricula || !nombre || !carrera || !correo) {
       this.mostrarMensaje('Por favor, llena todos los campos', 'warning');
       return;
@@ -651,15 +631,30 @@ export class AdministracionPage {
       return;
     }
 
+    // 2. VERIFICACIÓN DE DUPLICADOS (Solo si NO estamos editando)
+    if (!this.editandoAlumno) {
+      const matriculaLimpia = matricula.trim();
+      const existe = this.alumnos.find(a => a.matricula.trim() === matriculaLimpia);
+      
+      if (existe) {
+        this.mostrarMensaje(`Error: El alumno con matrícula ${matriculaLimpia} ya existe.`, 'danger');
+        return;
+      }
+    }
+
+    // 3. Procesamiento y Guardado
     this.alumnoNuevo.nombre = this.formatearNombrePropio(nombre);
     this.alumnoNuevo.carrera = this.formatearNombrePropio(carrera);
 
     const res = await this.almacenService.registrarAlumno(this.alumnoNuevo);
+    
     if (res.exito) {
       this.mostrarMensaje(this.editandoAlumno ? 'Alumno actualizado' : 'Alumno registrado', 'success');
       this.cancelarEdicionAlumno();
-      this.cargarDatos();
-    } else this.mostrarMensaje('Error al procesar la solicitud', 'danger');
+      this.cargarDatos(); // Recargamos para refrescar la lista
+    } else {
+      this.mostrarMensaje('Error al procesar la solicitud', 'danger');
+    }
   }
 
   prepararEdicionAlumno(alumno: any) {
@@ -694,16 +689,28 @@ export class AdministracionPage {
   async guardarMaestro() {
     const { numMaestro, nombre, correo, departamento } = this.maestroNuevo;
 
+    // 1. Validación de campos vacíos
     if (!numMaestro || !nombre || !correo || !departamento) {
       this.mostrarMensaje('Nombre, Número, Correo y Departamento son obligatorios', 'warning');
       return;
     }
 
+    // 2. Validación de correo
     if (!this.validarCorreo(correo)) {
       this.mostrarMensaje('El correo del maestro no es válido', 'danger');
       return;
     }
 
+    // 3. VERIFICACIÓN DE DUPLICADOS (Solo para registros nuevos)
+    if (!this.editandoMaestro) {
+      const existe = this.maestros.find(m => m.num_maestro === numMaestro.trim());
+      if (existe) {
+        this.mostrarMensaje(`Error: El maestro con número ${numMaestro} ya existe.`, 'danger');
+        return;
+      }
+    }
+
+    // 4. Formateo de datos
     this.maestroNuevo.nombre = this.formatearNombrePropio(nombre);
     this.maestroNuevo.departamento = departamento.toUpperCase().trim();
     this.maestroNuevo.materias = this.maestroNuevo.materias.map(m => this.formatearNombrePropio(m));
@@ -712,12 +719,16 @@ export class AdministracionPage {
       this.agregarMateriaLista();
     }
     
+    // 5. Guardado en servicio
     const res = await this.almacenService.registrarMaestro(this.maestroNuevo);
+    
     if (res.exito) {
       this.mostrarMensaje(this.editandoMaestro ? 'Maestro actualizado' : 'Maestro registrado', 'success');
       this.cancelarEdicionMaestro();
-      this.cargarDatos();
-    } else this.mostrarMensaje('Error al guardar maestro', 'danger');
+      this.cargarDatos(); // Refrescamos lista
+    } else {
+      this.mostrarMensaje('Error al guardar maestro', 'danger');
+    }
   }
 
   prepararEdicionMaestro(m: any) {
@@ -740,19 +751,35 @@ export class AdministracionPage {
   }
 
   async guardarEmpleado() {
+    // 1. Validación de campos obligatorios
     if(!this.empleadoNuevo.numEmpleado || !this.empleadoNuevo.nombre || (!this.editandoEmpleado && !this.empleadoNuevo.password)){
         this.mostrarMensaje('Todos los campos son obligatorios', 'warning');
         return;
     }
 
+    // 2. VERIFICACIÓN DE DUPLICADOS (Solo si es un registro nuevo)
+    if (!this.editandoEmpleado) {
+      const numLimpio = this.empleadoNuevo.numEmpleado.trim();
+      const existe = this.empleados.find(e => e.num_empleado === numLimpio);
+      
+      if (existe) {
+        this.mostrarMensaje(`Error: El número de empleado ${numLimpio} ya está registrado.`, 'danger');
+        return;
+      }
+    }
+
+    // 3. Formateo y guardado
     this.empleadoNuevo.nombre = this.formatearNombrePropio(this.empleadoNuevo.nombre);
 
     const res = await this.almacenService.registrarEmpleado(this.empleadoNuevo);
+    
     if (res.exito) {
       this.mostrarMensaje(this.editandoEmpleado ? 'Empleado actualizado' : 'Empleado registrado', 'success');
       this.cancelarEdicionEmpleado();
-      this.cargarDatos();
-    } else this.mostrarMensaje('Error al guardar', 'danger');
+      this.cargarDatos(); // Refrescamos lista
+    } else {
+      this.mostrarMensaje('Error al guardar', 'danger');
+    }
   }
 
   prepararEdicionEmpleado(e: any) {
