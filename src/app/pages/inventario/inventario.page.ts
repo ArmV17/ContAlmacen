@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-// 👇 IMPORTACIÓN BLINDADA: Componentes Standalone exactos para tu HTML
 import { 
   IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, 
   IonButton, IonIcon, IonSearchbar, IonContent, IonAccordionGroup, 
@@ -24,7 +23,6 @@ import { AlmacenService } from '../../services/almacen.service';
   templateUrl: './inventario.page.html',
   styleUrls: ['./inventario.page.scss'],
   standalone: true,
-  // 👇 DECLARACIÓN EXPLÍCITA (Aquí está la clave para que Vercel no borre estilos)
   imports: [
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonButtons, IonMenuButton, IonTitle, 
@@ -36,6 +34,7 @@ export class InventarioPage {
 
   herramientasOriginales: any[] = [];
   herramientasAgrupadas: any[] = [];
+  inventarioFiltrado: any[] = []; // Variable de estado para los resultados
   textoBuscar: string = '';
 
   constructor(private almacenService: AlmacenService) {
@@ -53,6 +52,7 @@ export class InventarioPage {
   async cargarInventario() {
     this.herramientasOriginales = await this.almacenService.obtenerInventario();
     this.procesarInventario();
+    this.inventarioFiltrado = [...this.herramientasAgrupadas]; // Inicializar
   }
 
   procesarInventario() {
@@ -91,12 +91,17 @@ export class InventarioPage {
     this.herramientasAgrupadas = Array.from(mapa.values());
   }
 
-  get inventarioFiltrado() {
-    const t = this.textoBuscar.toLowerCase().trim();
-    if (!t) return this.herramientasAgrupadas;
+  // Método optimizado: Se ejecuta solo al interactuar con el buscador
+  buscarHerramienta(event: any) {
+    const t = (event.detail.value || '').toLowerCase().trim();
+    this.textoBuscar = t;
 
-    const resultados: any[] = [];
-    this.herramientasAgrupadas.forEach(grupo => {
+    if (!t) {
+      this.inventarioFiltrado = this.herramientasAgrupadas;
+      return;
+    }
+
+    this.inventarioFiltrado = this.herramientasAgrupadas.reduce((resultados, grupo) => {
       const coincideNombre = grupo.nombre.toLowerCase().includes(t);
       const nuevoGrupo = { ...grupo, detallesPorTipo: [] as any[] };
       let hayCoincidenciaInterna = false;
@@ -122,108 +127,48 @@ export class InventarioPage {
         nuevoGrupo.totalDisponibles = nuevoGrupo.detallesPorTipo.reduce((acc: number, det: any) => acc + det.disponibles, 0);
         resultados.push(nuevoGrupo);
       }
-    });
-    return resultados;
+      return resultados;
+    }, []);
   }
 
-  buscarHerramienta(event: any) {
-    this.textoBuscar = event.detail.value || '';
+  // Método trackBy para optimizar el rendimiento del *ngFor
+  trackByNombre(index: number, item: any) {
+    return item.nombre;
   }
 
   generarPDFInventario() {
     const doc = new jsPDF();
     const fecha = new Date().toLocaleDateString('es-MX');
     const hora = new Date().toLocaleTimeString('es-MX');
-    
-    // --- NUEVO: DEFINIR QUIÉN GENERA EL PDF ---
     const generadoPor = "Jose Leonardo Villa Padron"; 
 
-    // --- CONFIGURACIÓN DE ENCABEZADO ---
     doc.setFontSize(18);
-    doc.setTextColor(44, 62, 80); // Color azul noche profesional
+    doc.setTextColor(44, 62, 80);
     doc.text('REPORTE DE INVENTARIO', 14, 20);
-    
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text(`Universidad Autónoma Agraria Antonio Narro`, 14, 27);
-    
-    // --- LÍNEAS DE EMISIÓN Y GENERADOR ---
     doc.setFontSize(9);
     doc.text(`Generado por: ${generadoPor}`, 14, 34);
     doc.text(`Fecha de emisión: ${fecha} | ${hora}`, 14, 39);
-
-    // Línea divisoria estética
     doc.setDrawColor(44, 62, 80);
     doc.setLineWidth(0.5);
     doc.line(14, 42, 196, 42);
 
     const cuerpoTabla: any[] = [];
-
-    // --- LÓGICA DE PROCESAMIENTO DE DATOS ---
     this.herramientasAgrupadas.forEach((herramienta: any) => {
       herramienta.detallesPorTipo.forEach((detalle: any) => {
-        let nombreBase = herramienta.nombre.trim();
-        let tipoTexto = detalle.tipo ? detalle.tipo.trim() : '';
-        let nombreFinal = nombreBase;
-
-        const nombreLower = nombreBase.toLowerCase();
-        const tipoLower = tipoTexto.toLowerCase();
-
-        if (tipoTexto && tipoLower !== 'normal' && tipoLower !== 'sin tipo' && tipoLower !== '') {
-          if (!nombreLower.includes(tipoLower)) {
-            let conector = ' de ';
-            const adjetivos = ['largo', 'larga', 'corto', 'corta', 'grande', 'chico', 'chica', 'nuevo', 'viejo', 'usado'];
-            if (adjetivos.includes(tipoLower)) { conector = ' '; }
-            if (tipoLower.startsWith('de ') || tipoLower.startsWith('del ')) { conector = ' '; }
-            if (!isNaN(parseInt(tipoTexto.charAt(0))) && !nombreLower.endsWith(' de')) { conector = ' de '; }
-
-            nombreFinal = `${nombreBase}${conector}${tipoTexto}`;
-          }
-        }
-
-        cuerpoTabla.push([
-          nombreFinal,
-          detalle.items.length 
-        ]);
+        cuerpoTabla.push([herramienta.nombre, detalle.items.length]);
       });
     });
 
-    // --- GENERACIÓN DE LA TABLA ---
     autoTable(doc, {
-      startY: 48, // Aumentado para dar espacio a la info del emisor
+      startY: 48,
       head: [['Descripción de la Herramienta', 'Cantidad']],
       body: cuerpoTabla,
-      theme: 'striped',
-      headStyles: {
-        fillColor: [44, 62, 80],
-        textColor: [255, 255, 255],
-        fontSize: 11,
-        halign: 'left'
-      },
-      styles: {
-        fontSize: 10,
-        cellPadding: 4
-      },
-      columnStyles: {
-        1: { halign: 'center', cellWidth: 35, fontStyle: 'bold' }
-      },
-      margin: { top: 40 },
-      didDrawPage: (data) => {
-          const totalPaginas = (doc as any).internal.pages.length - 1;
-          const str = 'Página ' + totalPaginas;
-          const pageSize = doc.internal.pageSize;
-          const pageHeight = pageSize.height ? pageSize.height : pageSize.getHeight();
-
-          doc.setFontSize(9);
-          doc.setTextColor(150);
-          doc.text(str, data.settings.margin.left, pageHeight - 10);
-          
-          // Opcional: repetir el nombre del emisor en el pie de página
-          doc.text(`Reporte generado por ${generadoPor}`, 140, pageHeight - 10);
-        }
+      theme: 'striped'
     });
 
-    const nombreArchivo = `Reporte_Inventario_${fecha.replace(/\//g, '-')}.pdf`;
-    doc.save(nombreArchivo);
+    doc.save(`Reporte_Inventario_${fecha.replace(/\//g, '-')}.pdf`);
   }
 }

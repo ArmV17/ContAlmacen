@@ -12,12 +12,13 @@
     </ion-buttons>
   </ion-toolbar>
   
-  <ion-toolbar class="toolbar-elegante barra-busqueda-container">
+  <div *ngFor="let herramienta of inventarioFiltrado" class="grupo-busqueda">
+
     <ion-searchbar 
-      placeholder="Buscar por nombre, estado o tipo..."
-      [(ngModel)]="textoBuscar">
+      placeholder="Buscar..."
+      [(ngModel)]="textoBuscar"
+      (ionInput)="buscarHerramienta($event)"> 
     </ion-searchbar>
-  </ion-toolbar>
 </ion-header>
 
 <ion-content class="fondo-claro ion-padding">
