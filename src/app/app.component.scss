@@ -155,25 +155,32 @@ ion-menu {
   }
 }
 
-/* --- ESTILOS PARA EL FOOTER DE DERECHOS DE AUTOR --- */
+/* --- POSICIONAMIENTO FIJO AL FONDO DEL MENU --- */
 .copyright-section {
-  padding: 20px 16px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 16px;
   text-align: center;
-  border-top: 1px solid rgba(0, 0, 0, 0.04); /* Línea divisoria muy suave */
-  background: transparent;
-  margin-top: auto; /* Empuja el contenedor al fondo si usas flexbox */
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  background: #f4f6f9; /* Mismo color de fondo para que no se traslúcido */
+  z-index: 10;
 
   p {
-    margin: 3px 0 0 0;
-    font-size: 0.75rem;
-    color: #64748b; /* Gris slate atenuado y profesional */
+    margin: 2px 0 0 0;
+    font-size: 0.72rem;
+    color: #64748b;
     font-weight: 500;
-    letter-spacing: 0.2px;
     
-    /* Resalta ligeramente la primera línea (la versión) */
     &:first-child {
       font-weight: 700;
-      color: #475569; 
+      color: #475569;
     }
   }
+}
+
+/* Espacio de seguridad para la lista del menú */
+.lista-menu {
+  padding-bottom: 70px !important; /* Evita que el último botón choque con los créditos */
 }
