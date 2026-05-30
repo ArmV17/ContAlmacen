@@ -36,7 +36,7 @@ import {
 export class AppComponent implements OnInit, OnDestroy {
   
   private temporizadorInactividad: any;
-  private readonly TIEMPO_LIMITE = 900000; // 15 minutos 
+  private readonly TIEMPO_LIMITE = 300000; // 5 minutos 
 
   constructor(
     private router: Router,
@@ -127,7 +127,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
       const alert = await this.alertController.create({
         header: 'Sesión Expirada',
-        message: 'Tu sesión se ha cerrado automáticamente por seguridad después de 15 minutos de inactividad.',
+        message: 'Tu sesión se ha cerrado automáticamente por seguridad después de 5 minutos de inactividad.',
         buttons: ['Entendido'],
         cssClass: 'alerta-peligro'
       });
