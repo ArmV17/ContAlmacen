@@ -190,7 +190,7 @@ export class NuevoPrestamoPage implements OnInit {
     }
 
     let tieneLimite = true;
-    if (this.prestamo.tipoReceptor === 'profesor' && this.receptorEncontrado?.departamento === 'SUELOS') {
+    if (this.prestamo.tipoReceptor === 'profesor' && this.receptorEncontrado?.departamento === 'CIENCIAS DEL SUELO') {
       tieneLimite = false;
     }
 
