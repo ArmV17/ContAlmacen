@@ -491,7 +491,7 @@ async obtenerMaestros() {
           
           if (data.departamento) {
             try {
-              data.departamento = this.desencriptarTexto(data.departamento);
+              data.departamento = this.desencriptarTexto(data.departamento).trim().toUpperCase();
             } catch {
             }
           }
@@ -536,7 +536,9 @@ async obtenerMaestros() {
         const data: any = snap.data();
         if (data.nombre) data.nombre = this.desencriptarTexto(data.nombre);
         if (data.departamento) {
-          try { data.departamento = this.desencriptarTexto(data.departamento); } catch { }
+          try { 
+             data.departamento = this.desencriptarTexto(data.departamento).trim().toUpperCase(); 
+          } catch { }
         }
         return { id: snap.id, ...data };
       }
