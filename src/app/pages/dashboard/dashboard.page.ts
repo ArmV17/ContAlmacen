@@ -206,51 +206,61 @@ export class DashboardPage {
   configurarCabeceraPDF(doc: any, titulo: string, usuario: string) {
     const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Obtener fecha y hora exactas
+    // Fechas y horas dinámicas
     const fechaActual = new Date();
     const fechaHora = fechaActual.toLocaleDateString('es-MX') + ' ' + 
                       fechaActual.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
-    // 1. Logo Base64
-    // (Recuerda pegar aquí tu código Base64 largo que empieza con data:image/png;base64,... o jpeg)
-    const logoBase64 = 'data:image/png;base64, PEGA_AQUI_TU_CODIGO'; 
-    
+    // 1. LOGOS EN BASE64
+    const logoIzquierdoBase64 = 'data:image/png;base64, PEGA_AQUI_EL_LOGO_UAAAN'; 
+    const logoDerecha1Base64 = 'data:image/png;base64, PEGA_AQUI_EL_LOGO_DERECHO_1'; 
+    const logoDerecha2Base64 = 'data:image/png;base64, PEGA_AQUI_EL_LOGO_DERECHO_2'; 
+
     try {
-      doc.addImage(logoBase64, 'PNG', 15, 10, 22, 22);
+      // Logo Narro (Izquierda)
+      doc.addImage(logoIzquierdoBase64, 'PNG', 15, 10, 22, 26);
+      
+      // Logos Secretaría/Departamento (Derecha)
+      doc.addImage(logoDerecha1Base64, 'PNG', pageWidth - 55, 12, 18, 18);
+      doc.addImage(logoDerecha2Base64, 'PNG', pageWidth - 32, 12, 18, 18);
     } catch (e) {
-      console.warn('Error al cargar el logo en el PDF.');
+      console.warn('Error al cargar los logos.');
     }
 
-    // 2. Textos Institucionales y Membrete (Centrados)
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0); // Negro
-    doc.text('Universidad Autónoma Agraria Antonio Narro', pageWidth / 2, 16, { align: 'center' });
+    // 2. MEMBRETE OFICIAL CENTRAL
+    doc.setTextColor(0, 0, 0); 
     
-    // Lema de la Universidad
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(11);
-    doc.text('"Alma Terra Mater"', pageWidth / 2, 21, { align: 'center' });
-
-    // Departamento y Autoridad
-    doc.setFont('helvetica', 'normal');
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    doc.text('Departamento de Ciencias del Suelo', pageWidth / 2, 27, { align: 'center' });
+    doc.text('Universidad Autónoma Agraria Antonio Narro', pageWidth / 2, 15, { align: 'center' });
     
     doc.setFontSize(10);
-    doc.text('Dr. Víctor Samuel Peña Olvera - Jefe del Departamento', pageWidth / 2, 32, { align: 'center' });
+    doc.text('DIVISIÓN DE INGENIERÍA', pageWidth / 2, 20, { align: 'center' });
+    doc.text('DEPARTAMENTO DE CIENCIAS DEL SUELO', pageWidth / 2, 25, { align: 'center' });
 
-    // 3. Título del Reporte 
+    // Textos de contacto más pequeños para que luzca como el original
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('Calzada Antonio Narro No. 1923, Colonia Buenavista', pageWidth / 2, 30, { align: 'center' });
+    doc.text('Saltillo, Coahuila, México. C.P. 25315', pageWidth / 2, 34, { align: 'center' });
+    doc.text('Tel. (844) 411 02 00 Ext. 1936, 1937', pageWidth / 2, 38, { align: 'center' });
+    doc.text('e-mail: suelos@uaaan.edu.mx   Página Web: www.uaaan.edu.mx', pageWidth / 2, 42, { align: 'center' });
+
+    // 3. LÍNEA SEPARADORA
+    doc.setLineWidth(0.5);
+    doc.line(15, 45, pageWidth - 15, 45);
+
+    // 4. DATOS DE GENERACIÓN Y TÍTULO
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
-    doc.text(titulo, pageWidth / 2, 42, { align: 'center' });
+    doc.setFontSize(12);
+    // Título centrado
+    doc.text(titulo, pageWidth / 2, 54, { align: 'center' });
 
-    // 4. Datos Dinámicos del Generador (Alineados a la derecha)
+    // Usuario y Fecha a la derecha, debajo de la línea
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.setTextColor(80, 80, 80); 
-    doc.text(`Generado por: ${usuario}`, pageWidth - 15, 16, { align: 'right' });
-    doc.text(`Fecha y hora: ${fechaHora}`, pageWidth - 15, 21, { align: 'right' });
+    doc.text(`Generado por: ${usuario}`, pageWidth - 15, 51, { align: 'right' });
+    doc.text(`Fecha y hora: ${fechaHora}`, pageWidth - 15, 56, { align: 'right' });
   }
 
   generarPDFGeneral() {
@@ -285,9 +295,9 @@ export class DashboardPage {
     ]);
 
     autoTable(doc, {
-      head: [['Nombre', 'ID', 'Info', 'Herramientas', 'Fecha', 'Prestó', 'Estado']],
+      head: [['Alumno', 'Matrícula', 'Carrera', 'Herramientas', 'Fecha', 'Prestó', 'Estado']],
       body: filas,
-      startY: 50, // Empezar la tabla en Y=50 para que no toque el título (Y=38)
+      startY: 62, // Empezar la tabla en Y=62 para que no toque el título (Y=38)
       theme: 'striped',
       styles: { fontSize: 9, halign: 'center' },
       headStyles: { fillColor: [0, 0, 0] } 
@@ -328,9 +338,9 @@ export class DashboardPage {
     ]);
 
     autoTable(doc, {
-      head: [['Nombre', 'ID', 'Herramientas (Vencidas)', 'Vencimiento', 'Prestó']],
+      head: [['Alumno', 'Matrícula', 'Carrera', 'Herramientas (Vencidas)', 'Vencimiento', 'Prestó']],
       body: filas,
-      startY: 48, // Empezar la tabla en Y=48 para que no toque el título (Y=38)
+      startY: 62, // Empezar la tabla en Y=62 para que no toque el título (Y=38)
       theme: 'striped',
       styles: { fontSize: 9, halign: 'center' },
       headStyles: { fillColor: [0, 0, 0] } 
