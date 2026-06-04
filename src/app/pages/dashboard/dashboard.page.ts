@@ -207,23 +207,21 @@ export class DashboardPage {
     const pageWidth = doc.internal.pageSize.getWidth();
     
     // Obtener fecha y hora exactas
-    const fechaHora = new Date().toLocaleString('es-MX', { 
-      year: 'numeric', month: '2-digit', day: '2-digit', 
-      hour: '2-digit', minute: '2-digit' 
-    });
+    const fechaActual = new Date();
+    const fechaHora = fechaActual.toLocaleDateString('es-MX') + ' ' + 
+                      fechaActual.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
     // 1. Logo de la Universidad
-    // Asegúrate de tener 'logo.png' en tu carpeta src/assets/
+    // Asegúrate de tener 'logo.png' en tu carpeta src/assets/ o en la raíz pública
     const logo = new Image();
     logo.src = 'assets/logo.png'; 
     try {
-      // addImage(imagen, formato, X, Y, Ancho, Alto)
       doc.addImage(logo, 'PNG', 15, 10, 22, 26);
     } catch (e) {
       console.warn('Error al cargar el logo en el PDF.');
     }
 
-    // 2. Textos Institucionales (Centrados)
+    // 2. Textos Institucionales
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0);
@@ -235,13 +233,13 @@ export class DashboardPage {
     doc.setFont('helvetica', 'normal');
     doc.text('Departamento Ciencias del Suelo', pageWidth / 2, 28, { align: 'center' });
 
-    // 3. Título Específico del Reporte
+    // 3. Título del Reporte
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(15);
-    doc.setTextColor(30, 58, 138); // Color azul institucional
+    doc.setTextColor(30, 58, 138); // Azul institucional
     doc.text(titulo, pageWidth / 2, 38, { align: 'center' });
 
-    // 4. Datos de Generación (Alineados a la derecha)
+    // 4. Datos Dinámicos del Generador
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(80, 80, 80);
@@ -253,10 +251,9 @@ export class DashboardPage {
     const doc = new jsPDF('l', 'mm', 'a4'); 
     const hoy = new Date().toLocaleDateString('es-MX');
     
-    // Obtenemos el nombre del operador que inició sesión
+    // Obtener dinámicamente el nombre de quien inició sesión
     const empleadoActual = localStorage.getItem('userName') || 'Admin';
 
-    // Llamamos a la cabecera enviando solo doc, titulo y usuario
     this.configurarCabeceraPDF(doc, 'REPORTE GENERAL DE ALMACÉN', empleadoActual);
 
     const mapaAgrupado = new Map();
@@ -286,7 +283,7 @@ export class DashboardPage {
     autoTable(doc, {
       head: [['Nombre', 'ID', 'Info', 'Herramientas', 'Fecha', 'Prestó', 'Estado']],
       body: filas,
-      startY: 48, // Ajustado para dar espacio a la cabecera más grande
+      startY: 48, // Ajustado para no encimarse con el logo
       theme: 'striped',
       styles: { fontSize: 8, halign: 'center' }
     });
@@ -297,23 +294,46 @@ export class DashboardPage {
   generarPDFVencidos() {
     const doc = new jsPDF('l', 'mm', 'a4'); 
     const hoy = new Date().toLocaleDateString('es-MX');
-    this.configurarCabeceraPDF(doc, 'REPORTE DE VENCIDOS', hoy, "Jose Leonardo Villa Padron");
+    const empleadoActual = localStorage.getItem('userName') || 'Admin';
+
+    this.configurarCabeceraPDF(doc, 'REPORTE DE PRÉSTAMOS VENCIDOS', empleadoActual);
 
     const vencidos = this.prestamosOriginales.filter(p => p.estado === 'Vencido');
-    const filas = vencidos.map(p => [
-      p.receptor_nombre, p.receptor_id, p.herramienta_nombre, 
-      p.fecha_devolucion_pactada?.toDate().toLocaleDateString('es-MX'), p.empleado_almacen
+    const mapaAgrupado = new Map();
+
+    // Lógica para agrupar por usuario y fecha
+    vencidos.forEach(p => {
+      const fecha = p.fecha_devolucion_pactada?.toDate().toLocaleDateString('es-MX') || 'N/A';
+      // La llave define qué hace que se junten (mismo ID y misma Fecha)
+      const llave = `${p.receptor_id}_${fecha}`;
+
+      if (mapaAgrupado.has(llave)) {
+        mapaAgrupado.get(llave).herramientas.push(p.herramienta_nombre);
+      } else {
+        mapaAgrupado.set(llave, {
+          nombre: p.receptor_nombre,
+          id: p.receptor_id,
+          herramientas: [p.herramienta_nombre],
+          fecha: fecha,
+          prestó: p.empleado_almacen || 'Admin'
+        });
+      }
+    });
+
+    const filas = Array.from(mapaAgrupado.values()).map((g: any) => [
+      g.nombre, g.id, g.herramientas.join(', '), g.fecha, g.prestó
     ]);
 
     autoTable(doc, {
-      head: [['Nombre', 'ID', 'Herramienta', 'Vencimiento', 'Prestó']],
+      head: [['Nombre', 'ID', 'Herramientas (Vencidas)', 'Fecha Vencimiento', 'Prestó']],
       body: filas,
-      startY: 45,
-      styles: { halign: 'center' },
-      headStyles: { fillColor: [153, 27, 27] }
+      startY: 48, 
+      theme: 'striped',
+      styles: { fontSize: 8, halign: 'center' },
+      headStyles: { fillColor: [153, 27, 27] } // Rojo oscuro para resaltar que es vencido
     });
 
-    doc.save(`Reporte_Vencidos_${hoy}.pdf`);
+    doc.save(`Reporte_Vencidos_${hoy.replace(/\//g, '-')}.pdf`);
   }
 
   async mostrarMensaje(mensaje: string, color: string) {
