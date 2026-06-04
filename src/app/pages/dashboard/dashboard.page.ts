@@ -211,18 +211,16 @@ export class DashboardPage {
     const fechaHora = fechaActual.toLocaleDateString('es-MX') + ' ' + 
                       fechaActual.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
-    // 1. LOGOS EN BASE64
+    // 1. LOGOS EN BASE64 (Solo 2 en total: Narro a la izq y el otro a la der)
     const logoIzquierdoBase64 = 'data:image/png;base64, PEGA_AQUI_EL_LOGO_UAAAN'; 
-    const logoDerecha1Base64 = 'data:image/png;base64, PEGA_AQUI_EL_LOGO_DERECHO_1'; 
-    const logoDerecha2Base64 = 'data:image/png;base64, PEGA_AQUI_EL_LOGO_DERECHO_2'; 
+    const logoDerechoBase64 = 'data:image/png;base64, PEGA_AQUI_EL_LOGO_DERECHO'; 
 
     try {
       // Logo Narro (Izquierda)
       doc.addImage(logoIzquierdoBase64, 'PNG', 15, 10, 22, 26);
       
-      // Logos Secretaría/Departamento (Derecha)
-      doc.addImage(logoDerecha1Base64, 'PNG', pageWidth - 55, 12, 18, 18);
-      doc.addImage(logoDerecha2Base64, 'PNG', pageWidth - 32, 12, 18, 18);
+      // Logo Secretaría/Departamento (Derecha) - Ajustado a un solo logo
+      doc.addImage(logoDerechoBase64, 'PNG', pageWidth - 35, 12, 20, 20);
     } catch (e) {
       console.warn('Error al cargar los logos.');
     }
@@ -238,7 +236,7 @@ export class DashboardPage {
     doc.text('DIVISIÓN DE INGENIERÍA', pageWidth / 2, 20, { align: 'center' });
     doc.text('DEPARTAMENTO DE CIENCIAS DEL SUELO', pageWidth / 2, 25, { align: 'center' });
 
-    // Textos de contacto más pequeños para que luzca como el original
+    // Textos de contacto más pequeños
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.text('Calzada Antonio Narro No. 1923, Colonia Buenavista', pageWidth / 2, 30, { align: 'center' });
@@ -253,7 +251,6 @@ export class DashboardPage {
     // 4. DATOS DE GENERACIÓN Y TÍTULO
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(12);
-    // Título centrado
     doc.text(titulo, pageWidth / 2, 54, { align: 'center' });
 
     // Usuario y Fecha a la derecha, debajo de la línea
@@ -264,7 +261,7 @@ export class DashboardPage {
   }
 
   generarPDFGeneral() {
-    const doc = new jsPDF('l', 'mm', 'a4'); // 'l' = Landscape (Horizontal)
+    const doc = new jsPDF('l', 'mm', 'a4'); 
     const hoy = new Date().toLocaleDateString('es-MX');
     const empleadoActual = localStorage.getItem('userName') || 'Admin';
 
@@ -272,34 +269,45 @@ export class DashboardPage {
 
     const mapaAgrupado = new Map();
     this.prestamosOriginales.forEach(p => {
-      const fecha = p.fecha_devolucion_pactada?.toDate().toLocaleDateString('es-MX') || 'N/A';
-      const llave = `${p.receptor_id}_${fecha}_${p.estado}`;
+      // 1. Sacar Fecha de Préstamo real
+      const fechaPrestamo = p.fecha_prestamo?.toDate().toLocaleDateString('es-MX') || 'N/A';
+      
+      // 2. Determinar si es Carrera o Departamento
+      let carreraDepto = p.receptor_info_extra || 'N/A';
+      if (p.receptor_tipo === 'Profesor' || p.receptor_info_extra === 'Personal Docente') {
+         carreraDepto = p.autorizado_por_depto || 'CIENCIAS DEL SUELO';
+      }
+
+      // 3. Llave para agrupar por usuario, fecha de préstamo y estado
+      const llave = `${p.receptor_id}_${fechaPrestamo}_${p.estado}`;
 
       if (mapaAgrupado.has(llave)) {
         mapaAgrupado.get(llave).herramientas.push(p.herramienta_nombre);
       } else {
         mapaAgrupado.set(llave, {
+          matricula: p.receptor_id,
           nombre: p.receptor_nombre,
-          id: p.receptor_id,
-          info: p.receptor_info_extra || 'N/A',
+          carreraDepto: carreraDepto,
           herramientas: [p.herramienta_nombre],
-          fecha: fecha,
-          prestó: p.empleado_almacen || 'Admin',
+          fecha: fechaPrestamo,
+          presto: p.empleado_almacen || 'Admin',
           estado: (p.estado || 'Activo').toUpperCase()
         });
       }
     });
 
+    // Construir filas en el orden que pediste
     const filas = Array.from(mapaAgrupado.values()).map((g: any) => [
-      g.nombre, g.id, g.info, g.herramientas.join(', '), g.fecha, g.prestó, g.estado
+      g.matricula, g.nombre, g.carreraDepto, g.herramientas.join(', '), g.fecha, g.presto, g.estado
     ]);
 
     autoTable(doc, {
-      head: [['Alumno', 'Matrícula', 'Carrera', 'Herramientas', 'Fecha', 'Prestó', 'Estado']],
+      // Nuevos encabezados
+      head: [['Matrícula / ID', 'Nombre', 'Carrera / Depto', 'Herramientas', 'Fecha Préstamo', 'Prestó', 'Estado']],
       body: filas,
-      startY: 62, // Empezar la tabla en Y=62 para que no toque el título (Y=38)
+      startY: 62, 
       theme: 'striped',
-      styles: { fontSize: 9, halign: 'center' },
+      styles: { fontSize: 8, halign: 'center' },
       headStyles: { fillColor: [0, 0, 0] } 
     });
 
@@ -307,7 +315,7 @@ export class DashboardPage {
   }
   
   generarPDFVencidos() {
-    const doc = new jsPDF('l', 'mm', 'a4'); // 'l' = Landscape (Horizontal)
+    const doc = new jsPDF('l', 'mm', 'a4'); 
     const hoy = new Date().toLocaleDateString('es-MX');
     const empleadoActual = localStorage.getItem('userName') || 'Admin';
 
@@ -317,38 +325,48 @@ export class DashboardPage {
     const mapaAgrupado = new Map();
 
     vencidos.forEach(p => {
-      const fecha = p.fecha_devolucion_pactada?.toDate().toLocaleDateString('es-MX') || 'N/A';
-      const llave = `${p.receptor_id}_${fecha}`;
+      // 1. Sacar Fecha de Préstamo real
+      const fechaPrestamo = p.fecha_prestamo?.toDate().toLocaleDateString('es-MX') || 'N/A';
+      
+      // 2. Determinar Carrera o Departamento
+      let carreraDepto = p.receptor_info_extra || 'N/A';
+      if (p.receptor_tipo === 'Profesor' || p.receptor_info_extra === 'Personal Docente') {
+         carreraDepto = p.autorizado_por_depto || 'CIENCIAS DEL SUELO';
+      }
+
+      const llave = `${p.receptor_id}_${fechaPrestamo}`;
 
       if (mapaAgrupado.has(llave)) {
         mapaAgrupado.get(llave).herramientas.push(p.herramienta_nombre);
       } else {
         mapaAgrupado.set(llave, {
+          matricula: p.receptor_id,
           nombre: p.receptor_nombre,
-          id: p.receptor_id,
+          carreraDepto: carreraDepto,
           herramientas: [p.herramienta_nombre],
-          fecha: fecha,
-          prestó: p.empleado_almacen || 'Admin'
+          fecha: fechaPrestamo,
+          presto: p.empleado_almacen || 'Admin',
+          estado: 'VENCIDO'
         });
       }
     });
 
     const filas = Array.from(mapaAgrupado.values()).map((g: any) => [
-      g.nombre, g.id, g.herramientas.join(', '), g.fecha, g.prestó
+      g.matricula, g.nombre, g.carreraDepto, g.herramientas.join(', '), g.fecha, g.presto, g.estado
     ]);
 
     autoTable(doc, {
-      head: [['Alumno', 'Matrícula', 'Carrera', 'Herramientas (Vencidas)', 'Vencimiento', 'Prestó']],
+      head: [['Matrícula / ID', 'Nombre', 'Carrera / Depto', 'Herramientas', 'Fecha Préstamo', 'Prestó', 'Estado']],
       body: filas,
-      startY: 62, // Empezar la tabla en Y=62 para que no toque el título (Y=38)
+      startY: 62, 
       theme: 'striped',
-      styles: { fontSize: 9, halign: 'center' },
+      styles: { fontSize: 8, halign: 'center' },
       headStyles: { fillColor: [0, 0, 0] } 
     });
 
     doc.save(`Reporte_Vencidos_${hoy.replace(/\//g, '-')}.pdf`);
   }
-
+  
   async mostrarMensaje(mensaje: string, color: string) {
     const toast = await this.toastController.create({ message: mensaje, duration: 3000, color: color });
     await toast.present();
