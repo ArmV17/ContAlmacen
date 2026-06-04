@@ -211,47 +211,43 @@ export class DashboardPage {
     const fechaHora = fechaActual.toLocaleDateString('es-MX') + ' ' + 
                       fechaActual.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
-    // 1. Logo de la Universidad
-    // Asegúrate de tener 'logo.png' en tu carpeta src/assets/ o en la raíz pública
-    const logo = new Image();
-    logo.src = 'assets/Logo.png';
+    // 1. SOLUCIÓN DEL LOGO: Usa Base64
+    // Borra el texto de abajo y pega tu cadena Base64 real (comenzará con 'data:image/png;base64,...')
+    const logoBase64 = 'data:image/png;base64, PEGA_AQUI_TODO_TU_CODIGO_BASE_64'; 
+    
     try {
-      doc.addImage(logo, 'PNG', 15, 10, 22, 26);
+      doc.addImage(logoBase64, 'PNG', 15, 10, 22, 26);
     } catch (e) {
       console.warn('Error al cargar el logo en el PDF.');
     }
 
-    // 2. Textos Institucionales
+    // 2. Textos Institucionales (Sin "UAAAN" y en color Negro)
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(0, 0, 0); // Negro
     doc.text('Universidad Autónoma Agraria Antonio Narro', pageWidth / 2, 16, { align: 'center' });
     
-    doc.setFontSize(12);
-    doc.text('UAAAN', pageWidth / 2, 22, { align: 'center' });
-    
     doc.setFont('helvetica', 'normal');
-    doc.text('Departamento Ciencias del Suelo', pageWidth / 2, 28, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text('Departamento Ciencias del Suelo', pageWidth / 2, 22, { align: 'center' });
 
-    // 3. Título del Reporte
+    // 3. Título del Reporte (Negro)
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(15);
-    doc.setTextColor(30, 58, 138); // Azul institucional
-    doc.text(titulo, pageWidth / 2, 38, { align: 'center' });
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0); // Negro
+    doc.text(titulo, pageWidth / 2, 32, { align: 'center' });
 
     // 4. Datos Dinámicos del Generador
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.setTextColor(80, 80, 80);
+    doc.setTextColor(80, 80, 80); // Gris oscuro para que no robe atención
     doc.text(`Generado por: ${usuario}`, pageWidth - 15, 16, { align: 'right' });
     doc.text(`Fecha y hora: ${fechaHora}`, pageWidth - 15, 21, { align: 'right' });
   }
 
   generarPDFGeneral() {
-    const doc = new jsPDF('l', 'mm', 'a4'); 
+    const doc = new jsPDF('p', 'mm', 'a4'); // 'p' = Portrait (Vertical)
     const hoy = new Date().toLocaleDateString('es-MX');
-    
-    // Obtener dinámicamente el nombre de quien inició sesión
     const empleadoActual = localStorage.getItem('userName') || 'Admin';
 
     this.configurarCabeceraPDF(doc, 'REPORTE GENERAL DE ALMACÉN', empleadoActual);
@@ -283,16 +279,17 @@ export class DashboardPage {
     autoTable(doc, {
       head: [['Nombre', 'ID', 'Info', 'Herramientas', 'Fecha', 'Prestó', 'Estado']],
       body: filas,
-      startY: 48, // Ajustado para no encimarse con el logo
+      startY: 40, 
       theme: 'striped',
-      styles: { fontSize: 8, halign: 'center' }
+      styles: { fontSize: 8, halign: 'center' },
+      headStyles: { fillColor: [0, 0, 0] } // Cabecera de tabla en Negro
     });
 
     doc.save(`Reporte_General_${hoy.replace(/\//g, '-')}.pdf`);
   }
   
   generarPDFVencidos() {
-    const doc = new jsPDF('l', 'mm', 'a4'); 
+    const doc = new jsPDF('p', 'mm', 'a4'); // 'p' = Portrait (Vertical)
     const hoy = new Date().toLocaleDateString('es-MX');
     const empleadoActual = localStorage.getItem('userName') || 'Admin';
 
@@ -301,10 +298,8 @@ export class DashboardPage {
     const vencidos = this.prestamosOriginales.filter(p => p.estado === 'Vencido');
     const mapaAgrupado = new Map();
 
-    // Lógica para agrupar por usuario y fecha
     vencidos.forEach(p => {
       const fecha = p.fecha_devolucion_pactada?.toDate().toLocaleDateString('es-MX') || 'N/A';
-      // La llave define qué hace que se junten (mismo ID y misma Fecha)
       const llave = `${p.receptor_id}_${fecha}`;
 
       if (mapaAgrupado.has(llave)) {
@@ -325,12 +320,12 @@ export class DashboardPage {
     ]);
 
     autoTable(doc, {
-      head: [['Nombre', 'ID', 'Herramientas (Vencidas)', 'Fecha Vencimiento', 'Prestó']],
+      head: [['Nombre', 'ID', 'Herramientas (Vencidas)', 'Vencimiento', 'Prestó']],
       body: filas,
-      startY: 48, 
+      startY: 40, 
       theme: 'striped',
       styles: { fontSize: 8, halign: 'center' },
-      headStyles: { fillColor: [153, 27, 27] } // Rojo oscuro para resaltar que es vencido
+      headStyles: { fillColor: [0, 0, 0] } // Cabecera de tabla en Negro
     });
 
     doc.save(`Reporte_Vencidos_${hoy.replace(/\//g, '-')}.pdf`);
