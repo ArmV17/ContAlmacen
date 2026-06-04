@@ -203,10 +203,61 @@ export class DashboardPage {
     }
   }
 
+  configurarCabeceraPDF(doc: any, titulo: string, usuario: string) {
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Obtener fecha y hora exactas
+    const fechaHora = new Date().toLocaleString('es-MX', { 
+      year: 'numeric', month: '2-digit', day: '2-digit', 
+      hour: '2-digit', minute: '2-digit' 
+    });
+
+    // 1. Logo de la Universidad
+    // Asegúrate de tener 'logo.png' en tu carpeta src/assets/
+    const logo = new Image();
+    logo.src = 'assets/logo.png'; 
+    try {
+      // addImage(imagen, formato, X, Y, Ancho, Alto)
+      doc.addImage(logo, 'PNG', 15, 10, 22, 26);
+    } catch (e) {
+      console.warn('Error al cargar el logo en el PDF.');
+    }
+
+    // 2. Textos Institucionales (Centrados)
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Universidad Autónoma Agraria Antonio Narro', pageWidth / 2, 16, { align: 'center' });
+    
+    doc.setFontSize(12);
+    doc.text('UAAAN', pageWidth / 2, 22, { align: 'center' });
+    
+    doc.setFont('helvetica', 'normal');
+    doc.text('Departamento Ciencias del Suelo', pageWidth / 2, 28, { align: 'center' });
+
+    // 3. Título Específico del Reporte
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    doc.setTextColor(30, 58, 138); // Color azul institucional
+    doc.text(titulo, pageWidth / 2, 38, { align: 'center' });
+
+    // 4. Datos de Generación (Alineados a la derecha)
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Generado por: ${usuario}`, pageWidth - 15, 16, { align: 'right' });
+    doc.text(`Fecha y hora: ${fechaHora}`, pageWidth - 15, 21, { align: 'right' });
+  }
+
   generarPDFGeneral() {
     const doc = new jsPDF('l', 'mm', 'a4'); 
     const hoy = new Date().toLocaleDateString('es-MX');
-    this.configurarCabeceraPDF(doc, 'REPORTE GENERAL DE ALMACÉN', hoy, "Jose Leonardo Villa Padron");
+    
+    // Obtenemos el nombre del operador que inició sesión
+    const empleadoActual = localStorage.getItem('userName') || 'Admin';
+
+    // Llamamos a la cabecera enviando solo doc, titulo y usuario
+    this.configurarCabeceraPDF(doc, 'REPORTE GENERAL DE ALMACÉN', empleadoActual);
 
     const mapaAgrupado = new Map();
     this.prestamosOriginales.forEach(p => {
@@ -235,14 +286,14 @@ export class DashboardPage {
     autoTable(doc, {
       head: [['Nombre', 'ID', 'Info', 'Herramientas', 'Fecha', 'Prestó', 'Estado']],
       body: filas,
-      startY: 45,
+      startY: 48, // Ajustado para dar espacio a la cabecera más grande
       theme: 'striped',
       styles: { fontSize: 8, halign: 'center' }
     });
 
-    doc.save(`Reporte_General_${hoy}.pdf`);
+    doc.save(`Reporte_General_${hoy.replace(/\//g, '-')}.pdf`);
   }
-
+  
   generarPDFVencidos() {
     const doc = new jsPDF('l', 'mm', 'a4'); 
     const hoy = new Date().toLocaleDateString('es-MX');
@@ -263,14 +314,6 @@ export class DashboardPage {
     });
 
     doc.save(`Reporte_Vencidos_${hoy}.pdf`);
-  }
-
-  private configurarCabeceraPDF(doc: jsPDF, titulo: string, fecha: string, emisor: string) {
-    doc.setFontSize(18);
-    doc.text('UAAAN - Control de Almacén', 14, 15);
-    doc.setFontSize(10);
-    doc.text(`${titulo} | Generado por: ${emisor} | Fecha: ${fecha}`, 14, 25);
-    doc.line(14, 30, 283, 30);
   }
 
   async mostrarMensaje(mensaje: string, color: string) {
