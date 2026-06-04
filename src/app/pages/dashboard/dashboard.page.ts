@@ -216,7 +216,7 @@ export class DashboardPage {
     
     try {
       // (imagen, formato, X, Y, Ancho, Alto)
-      doc.addImage(logoBase64, 'PNG', 15, 10, 20, 24);
+      doc.addImage(logoBase64, 'PNG', 15, 10, 22, 22);
     } catch (e) {
       console.warn('Error al cargar el logo en el PDF.');
     }
