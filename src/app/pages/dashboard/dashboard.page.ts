@@ -211,42 +211,45 @@ export class DashboardPage {
     const fechaHora = fechaActual.toLocaleDateString('es-MX') + ' ' + 
                       fechaActual.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
 
-    // 1. SOLUCIÓN DEL LOGO: Usa Base64
-    // Borra el texto de abajo y pega tu cadena Base64 real (comenzará con 'data:image/png;base64,...')
+    // 1. Logo Base64 (Ajustamos el tamaño para que no estorbe)
     const logoBase64 = 'data:image/png;base64, PEGA_AQUI_TODO_TU_CODIGO_BASE_64'; 
     
     try {
-      doc.addImage(logoBase64, 'PNG', 15, 10, 22, 26);
+      // (imagen, formato, X, Y, Ancho, Alto)
+      doc.addImage(logoBase64, 'PNG', 15, 10, 20, 24);
     } catch (e) {
       console.warn('Error al cargar el logo en el PDF.');
     }
 
-    // 2. Textos Institucionales (Sin "UAAAN" y en color Negro)
+    // 2. Textos Institucionales (Bien separados hacia abajo)
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0); // Negro
-    doc.text('Universidad Autónoma Agraria Antonio Narro', pageWidth / 2, 16, { align: 'center' });
+    // Bajamos a Y=18
+    doc.text('Universidad Autónoma Agraria Antonio Narro', pageWidth / 2, 18, { align: 'center' });
     
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(12);
-    doc.text('Departamento Ciencias del Suelo', pageWidth / 2, 22, { align: 'center' });
+    // Bajamos a Y=26
+    doc.text('Departamento Ciencias del Suelo', pageWidth / 2, 26, { align: 'center' });
 
-    // 3. Título del Reporte (Negro)
+    // 3. Título del Reporte 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
     doc.setTextColor(0, 0, 0); // Negro
-    doc.text(titulo, pageWidth / 2, 32, { align: 'center' });
+    // Bajamos a Y=38 para separarlo de la institución
+    doc.text(titulo, pageWidth / 2, 38, { align: 'center' });
 
     // 4. Datos Dinámicos del Generador
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.setTextColor(80, 80, 80); // Gris oscuro para que no robe atención
-    doc.text(`Generado por: ${usuario}`, pageWidth - 15, 16, { align: 'right' });
-    doc.text(`Fecha y hora: ${fechaHora}`, pageWidth - 15, 21, { align: 'right' });
+    doc.setTextColor(80, 80, 80); 
+    doc.text(`Generado por: ${usuario}`, pageWidth - 15, 18, { align: 'right' });
+    doc.text(`Fecha y hora: ${fechaHora}`, pageWidth - 15, 24, { align: 'right' });
   }
 
   generarPDFGeneral() {
-    const doc = new jsPDF('p', 'mm', 'a4'); // 'p' = Portrait (Vertical)
+    const doc = new jsPDF('l', 'mm', 'a4'); // 'l' = Landscape (Horizontal)
     const hoy = new Date().toLocaleDateString('es-MX');
     const empleadoActual = localStorage.getItem('userName') || 'Admin';
 
@@ -279,17 +282,17 @@ export class DashboardPage {
     autoTable(doc, {
       head: [['Nombre', 'ID', 'Info', 'Herramientas', 'Fecha', 'Prestó', 'Estado']],
       body: filas,
-      startY: 40, 
+      startY: 48, // Empezar la tabla en Y=48 para que no toque el título (Y=38)
       theme: 'striped',
-      styles: { fontSize: 8, halign: 'center' },
-      headStyles: { fillColor: [0, 0, 0] } // Cabecera de tabla en Negro
+      styles: { fontSize: 9, halign: 'center' },
+      headStyles: { fillColor: [0, 0, 0] } 
     });
 
     doc.save(`Reporte_General_${hoy.replace(/\//g, '-')}.pdf`);
   }
   
   generarPDFVencidos() {
-    const doc = new jsPDF('p', 'mm', 'a4'); // 'p' = Portrait (Vertical)
+    const doc = new jsPDF('l', 'mm', 'a4'); // 'l' = Landscape (Horizontal)
     const hoy = new Date().toLocaleDateString('es-MX');
     const empleadoActual = localStorage.getItem('userName') || 'Admin';
 
@@ -322,10 +325,10 @@ export class DashboardPage {
     autoTable(doc, {
       head: [['Nombre', 'ID', 'Herramientas (Vencidas)', 'Vencimiento', 'Prestó']],
       body: filas,
-      startY: 40, 
+      startY: 48, // Empezar la tabla en Y=48 para que no toque el título (Y=38)
       theme: 'striped',
-      styles: { fontSize: 8, halign: 'center' },
-      headStyles: { fillColor: [0, 0, 0] } // Cabecera de tabla en Negro
+      styles: { fontSize: 9, halign: 'center' },
+      headStyles: { fillColor: [0, 0, 0] } 
     });
 
     doc.save(`Reporte_Vencidos_${hoy.replace(/\//g, '-')}.pdf`);
