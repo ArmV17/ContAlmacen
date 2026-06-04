@@ -214,7 +214,7 @@ export class DashboardPage {
     // 1. Logo de la Universidad
     // Asegúrate de tener 'logo.png' en tu carpeta src/assets/ o en la raíz pública
     const logo = new Image();
-    logo.src = 'assets/logo.png'; 
+    logo.src = 'assets/Logo.png';
     try {
       doc.addImage(logo, 'PNG', 15, 10, 22, 26);
     } catch (e) {
