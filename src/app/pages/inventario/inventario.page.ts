@@ -185,8 +185,8 @@ export class InventarioPage {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.setTextColor(80, 80, 80); 
-    doc.text(`Generado por: ${usuario}`, pageWidth - 15, 48, { align: 'right' });
-    doc.text(`Fecha y hora: ${fechaHora}`, pageWidth - 15, 52, { align: 'right' });
+    doc.text(`${usuario}`, pageWidth - 15, 48, { align: 'right' });
+    doc.text(`${fechaHora}`, pageWidth - 15, 52, { align: 'right' });
   }
   
   generarPDFInventario() {
