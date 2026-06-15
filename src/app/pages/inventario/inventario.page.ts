@@ -202,9 +202,9 @@ export class InventarioPage {
       herramienta.detallesPorTipo.forEach((detalle: any) => {
         
         // Lógica: Si detalle.tipo tiene contenido, lo concatenamos, si no, dejamos solo el nombre
-        const nombreCompleto = detalle.tipo && detalle.tipo.trim() !== '' 
-                              ? `${herramienta.nombre} ${detalle.tipo}` 
-                              : herramienta.nombre;
+        const nombreCompleto = (detalle.tipo && detalle.tipo.trim() !== '' && detalle.tipo.trim().toLowerCase() !== 'normal') 
+                       ? `${herramienta.nombre} ${detalle.tipo}` 
+                       : herramienta.nombre;
           
         cuerpoTabla.push([nombreCompleto, detalle.items.length]);
       });
