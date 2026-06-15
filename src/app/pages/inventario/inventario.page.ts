@@ -200,11 +200,13 @@ export class InventarioPage {
     const cuerpoTabla: any[] = [];
     this.herramientasAgrupadas.forEach((herramienta: any) => {
       herramienta.detallesPorTipo.forEach((detalle: any) => {
-        // Aquí concatenamos: nombre general + " " + el nombre específico de la variante
-        // Cambia 'detalle.tipo' por el nombre de la propiedad real donde guardas "Largo", "Corto", etc.
-        const nombreCompleto = `${herramienta.nombre} ${detalle.tipo || ''}`;
         
-        cuerpoTabla.push([nombreCompleto.trim(), detalle.items.length]);
+        // Lógica: Si detalle.tipo tiene contenido, lo concatenamos, si no, dejamos solo el nombre
+        const nombreCompleto = detalle.tipo && detalle.tipo.trim() !== '' 
+                               ? `${herramienta.nombre} ${detalle.tipo}` 
+                               : herramienta.nombre;
+        
+        cuerpoTabla.push([nombreCompleto, detalle.items.length]);
       });
     });
 
