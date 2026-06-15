@@ -92,12 +92,23 @@ export class NuevoPrestamoPage implements OnInit {
 
     if (id.length < 1) return;
 
+    // Función auxiliar para validar correo
+    const tieneCorreoValido = (usuario: any) => {
+      // Si el correo existe y empieza con 'sin_correo', es inválido
+      if (usuario.correo && usuario.correo.toLowerCase().startsWith('sin_correo')) {
+        this.mostrarMensaje('El usuario tiene un correo no válido (sin_correo)', 'danger');
+        return false;
+      }
+      return true;
+    };
+
     if (this.prestamo.tipoReceptor === 'alumno') {
-      // REGLA: Solo procesa si parece una matrícula (ej. 8 dígitos)
-      // Esto evita que si escaneas una herramienta aquí por error, el sistema intente buscarla
       if (id.length >= 8 && /^\d+$/.test(id)) { 
         const alumno = await this.almacenService.buscarAlumnoPorMatricula(id);
         if (alumno) {
+          // VALIDACIÓN AGREGADA
+          if (!tieneCorreoValido(alumno)) return;
+
           this.receptorEncontrado = alumno;
           this.prestamo.nombreReceptor = alumno.nombre;
           this.cantidadPrestamosActuales = await this.almacenService.contarPrestamosActivos(id);
@@ -105,13 +116,12 @@ export class NuevoPrestamoPage implements OnInit {
         }
       }
     } else {
-      // REGLA: Para profesores, buscamos coincidencias exactas en tu lista cargada
-      // Normalmente son IDs más cortos (ej. 4 dígitos)
-      const prof = this.listaMaestros.find(p => 
-        String(p.num_maestro).trim() === String(id)
-      );
+      const prof = this.listaMaestros.find(p => String(p.num_maestro).trim() === String(id));
       
       if (prof) {
+        // VALIDACIÓN AGREGADA
+        if (!tieneCorreoValido(prof)) return;
+
         this.receptorEncontrado = prof;
         this.prestamo.nombreReceptor = prof.nombre;
         this.materiasFiltradas = prof.materias || [];
@@ -220,6 +230,12 @@ export class NuevoPrestamoPage implements OnInit {
   }
 
   async finalizarPrestamo() {
+    // Bloqueo de seguridad preventivo
+    if (this.receptorEncontrado?.correo?.toLowerCase().startsWith('sin_correo')) {
+       this.mostrarMensaje('Acción bloqueada: Correo no válido registrado.', 'danger');
+       return;
+    }
+
     if (this.carritoHerramientas.length === 0 || !this.prestamo.materia || !this.prestamo.fechaEntrega) {
       this.mostrarMensaje('Completa los datos y la lista.', 'warning');
       return;

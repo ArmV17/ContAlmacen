@@ -30,6 +30,7 @@ import { AlmacenService } from '../../services/almacen.service';
     IonAccordion, IonItem, IonLabel
   ]
 })
+
 export class InventarioPage {
 
   herramientasOriginales: any[] = [];
@@ -190,32 +191,31 @@ export class InventarioPage {
   }
   
   generarPDFInventario() {
-    // 'p' indica que la hoja es Portrait (Vertical)
     const doc = new jsPDF('p', 'mm', 'a4'); 
     const hoy = new Date().toLocaleDateString('es-MX');
-    
-    // Obtenemos el usuario que inició sesión para el membrete
     const empleadoActual = localStorage.getItem('userName') || 'Admin';
 
-    // Llamamos a la cabecera oficial
     this.configurarCabeceraPDF(doc, 'REPORTE DE INVENTARIO', empleadoActual);
 
     const cuerpoTabla: any[] = [];
     this.herramientasAgrupadas.forEach((herramienta: any) => {
       herramienta.detallesPorTipo.forEach((detalle: any) => {
-        cuerpoTabla.push([herramienta.nombre, detalle.items.length]);
+        // Aquí concatenamos: nombre general + " " + el nombre específico de la variante
+        // Cambia 'detalle.tipo' por el nombre de la propiedad real donde guardas "Largo", "Corto", etc.
+        const nombreCompleto = `${herramienta.nombre} ${detalle.tipo || ''}`;
+        
+        cuerpoTabla.push([nombreCompleto.trim(), detalle.items.length]);
       });
     });
 
     autoTable(doc, {
-      head: [['Descripción de la Herramienta', 'Cantidad']],
+      head: [['Herramienta', 'Cantidad']],
       body: cuerpoTabla,
-      startY: 58, // Empezar más abajo para respetar el membrete oficial
-      margin: { top: 15, left: 15, right: 15 }, // Márgenes en caso de que ocupe varias hojas
+      startY: 58, 
+      margin: { top: 15, left: 15, right: 15 }, 
       theme: 'striped',
-      // Letra un poco más grande (9) porque al ser vertical y de 2 columnas hay buen espacio
       styles: { fontSize: 9, halign: 'center', cellPadding: 3 }, 
-      headStyles: { fillColor: [0, 0, 0] } // Cabecera de la tabla en color negro
+      headStyles: { fillColor: [0, 0, 0] }
     });
 
     doc.save(`Reporte_Inventario_${hoy.replace(/\//g, '-')}.pdf`);
