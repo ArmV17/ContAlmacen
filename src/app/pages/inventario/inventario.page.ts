@@ -203,9 +203,9 @@ export class InventarioPage {
         
         // Lógica: Si detalle.tipo tiene contenido, lo concatenamos, si no, dejamos solo el nombre
         const nombreCompleto = detalle.tipo && detalle.tipo.trim() !== '' 
-                               ? `${herramienta.nombre} ${detalle.tipo}` 
-                               : herramienta.nombre;
-        
+                              ? `${herramienta.nombre} ${detalle.tipo}` 
+                              : herramienta.nombre;
+          
         cuerpoTabla.push([nombreCompleto, detalle.items.length]);
       });
     });
