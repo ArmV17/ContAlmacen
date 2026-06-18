@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewChildren, QueryList } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ToastController, AlertController } from '@ionic/angular';
+import { IonicModule, ToastController, AlertController, IonInput } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import { 
   qrCodeOutline, arrowUndoOutline, calendarOutline, 
@@ -19,6 +19,12 @@ import { AlmacenService } from '../../services/almacen.service';
   imports: [IonicModule, CommonModule, FormsModule]
 })
 export class DevolucionesPage implements OnInit {
+
+  // Foco global de búsqueda de matrícula
+  @ViewChild('inputBusquedaGlobal') inputBusquedaGlobal!: IonInput;
+  
+  // Lista dinámica de los inputs de herramientas dentro de cada tarjeta
+  @ViewChildren('inputEscaneoHerramienta') inputsEscaneoHerramientas!: QueryList<IonInput>;
 
   busquedaId: string = '';
   prestamosAgrupados: any[] = [];
@@ -38,13 +44,17 @@ export class DevolucionesPage implements OnInit {
     });
   }
 
-  async ngOnInit() {
+  async ionViewDidEnter() {
     await this.cargarYAgruparPrestamos();
+    // Foco automático en la búsqueda global al entrar a la página
+    setTimeout(() => this.inputBusquedaGlobal?.setFocus(), 500);
   }
 
-  /**
-   * Obtiene todos los préstamos activos y los agrupa por Receptor
-   */
+  // Se cambia ngOnInit por ionViewDidEnter para asegurar que el DOM esté cargado para el ViewChild
+  async ngOnInit() {
+    // La carga se movió a ionViewDidEnter
+  }
+
   async cargarYAgruparPrestamos() {
     this.cargando = true;
     try {
@@ -85,18 +95,49 @@ export class DevolucionesPage implements OnInit {
     }
   }
 
+  // --- NUEVA LÓGICA DE SALTO DE FOCO ---
+
   /**
-   * Valida la herramienta. 
-   * Convierte a MAYÚSCULAS automáticamente al escribir o escanear con el Alacrity.
+   * Filtrar deudores por ID o Nombre (Al escribir o dar Enter en la búsqueda global)
    */
+  filtrarLista(eventoEnter: boolean = false) {
+    const busqueda = this.busquedaId.trim().toLowerCase();
+    
+    if (!busqueda) {
+      this.prestamosAgrupados = this.prestamosRespaldo;
+      return;
+    }
+    
+    this.prestamosAgrupados = this.prestamosRespaldo.filter(g => 
+      g.receptor_id.toLowerCase().includes(busqueda) || 
+      g.receptor_nombre.toLowerCase().includes(busqueda)
+    );
+
+    // Si presionaron Enter y encontraron a la persona, pasamos el foco a su caja de herramientas
+    if (eventoEnter && this.prestamosAgrupados.length > 0) {
+      // Damos un pequeño respiro para que Angular renderice la tarjeta si estaba oculta
+      setTimeout(() => {
+        // Enfocus al primer input de la lista de resultados
+        const primerInputHerramienta = this.inputsEscaneoHerramientas.first;
+        if (primerInputHerramienta) {
+          primerInputHerramienta.setFocus();
+        }
+      }, 300);
+    } else if (eventoEnter && this.prestamosAgrupados.length === 0) {
+       this.mostrarMensaje('No se encontró al deudor', 'warning');
+       this.busquedaId = '';
+       this.inputBusquedaGlobal?.setFocus();
+    }
+  }
+
+  // ==========================================
+
   validarHerramientaEnGrupo(grupo: any) {
-    // Normalización inmediata a Mayúsculas
     grupo.inputValidacion = grupo.inputValidacion.toUpperCase().trim();
     const codigo = grupo.inputValidacion;
 
     if (!codigo) return;
 
-    // Buscamos la herramienta en el préstamo de esta persona
     const herramienta = grupo.datos_devolucion.find((h: any) => h.codigo === codigo);
 
     if (herramienta) {
@@ -105,23 +146,29 @@ export class DevolucionesPage implements OnInit {
         this.mostrarMensaje(`Validado: ${herramienta.nombre}`, 'success');
       }
       
-      // Limpiamos el campo para el siguiente escaneo automático
       grupo.inputValidacion = '';
       this.actualizarEstadosGrupo(grupo);
+
+      // Mantenemos el foco en este mismo grupo para seguir escaneando herramientas
+      setTimeout(() => {
+        const index = this.prestamosAgrupados.findIndex(g => g.receptor_id === grupo.receptor_id);
+        if (index !== -1) {
+           const inputCorrespondiente = this.inputsEscaneoHerramientas.toArray()[index];
+           if(inputCorrespondiente) inputCorrespondiente.setFocus();
+        }
+      }, 100);
+
+    } else {
+       this.mostrarMensaje('Código no pertenece a este deudor', 'danger');
+       grupo.inputValidacion = '';
     }
   }
 
-  /**
-   * Actualiza los estados de los botones del grupo
-   */
   actualizarEstadosGrupo(grupo: any) {
     grupo.alMenosUnaValidada = grupo.datos_devolucion.some((h: any) => h.validado);
     grupo.todoValidado = grupo.datos_devolucion.every((h: any) => h.validado);
   }
 
-  /**
-   * Devolución Parcial/Individual: Entrega solo una herramienta específica
-   */
   async devolverUna(grupo: any, herramienta: any) {
     this.cargando = true;
     try {
@@ -129,13 +176,13 @@ export class DevolucionesPage implements OnInit {
       if (res.exito) {
         this.mostrarMensaje(`Entregada: ${herramienta.nombre}`, 'success');
         
-        // La quitamos de la lista visual
         grupo.datos_devolucion = grupo.datos_devolucion.filter((h: any) => h.prestamoId !== herramienta.prestamoId);
         this.actualizarEstadosGrupo(grupo);
         
-        // Si no quedan más herramientas, borramos el grupo de la vista
         if (grupo.datos_devolucion.length === 0) {
           this.prestamosAgrupados = this.prestamosAgrupados.filter(g => g.receptor_id !== grupo.receptor_id);
+          this.busquedaId = ''; // Limpiamos la búsqueda y regresamos al inicio
+          setTimeout(() => this.inputBusquedaGlobal?.setFocus(), 500);
         }
       }
     } catch (e) {
@@ -145,10 +192,6 @@ export class DevolucionesPage implements OnInit {
     }
   }
 
-  /**
-   * Devolución de Selección: Entrega todas las marcadas en verde.
-   * Si faltan herramientas, estas se quedan en la lista como pendientes.
-   */
   async recibirSeleccion(grupo: any) {
     const seleccionadas = grupo.datos_devolucion.filter((h: any) => h.validado);
     if (seleccionadas.length === 0) return;
@@ -161,16 +204,16 @@ export class DevolucionesPage implements OnInit {
         const res = await this.almacenService.registrarDevolucion(h.prestamoId, h.herramientaId);
         if (res.exito) {
           exitos++;
-          // Quitamos las herramientas procesadas de la lista
           grupo.datos_devolucion = grupo.datos_devolucion.filter((item: any) => item.prestamoId !== h.prestamoId);
         }
       }
 
       this.mostrarMensaje(`Se entregaron ${exitos} herramientas correctamente`, 'success');
       
-      // Si el deudor ya no debe nada, quitamos el grupo
       if (grupo.datos_devolucion.length === 0) {
         this.prestamosAgrupados = this.prestamosAgrupados.filter(g => g.receptor_id !== grupo.receptor_id);
+        this.busquedaId = ''; // Limpiamos la búsqueda y regresamos al inicio
+        setTimeout(() => this.inputBusquedaGlobal?.setFocus(), 500);
       }
       
       this.actualizarEstadosGrupo(grupo);
@@ -179,21 +222,6 @@ export class DevolucionesPage implements OnInit {
     } finally {
       this.cargando = false;
     }
-  }
-
-  /**
-   * Filtrar deudores por ID o Nombre
-   */
-  filtrarLista() {
-    const busqueda = this.busquedaId.trim().toLowerCase();
-    if (!busqueda) {
-      this.prestamosAgrupados = this.prestamosRespaldo;
-      return;
-    }
-    this.prestamosAgrupados = this.prestamosRespaldo.filter(g => 
-      g.receptor_id.toLowerCase().includes(busqueda) || 
-      g.receptor_nombre.toLowerCase().includes(busqueda)
-    );
   }
 
   escanearCodigo(event?: any) {

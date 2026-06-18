@@ -23,13 +23,15 @@ import { AlmacenService } from '../../services/almacen.service';
 })
 export class NuevoPrestamoPage implements OnInit {
 
-  // Referencia al input de herramientas para controlar el foco con el escáner
+  // Referencias de los inputs
+  @ViewChild('inputMatricula') inputMatricula!: IonInput;
+  @ViewChild('inputFecha') inputFecha!: IonInput; // Agregado para controlar el calendario
   @ViewChild('inputHerramienta') inputHerramienta!: IonInput;
 
   // Estructura del préstamo
   prestamo: any = {
-    tipoReceptor: 'alumno',   // 'alumno' o 'profesor'
-    identificador: '',        // Matrícula o N° Empleado
+    tipoReceptor: 'alumno',   
+    identificador: '',        
     nombreReceptor: '',
     profesorAutoriza: null, 
     materia: '',
@@ -49,7 +51,6 @@ export class NuevoPrestamoPage implements OnInit {
   carritoHerramientas: any[] = []; 
   cantidadPrestamosActuales: number = 0;
 
-  // El nombre se recupera dinámicamente del login
   empleadoActual = localStorage.getItem('userName') || 'Admin';
 
   constructor(
@@ -57,10 +58,9 @@ export class NuevoPrestamoPage implements OnInit {
     private almacenService: AlmacenService
   ) {
     addIcons({ 
-      saveOutline, personOutline, buildOutline, barcodeOutline, 
-      menu, alertCircle, checkmarkCircle, sendOutline, 
-      qrCodeOutline, hammerOutline, trashOutline, addOutline, 
-      constructOutline, addCircleOutline, listOutline, trashBinOutline,
+      saveOutline, personOutline, buildOutline, barcodeOutline, menu, alertCircle, 
+      checkmarkCircle, sendOutline, qrCodeOutline, hammerOutline, trashOutline, 
+      addOutline, constructOutline, addCircleOutline, listOutline, trashBinOutline,
       chevronDownOutline, chevronUpOutline, refreshOutline
     });
   }
@@ -68,35 +68,73 @@ export class NuevoPrestamoPage implements OnInit {
   async ngOnInit() {
     await this.cargarInventario();
     await this.cargarMaestros();
+    
+    // Autofocus al cargar la página en la matrícula
+    setTimeout(() => this.inputMatricula?.setFocus(), 500);
   }
 
   async cargarInventario() {
-    try {
-      this.listaInventario = await this.almacenService.obtenerInventario();
-    } catch (error) { console.error("Error inventario:", error); }
+    try { this.listaInventario = await this.almacenService.obtenerInventario(); } catch (e) { console.error(e); }
   }
 
   async cargarMaestros() {
-    try {
-      this.listaMaestros = await this.almacenService.obtenerMaestros();
-    } catch (error) { console.error("Error maestros:", error); }
+    try { this.listaMaestros = await this.almacenService.obtenerMaestros(); } catch (e) { console.error(e); }
   }
 
-  /**
-   * Verifica al receptor. Si se encuentra, el foco salta automáticamente al input de herramientas
-   * para empezar a usar el escáner Alacrity.
-   */
+  // ==========================================
+  // FLUJO DE INTERACCIÓN SECUENCIAL
+  // ==========================================
+
+  async alValidarMatricula() {
+    // Al dar Enter en la matrícula, solo validamos
+    await this.verificarReceptor();
+  }
+
+  onProfesorChange() {
+    if (this.prestamo.profesorAutoriza) {
+      this.materiasFiltradas = this.prestamo.profesorAutoriza.materias || [];
+      this.prestamo.materia = ''; 
+    }
+  }
+
+  alSeleccionarMateria() {
+    // Cuando el usuario elige la materia, mandamos a abrir el calendario de la fecha
+    setTimeout(() => {
+      this.abrirCalendario();
+    }, 400); 
+  }
+
+  async abrirCalendario() {
+    try {
+      const nativeInput = await this.inputFecha.getInputElement();
+      if (nativeInput && typeof nativeInput.showPicker === 'function') {
+        nativeInput.showPicker();
+      }
+    } catch (e) {
+      console.log("No se pudo desplegar el calendario nativo", e);
+    }
+  }
+
+  alSeleccionarFecha() {
+    // Al elegir la fecha, saltamos directamente al escáner de herramientas
+    if (this.prestamo.fechaEntrega) {
+      setTimeout(() => this.inputHerramienta?.setFocus(), 300);
+    }
+  }
+
+  // ==========================================
+  // LÓGICA DE NEGOCIO Y PRÉSTAMOS
+  // ==========================================
+
   async verificarReceptor() {
     const id = this.prestamo.identificador.trim();
     this.receptorEncontrado = null;
 
     if (id.length < 1) return;
 
-    // Función auxiliar para validar correo
     const tieneCorreoValido = (usuario: any) => {
-      // Si el correo existe y empieza con 'sin_correo', es inválido
       if (usuario.correo && usuario.correo.toLowerCase().startsWith('sin_correo')) {
-        this.mostrarMensaje('El usuario tiene un correo no válido (sin_correo)', 'danger');
+        this.mostrarMensaje('Usuario con correo no válido (sin_correo)', 'danger');
         return false;
       }
       return true;
@@ -105,48 +143,26 @@ export class NuevoPrestamoPage implements OnInit {
     if (this.prestamo.tipoReceptor === 'alumno') {
       if (id.length >= 8 && /^\d+$/.test(id)) { 
         const alumno = await this.almacenService.buscarAlumnoPorMatricula(id);
-        if (alumno) {
-          // VALIDACIÓN AGREGADA
-          if (!tieneCorreoValido(alumno)) return;
-
+        if (alumno && tieneCorreoValido(alumno)) {
           this.receptorEncontrado = alumno;
           this.prestamo.nombreReceptor = alumno.nombre;
           this.cantidadPrestamosActuales = await this.almacenService.contarPrestamosActivos(id);
-          this.setFocoHerramienta();
         }
       }
     } else {
       const prof = this.listaMaestros.find(p => String(p.num_maestro).trim() === String(id));
-      
-      if (prof) {
-        // VALIDACIÓN AGREGADA
-        if (!tieneCorreoValido(prof)) return;
-
+      if (prof && tieneCorreoValido(prof)) {
         this.receptorEncontrado = prof;
         this.prestamo.nombreReceptor = prof.nombre;
         this.materiasFiltradas = prof.materias || [];
         this.cantidadPrestamosActuales = await this.almacenService.contarPrestamosActivos(id);
-        this.setFocoHerramienta();
       }
     }
   }
 
-  setFocoHerramienta() {
-    setTimeout(() => {
-      this.inputHerramienta?.setFocus();
-    }, 400);
-  }
-
-  /**
-   * Procesa la lectura del escáner Alacrity (Evento Enter automático)
-   */
-  /**
- * Procesa la lectura del escáner.
- */
   async buscarHerramientaEscaneada() {
-    // SEGURIDAD: Si por alguna razón el cursor llega aquí sin receptor, no hace nada
     if (!this.receptorEncontrado) {
-      this.mostrarMensaje('Primero debe identificar al alumno o profesor', 'warning');
+      this.mostrarMensaje('Primero identifica al receptor', 'warning');
       this.codigoBusqueda = '';
       return;
     }
@@ -156,34 +172,27 @@ export class NuevoPrestamoPage implements OnInit {
     await this.buscarHerramienta();
 
     if (this.herramientaEncontrada) {
-      if (!this.herramientaEncontrada.prestada && this.herramientaEncontrada.estado !== 'Mantenimiento') {
-        this.agregarAlCarrito(); // Se añade automáticamente con el "Enter" del Alacrity
-      }
+      this.agregarAlCarrito(); 
     } else {
-      this.mostrarMensaje('Código no encontrado', 'warning');
       this.codigoBusqueda = '';
-      this.inputHerramienta.setFocus();
+      this.inputHerramienta?.setFocus();
     }
   }
 
   async buscarHerramienta() {
-    if (!this.codigoBusqueda) {
-      this.herramientaEncontrada = null;
-      return;
-    }
-
-    const encontrada = this.listaInventario.find(
-      h => h.num_herramienta.toUpperCase() === this.codigoBusqueda.trim().toUpperCase()
-    );
+    const encontrada = this.listaInventario.find(h => h.num_herramienta.toUpperCase() === this.codigoBusqueda.trim().toUpperCase());
     
     if (encontrada) {
       this.herramientaEncontrada = encontrada;
       if (encontrada.prestada || encontrada.estado === 'Prestado') {
         this.mostrarMensaje('Esta herramienta ya está prestada.', 'warning');
+        this.herramientaEncontrada = null;
       } else if (encontrada.estado === 'Mantenimiento') {
         this.mostrarMensaje('Herramienta en mantenimiento.', 'warning');
+        this.herramientaEncontrada = null;
       }
     } else {
+      this.mostrarMensaje('Herramienta no disponible o inexistente', 'warning');
       this.herramientaEncontrada = null;
     }
   }
@@ -195,7 +204,7 @@ export class NuevoPrestamoPage implements OnInit {
     if (existe) {
       this.mostrarMensaje('Ya agregaste esta herramienta.', 'warning');
       this.codigoBusqueda = '';
-      this.inputHerramienta.setFocus();
+      this.inputHerramienta?.setFocus();
       return;
     }
 
@@ -206,23 +215,17 @@ export class NuevoPrestamoPage implements OnInit {
 
     if (tieneLimite && (this.cantidadPrestamosActuales + this.carritoHerramientas.length) >= 5) {
       this.mostrarMensaje('Límite de 5 herramientas alcanzado.', 'danger');
+      this.codigoBusqueda = '';
+      this.inputHerramienta?.setFocus();
       return;
     }
 
     this.carritoHerramientas.push(this.herramientaEncontrada);
     this.mostrarMensaje(`${this.herramientaEncontrada.nombre_herramienta} en lista`, 'success');
     
-    // Limpieza y preparación para el siguiente escaneo automático
     this.codigoBusqueda = '';
     this.herramientaEncontrada = null;
     setTimeout(() => this.inputHerramienta?.setFocus(), 100);
-  }
-
-  onProfesorChange() {
-    if (this.prestamo.profesorAutoriza) {
-      this.materiasFiltradas = this.prestamo.profesorAutoriza.materias || [];
-      this.prestamo.materia = ''; 
-    }
   }
 
   quitarDelCarrito(index: number) {
@@ -230,7 +233,6 @@ export class NuevoPrestamoPage implements OnInit {
   }
 
   async finalizarPrestamo() {
-    // Bloqueo de seguridad preventivo
     if (this.receptorEncontrado?.correo?.toLowerCase().startsWith('sin_correo')) {
        this.mostrarMensaje('Acción bloqueada: Correo no válido registrado.', 'danger');
        return;
@@ -301,15 +303,12 @@ export class NuevoPrestamoPage implements OnInit {
     this.codigoBusqueda = '';
     this.herramientaEncontrada = null;
     this.materiasFiltradas = [];
+
+    setTimeout(() => this.inputMatricula?.setFocus(), 500);
   }
 
-  async mostrarMensaje(mensaje: string, color: string) {
-    const toast = await this.toastController.create({
-      message: mensaje,
-      duration: 2000,
-      color: color,
-      position: 'bottom'
-    });
-    toast.present();
+  async mostrarMensaje(m: string, c: string) {
+    const t = await this.toastController.create({ message: m, duration: 2000, color: c, position: 'bottom' });
+    t.present();
   }
 }

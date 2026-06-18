@@ -7,27 +7,27 @@
 <ion-content class="fondo-claro ion-padding">
   <div class="contenedor-maximo ion-margin-top">
 
-    <!-- BUSCADOR DE DEUDORES -->
     <ion-card class="tarjeta-formulario animated fadeIn">
       <ion-card-content>
         <ion-item class="input-limpio" lines="none">
           <ion-label position="stacked">Matrícula o ID Maestro</ion-label>
-          <ion-input [(ngModel)]="busquedaId" 
-                     (ionInput)="filtrarLista()" 
-                     placeholder="Buscar deudor..."
-                     inputmode="numeric">
+          <ion-input 
+            #inputBusquedaGlobal
+            [(ngModel)]="busquedaId" 
+            (ionInput)="filtrarLista(false)" 
+            (keyup.enter)="filtrarLista(true)"
+            placeholder="Buscar deudor..."
+            inputmode="numeric">
           </ion-input>
         </ion-item>
       </ion-card-content>
     </ion-card>
 
-    <!-- ESTADO VACÍO -->
     <div *ngIf="prestamosAgrupados.length === 0 && !cargando" class="ion-text-center ion-padding animated fadeIn">
       <ion-icon name="checkmark-done-circle-outline" size="large" color="success" style="font-size: 80px; opacity: 0.5;"></ion-icon>
       <p style="color: #64748b; font-weight: 600;">No hay herramientas pendientes</p>
     </div>
 
-    <!-- LISTADO DE PRÉSTAMOS ACTIVOS -->
     <h2 class="subtitulo-gestion" *ngIf="prestamosAgrupados.length > 0">Préstamos Activos</h2>
 
     <ion-list class="lista-transparente">
@@ -40,19 +40,19 @@
             <span class="tipo-badge">{{ grupo.receptor_tipo | uppercase }}</span>
           </div>
 
-          <!-- CONTENEDOR DE VALIDACIÓN (ESCÁNER O MANUAL) -->
           <div class="seccion-validacion-devolucion">
             <ion-item class="input-limpio mini" lines="none">
               <ion-icon name="barcode-outline" slot="start" color="primary"></ion-icon>
-              <!-- Conversión automática a mayúsculas mediante (ionInput) -->
-              <ion-input [(ngModel)]="grupo.inputValidacion" 
-                         (ionInput)="validarHerramientaEnGrupo(grupo)" 
-                         (keyup.enter)="validarHerramientaEnGrupo(grupo)"
-                         placeholder="Escanee o escriba código (Ej: PAL-01)">
+              
+              <ion-input 
+                #inputEscaneoHerramienta
+                [(ngModel)]="grupo.inputValidacion" 
+                (ionInput)="validarHerramientaEnGrupo(grupo)" 
+                (keyup.enter)="validarHerramientaEnGrupo(grupo)"
+                placeholder="Escanee o escriba código (Ej: PAL-01)">
               </ion-input>
             </ion-item>
 
-            <!-- LISTA DE HERRAMIENTAS DEL PRÉSTAMO -->
             <div class="lista-check-herramientas">
               <div *ngFor="let h of grupo.datos_devolucion" 
                    class="check-item-devolucion" 
@@ -67,7 +67,6 @@
                   </div>
                 </div>
                 
-                <!-- BOTÓN INDIVIDUAL PARA ENTREGA PARCIAL INMEDIATA -->
                 <ion-button *ngIf="h.validado" 
                             fill="clear" 
                             size="small" 
@@ -82,7 +81,6 @@
           </div>
         </ion-label>
 
-        <!-- BOTÓN DE ENTREGA GRUPAL DINÁMICO -->
         <ion-button slot="end" 
                     class="boton-recibir-grupo" 
                     color="success"

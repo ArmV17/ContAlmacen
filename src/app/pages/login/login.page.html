@@ -19,22 +19,27 @@
           <ion-item lines="none" class="input-item">
             <ion-icon name="person-outline" slot="start"></ion-icon>
             <ion-input 
+              #inputEmpleado 
               label="Número de Empleado" 
               labelPlacement="floating" 
               type="text" 
               [(ngModel)]="numEmpleado"
-              placeholder="Ej. 8125">
+              placeholder="Ej. 8125"
+              autofocus="true" 
+              (keyup.enter)="focusPassword()">
             </ion-input>
           </ion-item>
 
           <ion-item lines="none" class="input-item ion-margin-top">
             <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
             <ion-input 
+              #inputPassword 
               label="Contraseña" 
               labelPlacement="floating" 
               type="password" 
               [(ngModel)]="password"
-              placeholder="••••••••">
+              placeholder="••••••••"
+              (keyup.enter)="entrar()">
             </ion-input>
           </ion-item>
 
