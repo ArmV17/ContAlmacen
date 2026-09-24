@@ -26,7 +26,6 @@
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
-  /* Misma tipografía exacta que Dashboard y Nuevo Préstamo */
   ion-title {
     font-weight: 800;
     font-size: 1.2rem;
@@ -87,7 +86,7 @@
     margin-bottom: 12px;
 
     &:focus-within {
-      transform: none; /* Sin rebote para los inputs pequeños, solo glow */
+      transform: none; 
     }
   }
 }
@@ -114,9 +113,15 @@
   box-shadow: 0 4px 12px -4px rgba(0,0,0,0.05);
   transition: all 0.4s var(--spring-physics);
 
-  &:hover {
-    transform: translateY(-2px) scale(1.005);
-    box-shadow: 0 8px 24px -6px rgba(0,0,0,0.08);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-2px) scale(1.005);
+      box-shadow: 0 8px 24px -6px rgba(0,0,0,0.08);
+    }
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 
   .nombre-maestro {
@@ -180,12 +185,16 @@
   border: 1px solid #e2e8f0;
   transition: all 0.3s var(--spring-physics);
 
+  &:active {
+    transform: scale(0.97);
+  }
+
   /* 🌟 ESTADO DEVUELTO (ÉXITO) */
   &.validado {
     background: rgba(16, 185, 129, 0.08);
     border-color: var(--success-accent);
     box-shadow: 0 4px 12px var(--success-glow);
-    transform: scale(1.01); /* Resalta sutilmente */
+    transform: scale(1.01); 
 
     .info-h ion-icon { color: var(--success-accent); }
     .textos-h .nombre-h { color: #065f46; font-weight: 700; }
@@ -228,9 +237,15 @@
   letter-spacing: 0.3px;
   transition: all 0.4s var(--spring-physics);
 
-  &:hover {
-    transform: translateY(-2px);
-    --box-shadow: 0 12px 24px -6px var(--success-glow);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-2px);
+      --box-shadow: 0 12px 24px -6px var(--success-glow);
+    }
+  }
+
+  &:active {
+    transform: scale(0.96);
   }
 
   &[disabled] {
@@ -250,7 +265,6 @@ ion-list {
   margin-bottom: 0 !important;
 }
 
-/* Oculta los bordes por defecto de los items de Ionic si no hay contenido */
 ion-item {
   --border-width: 0 !important;
   --inner-border-width: 0 !important;
@@ -276,3 +290,77 @@ ion-item {
 
 .fadeIn { animation-name: fadeIn; animation-timing-function: var(--spring-physics); }
 .zoomIn { animation-name: zoomIn; animation-timing-function: var(--spring-physics); }
+
+
+/* ==========================================================================
+   📱 ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
+   ========================================================================== */
+@media (max-width: 768px) {
+  
+  .contenedor-maximo {
+    padding-top: 15px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 20px;
+  }
+
+  .tarjeta-formulario {
+    border-radius: 16px;
+    margin-bottom: 16px;
+  }
+
+  .item-gestion {
+    --padding-start: 12px;
+    --padding-end: 12px;
+    --padding-top: 12px;
+    --padding-bottom: 12px;
+    border-radius: 16px;
+
+    .nombre-maestro {
+      font-size: 1.05rem;
+    }
+
+    .info-secundaria {
+      gap: 8px;
+      margin-bottom: 10px;
+      
+      .badge-id {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+      }
+
+      .tipo-badge {
+        font-size: 0.75rem;
+      }
+    }
+  }
+
+  .seccion-validacion-devolucion {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .check-item-devolucion {
+    padding: 10px 12px;
+    
+    .info-h {
+      gap: 10px;
+      
+      ion-icon { 
+        font-size: 1.2rem; 
+      }
+      
+      .textos-h {
+        .nombre-h { font-size: 0.85rem; }
+        .codigo-h { font-size: 0.75rem; }
+      }
+    }
+  }
+
+  .boton-recibir-grupo {
+    height: 48px;
+    min-width: 100px;
+    margin-left: 5px;
+    font-size: 0.85rem;
+  }
+}

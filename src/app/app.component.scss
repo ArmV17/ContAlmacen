@@ -82,6 +82,7 @@ ion-menu {
 .lista-menu {
   background: transparent;
   padding: 0 16px; 
+  padding-bottom: 80px !important; /* Espacio extra seguro para los créditos */
 }
 
 .item-menu {
@@ -103,14 +104,22 @@ ion-menu {
     transition: all 0.4s var(--spring-physics);
   }
 
-  /* Efecto Hover */
-  &:hover {
-    --background: rgba(37, 99, 235, 0.04);
-    transform: translateX(6px) scale(1.01); 
-    
-    ion-icon { 
-      color: var(--primary-accent); 
+  /* Efecto Hover ÚNICAMENTE si el dispositivo tiene un ratón (PC) */
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      --background: rgba(37, 99, 235, 0.04);
+      transform: translateX(6px) scale(1.01); 
+      
+      ion-icon { 
+        color: var(--primary-accent); 
+      }
     }
+  }
+
+  /* Efecto al tocar la pantalla (Móvil) */
+  &:active {
+    transform: scale(0.97); /* Pequeño efecto de hundimiento al presionar */
+    --background: rgba(37, 99, 235, 0.08);
   }
 
   /* Estado Activo */
@@ -147,11 +156,17 @@ ion-menu {
   border: 1px solid transparent;
   transition: all 0.4s var(--spring-physics);
 
-  &:hover {
-    --background: rgba(239, 68, 68, 0.12);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    transform: translateY(-2px); 
-    box-shadow: 0 6px 16px -4px rgba(239, 68, 68, 0.2);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      --background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      transform: translateY(-2px); 
+      box-shadow: 0 6px 16px -4px rgba(239, 68, 68, 0.2);
+    }
+  }
+
+  &:active {
+    transform: scale(0.97);
   }
 }
 
@@ -164,7 +179,7 @@ ion-menu {
   padding: 16px;
   text-align: center;
   border-top: 1px solid rgba(0, 0, 0, 0.04);
-  background: #f4f6f9; /* Mismo color de fondo para que no se traslúcido */
+  background: #f4f6f9; 
   z-index: 10;
 
   p {
@@ -180,7 +195,42 @@ ion-menu {
   }
 }
 
-/* Espacio de seguridad para la lista del menú */
-.lista-menu {
-  padding-bottom: 70px !important; /* Evita que el último botón choque con los créditos */
+
+/* ==========================================
+   📱 ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
+   ========================================== */
+@media (max-width: 768px) {
+  
+  /* Reducimos el espacio gigante de arriba en celulares */
+  .user-profile-section {
+    padding: 20px 16px 20px;
+    margin-bottom: 10px;
+  }
+
+  .user-profile-section .user-name {
+    font-size: 1.15rem; /* Letra un poco más pequeña */
+  }
+
+  /* Reducimos el tamaño de los items para que quepan mejor en la pantalla */
+  .item-menu {
+    --min-height: 48px;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+  }
+
+  .menu-divider {
+    margin: 15px 20px; /* Menos espacio en blanco inútil */
+  }
+  
+  /* En celulares muy pequeños o acostados, el copyright fijo estorba. 
+     Esto evita que tape los últimos botones del menú. */
+  @media (max-height: 600px) {
+    .copyright-section {
+      position: relative; /* Lo quita del fondo fijo y lo pone al final de la lista */
+      margin-top: 20px;
+    }
+    .lista-menu {
+      padding-bottom: 20px !important;
+    }
+  }
 }

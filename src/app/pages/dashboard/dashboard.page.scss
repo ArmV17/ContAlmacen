@@ -36,7 +36,6 @@
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
-  /* 👇 AQUÍ SE APLICÓ EL MISMO ESTILO DE LETRA QUE EN NUEVO PRÉSTAMO 👇 */
   ion-title {
     font-weight: 800;
     font-size: 1.2rem;
@@ -48,38 +47,42 @@
    TARJETAS DE INDICADORES (KPIs MICRO-SUPERFICIES)
    ========================================================================== */
 .tarjeta-limpia {
-  /* Elevación 2026: Sombra súper difuminada + Resplandor inferior */
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.02);
-  border-radius: 20px; /* Curvas más amigables */
+  border-radius: 20px; 
   margin: 10px 5px;
   background: var(--surface-card);
-  border: 1px solid rgba(0,0,0,0.02); /* Borde invisible para delimitar */
+  border: 1px solid rgba(0,0,0,0.02); 
   transition: transform 0.4s var(--spring-physics), box-shadow 0.4s ease;
   
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  &:active {
+    transform: scale(0.97);
   }
 
   .texto-secundario {
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 1px; /* Tracking abierto para títulos pequeños */
+    letter-spacing: 1px; 
     font-size: 0.75rem;
     font-weight: 700;
   }
   
   .texto-primario, .texto-peligro {
-    font-size: 2.8rem; /* Números más grandes e impactantes */
+    font-size: 2.8rem; 
     font-weight: 800;
-    letter-spacing: -1.5px; /* Tracking cerrado para números gigantes */
+    letter-spacing: -1.5px; 
     margin: 4px 0;
   }
 
   .texto-primario { color: var(--text-main); }
   .texto-peligro { color: var(--danger-accent); }
 
-  /* Rediseño de tarjeta de alerta */
   &.alerta {
     background: linear-gradient(145deg, #ffffff 0%, #fef2f2 100%);
     border: 1px solid rgba(239, 68, 68, 0.15);
@@ -123,21 +126,23 @@
   --background: var(--surface-card);
   --border-radius: 16px;
   margin-bottom: 14px;
-  /* Sombra flotante idéntica a los botones del menú */
   box-shadow: 0 4px 12px -4px rgba(0,0,0,0.05);
   border: 1px solid rgba(0,0,0,0.02);
   transition: all 0.4s var(--spring-physics);
 
-  /* Hover sutil en los préstamos */
-  &:hover {
-    transform: scale(1.01) translateX(2px);
-    box-shadow: 0 8px 24px -6px rgba(0,0,0,0.08);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: scale(1.01) translateX(2px);
+      box-shadow: 0 8px 24px -6px rgba(0,0,0,0.08);
+    }
   }
 
-  /* Estado crítico */
+  &:active {
+    transform: scale(0.98);
+  }
+
   &.vencido {
     border-left: 4px solid var(--danger-accent);
-    /* Resplandor rojo lateral */
     box-shadow: -4px 4px 16px -4px var(--danger-glow);
   }
 
@@ -157,7 +162,6 @@
     }
   }
 
-  /* Cabecera del Item */
   .header-item-flex {
     display: flex;
     align-items: center;
@@ -183,7 +187,6 @@
   }
 }
 
-/* --- Mini lista de herramientas (Píldoras) --- */
 .mini-lista-herramientas {
   display: flex;
   flex-wrap: wrap;
@@ -244,7 +247,7 @@
 
 .info-adicional-dashboard {
   margin-top: 14px;
-  border-top: 1px dashed #e2e8f0; /* Línea punteada moderna en lugar de sólida */
+  border-top: 1px dashed #e2e8f0;
   padding-top: 12px;
 
   .fila-detalles-flex {
@@ -295,7 +298,6 @@
   &.estado-ok {
     background: rgba(16, 185, 129, 0.1);
     color: var(--success-accent);
-    /* Resplandor verde */
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
   }
   
@@ -331,7 +333,7 @@
 }
 
 .animated {
-  animation-duration: 0.6s; /* Un poco más lenta y suave */
+  animation-duration: 0.6s;
   animation-fill-mode: both;
 }
 
@@ -342,11 +344,64 @@
 
 .fadeIn { animation-name: fadeIn; animation-timing-function: var(--spring-physics); }
 
-/* Ajuste móvil */
-@media (max-width: 360px) {
-  .detalles-academicos .fila-academica-flex {
+/* ==========================================================================
+   📱 ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
+   ========================================================================== */
+@media (max-width: 768px) {
+  
+  /* Ajuste de las tarjetas de indicadores KPI (Números gigantes) */
+  .tarjeta-limpia {
+    margin: 5px;
+    border-radius: 16px;
+    
+    .texto-primario, .texto-peligro {
+      font-size: 2.2rem; /* Reducción de la fuente para evitar desbordes */
+      letter-spacing: -1px;
+    }
+
+    .texto-secundario {
+      font-size: 0.7rem;
+    }
+  }
+
+  /* Compresión de la sección de listas y tarjetas de préstamo */
+  .seccion-lista {
+    margin-top: 20px;
+    padding: 0 5px;
+    
+    .header-lista {
+      margin-bottom: 12px;
+      
+      .subtitulo {
+        font-size: 1.15rem;
+      }
+    }
+  }
+
+  /* Ajustes a los detalles académicos para evitar que choquen los textos */
+  .detalles-academicos .fila-academica-flex,
+  .info-adicional-dashboard .fila-detalles-flex {
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
+    gap: 8px;
+  }
+
+  .item-limpio-agrupado {
+    .header-item-flex {
+      flex-wrap: wrap; /* Permite que el badge pase a la línea de abajo si el nombre es largo */
+      
+      .receptor-nombre {
+        font-size: 1rem; /* Nombre ligeramente más pequeño */
+      }
+    }
+  }
+
+  /* Reducción del tamaño del mensaje vacío */
+  .mensaje-vacio {
+    margin-top: 40px;
+    
+    ion-icon {
+      font-size: 60px;
+    }
   }
 }

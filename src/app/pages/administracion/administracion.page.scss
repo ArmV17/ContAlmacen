@@ -93,6 +93,7 @@ ion-segment {
   max-width: 750px;
   margin: 0 auto;
   padding-bottom: 50px;
+  /* El padding en PC se puede manejar de forma global, pero se ajustará en Móvil */
 }
 
 .tarjeta-formulario {
@@ -103,9 +104,11 @@ ion-segment {
   border: 1px solid rgba(0,0,0,0.02);
   transition: transform 0.4s var(--spring-physics), box-shadow 0.4s ease;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+    }
   }
 
   .titulo-seccion {
@@ -176,9 +179,15 @@ ion-segment {
     border: 1px solid rgba(0,0,0,0.02);
     transition: all 0.4s var(--spring-physics);
 
-    &:hover {
-      transform: scale(1.01) translateX(2px);
-      box-shadow: 0 8px 24px -6px rgba(0,0,0,0.08);
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        transform: scale(1.01) translateX(2px);
+        box-shadow: 0 8px 24px -6px rgba(0,0,0,0.08);
+      }
+    }
+    
+    &:active {
+      transform: scale(0.98); /* Efecto táctil en móvil */
     }
 
     ion-label {
@@ -225,12 +234,16 @@ ion-buttons[slot="end"] {
     &[color="primary"] { 
       --color: var(--primary-accent); 
       background: rgba(37, 99, 235, 0.05);
-      &:hover { background: rgba(37, 99, 235, 0.1); }
+      @media (hover: hover) and (pointer: fine) {
+        &:hover { background: rgba(37, 99, 235, 0.1); }
+      }
     }
     &[color="danger"] { 
       --color: var(--danger-accent); 
       background: rgba(239, 68, 68, 0.05);
-      &:hover { background: rgba(239, 68, 68, 0.1); }
+      @media (hover: hover) and (pointer: fine) {
+        &:hover { background: rgba(239, 68, 68, 0.1); }
+      }
     }
   }
 }
@@ -247,9 +260,15 @@ ion-buttons[slot="end"] {
   margin-top: 20px;
   transition: all 0.4s var(--spring-physics);
 
-  &:hover {
-    transform: translateY(-2px);
-    --box-shadow: 0 12px 30px -6px var(--success-glow);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-2px);
+      --box-shadow: 0 12px 30px -6px var(--success-glow);
+    }
+  }
+  
+  &:active {
+    transform: scale(0.96);
   }
 }
 
@@ -263,9 +282,15 @@ ion-button[color="success"] {
   margin-bottom: 25px;
   transition: all 0.4s var(--spring-physics);
 
-  &:hover {
-    transform: translateY(-2px);
-    --box-shadow: 0 12px 30px -6px var(--success-glow);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-2px);
+      --box-shadow: 0 12px 30px -6px var(--success-glow);
+    }
+  }
+  
+  &:active {
+    transform: scale(0.96);
   }
 }
 
@@ -294,3 +319,68 @@ ion-button[color="success"] {
 ion-list { background: transparent !important; }
 ion-item::part(native) { background: transparent; border: none !important; }
 ion-item { --border-width: 0 !important; --inner-border-width: 0 !important; }
+
+/* ==========================================================================
+   📱 ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
+   ========================================================================== */
+@media (max-width: 768px) {
+  
+  /* Ajuste de Pestañas (Segment) para pantallas estrechas */
+  ion-segment {
+    margin: 5px;
+    width: calc(100% - 10px);
+    overflow-x: auto; /* Permite deslizar las pestañas si hay muchas */
+  }
+
+  ion-segment-button {
+    font-size: 0.85rem !important; /* Letra más pequeña para que quepan */
+    min-height: 38px !important;
+  }
+
+  /* Aprovechar el espacio de la pantalla quitando márgenes laterales innecesarios */
+  .contenedor-maximo {
+    padding: 10px;
+  }
+
+  .tarjeta-formulario {
+    margin-bottom: 15px;
+    border-radius: 16px; /* Borde un poco menos redondo para ahorrar espacio */
+    box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.05); /* Sombra más ligera para mejor rendimiento */
+  }
+
+  .tarjeta-formulario ion-card-content {
+    padding: 12px; /* Reducción del relleno interior de la tarjeta */
+  }
+
+  .tarjeta-formulario .titulo-seccion {
+    font-size: 1.1rem;
+  }
+
+  /* Ajustar botones de acción en las tarjetas del Dashboard */
+  .lista-gestion .item-gestion {
+    --padding-start: 12px;
+    margin-bottom: 10px;
+  }
+
+  .lista-gestion .item-gestion ion-label h3 {
+    font-size: 1rem;
+  }
+
+  /* Reducir el tamaño de los inputs para ganar altura en celulares */
+  .input-limpio {
+    margin-bottom: 12px;
+    --padding-start: 12px;
+  }
+  
+  .input-limpio ion-input, .input-limpio ion-select {
+    font-size: 0.95rem;
+  }
+  
+  /* Botones principales un poco más delgados */
+  .boton-guardar, ion-button[color="success"] {
+    height: 50px;
+    font-size: 1.05rem;
+    margin-top: 15px;
+    margin-bottom: 15px;
+  }
+}

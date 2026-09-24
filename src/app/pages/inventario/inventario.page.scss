@@ -21,14 +21,13 @@
    1. CABECERA (UNIFICADA CON ADMINISTRACIÓN)
    ========================================================================== */
 .toolbar-elegante {
-  --background: rgba(15, 23, 42, 0.95); /* El azul marino oscuro elegante */
+  --background: rgba(15, 23, 42, 0.95); 
   --color: #ffffff;
   --border-width: 0 !important;
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 
-  /* Título con la tipografía y peso exacto de Admin */
   ion-title {
     font-weight: 800;
     font-size: 1.2rem;
@@ -36,14 +35,12 @@
     text-transform: capitalize;
   }
 
-  /* Aseguramos que los iconos de navegación contrasten bien */
   ion-back-button, ion-menu-button {
     --color: #ffffff;
     --color-activated: #cbd5e1;
   }
 }
 
-/* Fondo principal que se alinea con la navbar */
 .fondo-claro {
   --background: var(--bg-app);
 }
@@ -56,22 +53,20 @@
 /* ==========================================================================
    2. BARRA DE BÚSQUEDA Y TÍTULOS
    ========================================================================== */
-/* Ajuste específico para que el buscador luzca integrado */
 .barra-busqueda-container {
-  padding: 0 16px 12px 16px !important; // Padding ajustado para integración total
+  padding: 0 16px 12px 16px !important; 
   
   ion-searchbar {
     --border-radius: 12px;
-    --background: rgba(255, 255, 255, 0.08); // Fondo translúcido para combinar con la toolbar oscura
+    --background: rgba(255, 255, 255, 0.08); 
     --color: #ffffff;
     --placeholder-color: rgba(255, 255, 255, 0.5);
     --icon-color: rgba(255, 255, 255, 0.6);
     --clear-button-color: #ffffff;
-    box-shadow: none; // Eliminamos la sombra externa porque ya está dentro de la toolbar oscura
+    box-shadow: none; 
   }
 }
 
-/* Para evitar el margen superior del título si estás usando este header */
 ion-toolbar.toolbar-elegante {
   --min-height: 56px;
 }
@@ -93,7 +88,7 @@ ion-toolbar.toolbar-elegante {
    3. ACORDEÓN: TARJETAS PRINCIPALES (MICRO-SUPERFICIES)
    ========================================================================== */
 .tarjeta-herramienta {
-  margin: 0 16px 16px 16px; /* Márgenes laterales para que no toque los bordes */
+  margin: 0 16px 16px 16px; 
   border-radius: 20px;
   background: var(--surface-card);
   border: 1px solid rgba(0,0,0,0.02);
@@ -101,13 +96,13 @@ ion-toolbar.toolbar-elegante {
   overflow: hidden;
   transition: all 0.4s var(--spring-physics);
 
-  /* Hover Card */
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 30px -8px rgba(0,0,0,0.08);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px -8px rgba(0,0,0,0.08);
+    }
   }
 
-  /* Estado Expandido (Glow Azul) */
   &.accordion-expanded {
     border-color: var(--primary-accent);
     box-shadow: 0 12px 30px -10px var(--primary-glow);
@@ -127,11 +122,10 @@ ion-toolbar.toolbar-elegante {
   --padding-end: 8px; 
   --background: transparent;
 
-  /* Modificamos el ícono principal si no usas avatar de imagen */
   .contenedor-icono-principal {
     width: 50px;
     height: 50px;
-    background: rgba(37, 99, 235, 0.08); /* Azul transparente */
+    background: rgba(37, 99, 235, 0.08); 
     border-radius: 14px;
     display: flex;
     align-items: center;
@@ -145,7 +139,6 @@ ion-toolbar.toolbar-elegante {
     }
   }
 
-  /* Si sigues usando avatar de imagen, lo actualizamos también */
   .avatar-herramienta {
     width: 55px;
     height: 55px;
@@ -181,12 +174,12 @@ ion-toolbar.toolbar-elegante {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: rgba(16, 185, 129, 0.08); /* Verde suave por defecto */
+    background: rgba(16, 185, 129, 0.08); 
     border: 1px solid rgba(16, 185, 129, 0.2);
     padding: 8px 16px;
     border-radius: 14px;
     min-width: 90px;
-    box-shadow: 0 4px 12px var(--success-glow); /* Glow Verde */
+    box-shadow: 0 4px 12px var(--success-glow); 
 
     .stock-label {
       font-size: 0.65rem;
@@ -200,18 +193,17 @@ ion-toolbar.toolbar-elegante {
     .stock-numero {
       font-size: 1.4rem;
       font-weight: 800;
-      color: #065f46; /* Verde muy oscuro */
+      color: #065f46; 
       line-height: 1;
     }
 
-    /* Alerta de Sin Stock (Glow Rojo) */
     &.sin-stock {
       background: rgba(239, 68, 68, 0.08);
       border-color: rgba(239, 68, 68, 0.2);
       box-shadow: 0 4px 12px var(--danger-glow);
       
       .stock-label { color: var(--danger-accent); }
-      .stock-numero { color: #7f1d1d; /* Rojo muy oscuro */ }
+      .stock-numero { color: #7f1d1d; }
     }
   }
 }
@@ -220,7 +212,7 @@ ion-toolbar.toolbar-elegante {
    5. INTERIOR DEL ACORDEÓN: FILAS DE UNIDADES
    ========================================================================== */
 .contenedor-desplegable {
-  background: var(--bg-app); /* Fondo ligeramente gris para separar */
+  background: var(--bg-app); 
   padding: 20px 16px;
   border-top: 1px dashed rgba(0,0,0,0.06);
 }
@@ -244,7 +236,6 @@ ion-toolbar.toolbar-elegante {
   margin: 10px 0 16px 0;
 }
 
-/* Fila de Herramienta Individual */
 .fila-unidad {
   display: flex;
   justify-content: space-between;
@@ -257,9 +248,15 @@ ion-toolbar.toolbar-elegante {
   box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.04);
   transition: all 0.3s var(--spring-physics);
 
-  &:hover {
-    transform: translateX(4px);
-    border-color: rgba(37, 99, 235, 0.15);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateX(4px);
+      border-color: rgba(37, 99, 235, 0.15);
+    }
+  }
+
+  &:active {
+    transform: scale(0.98);
   }
 
   .info-izquierda {
@@ -307,7 +304,6 @@ ion-toolbar.toolbar-elegante {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    /* Efecto "Led" en el puntito */
     box-shadow: 0 0 8px currentColor;
     
     &.disponible { background-color: var(--success-accent); color: var(--success-accent); }
@@ -335,9 +331,15 @@ ion-toolbar.toolbar-elegante {
   font-size: 1.4rem;
   transition: all 0.3s var(--spring-physics);
   
-  &:hover { 
-    --color: var(--primary-accent); 
-    transform: scale(1.1);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { 
+      --color: var(--primary-accent); 
+      transform: scale(1.1);
+    }
+  }
+
+  &:active {
+    transform: scale(0.9);
   }
 }
 
@@ -360,16 +362,9 @@ ion-toolbar.toolbar-elegante {
   }
 }
 
-/* Solución a líneas blancas de Ionic en las listas */
-ion-list {
-  background: transparent !important;
-  --background: transparent !important;
-}
-ion-item {
-  --border-width: 0 !important;
-  --inner-border-width: 0 !important;
-}
-
+/* ==========================================================================
+   CORRECCIONES DE IONIC
+   ========================================================================== */
 ion-list {
   background: transparent !important;
   --background: transparent !important;
@@ -394,4 +389,95 @@ ion-toolbar {
 
 ion-item-divider {
   display: none !important;
+}
+
+/* ==========================================================================
+   📱 ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
+   ========================================================================== */
+@media (max-width: 768px) {
+  
+  .barra-busqueda-container {
+    padding: 0 8px 8px 8px !important;
+  }
+
+  .titulo-herramienta-busqueda {
+    margin: 15px 0 10px 12px;
+    font-size: 1rem;
+  }
+
+  /* Reducción de márgenes laterales para maximizar el ancho de la tarjeta */
+  .tarjeta-herramienta {
+    margin: 0 8px 12px 8px;
+    border-radius: 16px;
+  }
+
+  /* Ajustes en la cabecera del acordeón */
+  .header-acordeon {
+    --min-height: 70px;
+    --padding-start: 12px;
+    
+    .contenedor-icono-principal {
+      width: 42px;
+      height: 42px;
+      margin-right: 12px;
+      border-radius: 12px;
+      
+      ion-icon { font-size: 20px; }
+    }
+
+    .avatar-herramienta {
+      width: 45px;
+      height: 45px;
+      margin-right: 12px;
+    }
+
+    .nombre-principal {
+      font-size: 1.1rem;
+    }
+  }
+
+  /* Ajustes del Badge de Stock para que no empuje el texto en pantallas angostas */
+  .controles-derecha {
+    gap: 8px;
+
+    .indicador-stock-moderno {
+      min-width: 70px;
+      padding: 6px 12px;
+      border-radius: 12px;
+
+      .stock-label { font-size: 0.6rem; }
+      .stock-numero { font-size: 1.15rem; }
+    }
+  }
+
+  /* Ajustes del listado interno */
+  .contenedor-desplegable {
+    padding: 15px 12px;
+  }
+
+  .fila-unidad {
+    padding: 12px;
+    flex-wrap: wrap; /* Si la pantalla es muy pequeña, permite que el estado baje a la siguiente línea */
+    gap: 10px;
+
+    .contenedor-icono-herramienta {
+      padding: 10px;
+      margin-right: 12px;
+      border-radius: 10px;
+      
+      ion-icon { font-size: 1.2rem; }
+    }
+
+    .codigo-unidad {
+      font-size: 0.95rem;
+    }
+  }
+
+  .estado-contenedor {
+    padding: 4px 10px;
+    
+    .texto-estado {
+      font-size: 0.7rem;
+    }
+  }
 }
