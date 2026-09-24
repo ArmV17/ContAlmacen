@@ -46,11 +46,9 @@ export class DevolucionesPage implements OnInit {
 
   async ionViewDidEnter() {
     await this.cargarYAgruparPrestamos();
-    // Foco automático en la búsqueda global al entrar a la página
     setTimeout(() => this.inputBusquedaGlobal?.setFocus(), 500);
   }
 
-  // Se cambia ngOnInit por ionViewDidEnter para asegurar que el DOM esté cargado para el ViewChild
   async ngOnInit() {
     // La carga se movió a ionViewDidEnter
   }
@@ -96,12 +94,9 @@ export class DevolucionesPage implements OnInit {
   }
 
   // --- NUEVA LÓGICA DE SALTO DE FOCO ---
-
-  /**
-   * Filtrar deudores por ID o Nombre (Al escribir o dar Enter en la búsqueda global)
-   */
   filtrarLista(eventoEnter: boolean = false) {
-    const busqueda = this.busquedaId.trim().toLowerCase();
+    // Protección contra undefined
+    const busqueda = (this.busquedaId || '').trim().toLowerCase();
     
     if (!busqueda) {
       this.prestamosAgrupados = this.prestamosRespaldo;
@@ -113,11 +108,8 @@ export class DevolucionesPage implements OnInit {
       g.receptor_nombre.toLowerCase().includes(busqueda)
     );
 
-    // Si presionaron Enter y encontraron a la persona, pasamos el foco a su caja de herramientas
     if (eventoEnter && this.prestamosAgrupados.length > 0) {
-      // Damos un pequeño respiro para que Angular renderice la tarjeta si estaba oculta
       setTimeout(() => {
-        // Enfocus al primer input de la lista de resultados
         const primerInputHerramienta = this.inputsEscaneoHerramientas.first;
         if (primerInputHerramienta) {
           primerInputHerramienta.setFocus();
@@ -125,16 +117,28 @@ export class DevolucionesPage implements OnInit {
       }, 300);
     } else if (eventoEnter && this.prestamosAgrupados.length === 0) {
        this.mostrarMensaje('No se encontró al deudor', 'warning');
-       this.busquedaId = '';
-       this.inputBusquedaGlobal?.setFocus();
+       
+       // SOLUCIÓN: Forzar la limpieza de manera asíncrona
+       setTimeout(() => {
+         this.busquedaId = '';
+         this.inputBusquedaGlobal?.setFocus();
+       }, 50);
     }
   }
 
   // ==========================================
 
   validarHerramientaEnGrupo(grupo: any) {
-    grupo.inputValidacion = grupo.inputValidacion.toUpperCase().trim();
-    const codigo = grupo.inputValidacion;
+    // Evitar escaneos basura si el sistema está procesando datos (falla de internet)
+    if (this.cargando) {
+       this.mostrarMensaje('Procesando, por favor espere...', 'warning');
+       setTimeout(() => { grupo.inputValidacion = ''; }, 50);
+       return;
+    }
+
+    // Protección para evitar que .toUpperCase() rompa la app si el input llega vacío
+    const inputBruto = grupo.inputValidacion || '';
+    const codigo = inputBruto.toUpperCase().trim();
 
     if (!codigo) return;
 
@@ -145,23 +149,23 @@ export class DevolucionesPage implements OnInit {
         herramienta.validado = true;
         this.mostrarMensaje(`Validado: ${herramienta.nombre}`, 'success');
       }
-      
-      grupo.inputValidacion = '';
       this.actualizarEstadosGrupo(grupo);
-
-      // Mantenemos el foco en este mismo grupo para seguir escaneando herramientas
-      setTimeout(() => {
-        const index = this.prestamosAgrupados.findIndex(g => g.receptor_id === grupo.receptor_id);
-        if (index !== -1) {
-           const inputCorrespondiente = this.inputsEscaneoHerramientas.toArray()[index];
-           if(inputCorrespondiente) inputCorrespondiente.setFocus();
-        }
-      }, 100);
-
     } else {
        this.mostrarMensaje('Código no pertenece a este deudor', 'danger');
-       grupo.inputValidacion = '';
     }
+
+    // SOLUCIÓN AL BUG PRINCIPAL:
+    // Al usar setTimeout aseguramos que Ionic borre el texto *después* de procesar el input, 
+    // evitando que se amontonen los códigos.
+    setTimeout(() => {
+      grupo.inputValidacion = '';
+      
+      const index = this.prestamosAgrupados.findIndex(g => g.receptor_id === grupo.receptor_id);
+      if (index !== -1) {
+         const inputCorrespondiente = this.inputsEscaneoHerramientas.toArray()[index];
+         if(inputCorrespondiente) inputCorrespondiente.setFocus();
+      }
+    }, 50);
   }
 
   actualizarEstadosGrupo(grupo: any) {
@@ -181,8 +185,11 @@ export class DevolucionesPage implements OnInit {
         
         if (grupo.datos_devolucion.length === 0) {
           this.prestamosAgrupados = this.prestamosAgrupados.filter(g => g.receptor_id !== grupo.receptor_id);
-          this.busquedaId = ''; // Limpiamos la búsqueda y regresamos al inicio
-          setTimeout(() => this.inputBusquedaGlobal?.setFocus(), 500);
+          // Limpiamos de forma segura
+          setTimeout(() => {
+            this.busquedaId = '';
+            this.inputBusquedaGlobal?.setFocus();
+          }, 500);
         }
       }
     } catch (e) {
@@ -212,8 +219,10 @@ export class DevolucionesPage implements OnInit {
       
       if (grupo.datos_devolucion.length === 0) {
         this.prestamosAgrupados = this.prestamosAgrupados.filter(g => g.receptor_id !== grupo.receptor_id);
-        this.busquedaId = ''; // Limpiamos la búsqueda y regresamos al inicio
-        setTimeout(() => this.inputBusquedaGlobal?.setFocus(), 500);
+        setTimeout(() => {
+          this.busquedaId = ''; 
+          this.inputBusquedaGlobal?.setFocus();
+        }, 500);
       }
       
       this.actualizarEstadosGrupo(grupo);
