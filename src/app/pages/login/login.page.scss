@@ -1,6 +1,9 @@
 /* ==========================================================================
-   LOGIN CAMPS 2026 - DISEÑO REFINADO
+   LOGIN CAMPS 2026 - DISEÑO REFINADO Y RESPONSIVO
    ========================================================================== */
+:host {
+  --spring-physics: cubic-bezier(0.175, 0.885, 0.32, 1.15); 
+}
 
 .background-login {
   /* Degradado mucho más elegante y profesional (Slate Navy) */
@@ -19,17 +22,19 @@
 /* --- CABECERA --- */
 .header-section {
   margin-bottom: 35px;
+  text-align: center;
   
   .logo-circle {
     background: #ffffff;
     width: 85px;
     height: 85px;
-    border-radius: 22px; // Más moderno que un círculo
+    border-radius: 22px; /* Más moderno que un círculo */
     display: flex;
     justify-content: center;
     align-items: center;
     margin: 0 auto 15px;
     box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+    transition: transform 0.4s var(--spring-physics);
     
     ion-icon {
       font-size: 45px;
@@ -61,15 +66,15 @@
   width: 100%;
   max-width: 400px;
   border-radius: 24px;
-  // Sombra más sutil y elegante
+  /* Sombra más sutil y elegante */
   box-shadow: 0 20px 40px rgba(0,0,0,0.4);
   background: white;
-  padding: 10px; // Padding interno para que los campos no toquen el borde
+  padding: 10px; /* Padding interno para que los campos no toquen el borde */
 }
 
 /* --- INPUTS REFINADOS --- */
 .input-item {
-  --background: #f8fafc; // Un gris más claro y limpio
+  --background: #f8fafc; /* Un gris más claro y limpio */
   --border-radius: 14px;
   --padding-start: 15px;
   margin-bottom: 12px;
@@ -79,8 +84,9 @@
   
   &:focus-within {
     --background: #ffffff;
-    --border-color: #3b82f6; // Acento azul eléctrico al seleccionar
+    --border-color: #3b82f6; /* Acento azul eléctrico al seleccionar */
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
   }
   
   ion-icon {
@@ -91,7 +97,7 @@
 
 /* --- BOTÓN AZUL ELÉCTRICO (ACTUALIZADO) --- */
 .btn-login {
-  --background: #1e293b; // Azul eléctrico intenso
+  --background: #1e293b; /* Azul eléctrico intenso */
   --background-hover: #0f172a;
   --color: white;
   --border-radius: 14px;
@@ -101,16 +107,24 @@
   margin-top: 25px;
   letter-spacing: 0.5px;
   box-shadow: 0 8px 16px rgba(37, 99, 235, 0.4);
-  transition: all 0.3s ease;
+  transition: all 0.4s var(--spring-physics);
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(37, 99, 235, 0.5);
+    }
+  }
 
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.96);
   }
 }
 
 /* --- FOOTER --- */
 .footer-info {
   margin-top: 30px;
+  text-align: center;
   p {
     color: rgba(255, 255, 255, 0.4);
     font-size: 11px;
@@ -118,6 +132,7 @@
   }
 }
 
+/* --- LOGO INSTITUCIONAL FLOTANTE --- */
 .logo-esquina {
   position: absolute;
   top: 25px; 
@@ -129,5 +144,83 @@
   opacity: 0.5;
   transition: opacity 0.3s ease;
   
-  &:hover { opacity: 0.9; }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { opacity: 0.9; }
+  }
+}
+
+/* ==========================================================================
+   📱 ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .login-wrapper {
+    padding: 15px;
+  }
+
+  /* Reducir el tamaño de la cabecera para que el teclado no tape el formulario */
+  .header-section {
+    margin-bottom: 25px;
+    
+    .logo-circle {
+      width: 70px;
+      height: 70px;
+      border-radius: 18px;
+      margin-bottom: 12px;
+      
+      ion-icon {
+        font-size: 35px;
+      }
+    }
+
+    .app-name {
+      font-size: 28px;
+    }
+
+    .app-subtitle {
+      font-size: 11px;
+    }
+  }
+
+  .login-card {
+    padding: 5px; /* Menos padding interno para maximizar el ancho de los inputs */
+    border-radius: 20px;
+  }
+
+  .input-item {
+    --padding-start: 12px;
+  }
+
+  .btn-login {
+    height: 52px;
+    font-size: 15px;
+    margin-top: 15px;
+  }
+
+  /* El logo institucional se hace más pequeño y discreto para no estorbar en pantallas chicas */
+  .logo-esquina {
+    width: 60px;
+    top: 20px;
+    right: 20px;
+    opacity: 0.3; /* Menos opacidad para no distraer en celular */
+  }
+
+  .footer-info {
+    margin-top: 20px;
+  }
+}
+
+/* Ajuste extremo para teléfonos muy pequeños o modo horizontal */
+@media (max-height: 600px) {
+  .header-section {
+    margin-bottom: 15px;
+    .logo-circle {
+      width: 50px;
+      height: 50px;
+      ion-icon { font-size: 25px; }
+    }
+    .app-name { font-size: 22px; }
+  }
+  .logo-esquina {
+    display: none; /* Ocultamos el logo de la esquina si no hay altura suficiente */
+  }
 }

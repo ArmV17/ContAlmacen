@@ -1,5 +1,6 @@
 <ion-app>
-  <ion-split-pane contentId="main-content" [when]="sesionIniciada()">
+  <!-- La magia responsiva: Combina la validación de sesión con el tamaño de pantalla -->
+  <ion-split-pane contentId="main-content" [when]="sesionIniciada() ? 'lg' : false">
     
     <ion-menu contentId="main-content" type="overlay" *ngIf="sesionIniciada()">
       
@@ -23,6 +24,7 @@
         </div>
 
         <ion-list class="lista-menu" lines="none">
+          <!-- Este contenedor asegura que el menú se cierre automáticamente en celular al tocar un botón -->
           <ion-menu-toggle auto-hide="false">
             
             <ion-item routerLink="/dashboard" routerDirection="root" class="item-menu" routerLinkActive="seleccionado">
@@ -60,6 +62,7 @@
           </ion-menu-toggle>
         </ion-list>
 
+        <!-- Créditos fijos al fondo -->
         <div class="copyright-section">
           <p>© 2026 CAMPS V 1.0.0</p>
           <p>Desarrollado por: Jose Armando Villa Olvera</p>
@@ -68,6 +71,7 @@
       </ion-content>
     </ion-menu>
 
+    <!-- Aquí se inyectan todas las demás pantallas de tu aplicación -->
     <ion-router-outlet id="main-content"></ion-router-outlet>
     
   </ion-split-pane>

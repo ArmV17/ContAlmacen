@@ -2,42 +2,53 @@
    VARIABLES GLOBALES CAMPS 2026
    ========================================== */
 :host {
-  /* La paleta que te gustó: Azul eléctrico y tonos Pizarra (Slate) */
   --primary-accent: #2563eb; 
   --primary-glow: rgba(37, 99, 235, 0.25);
-  --bg-app: #f4f6f9; /* Off-White que descansa la vista */
-  --text-main: #0f172a; /* Slate oscuro, más suave que el negro puro */
+  --bg-app: #f4f6f9; 
+  --text-main: #0f172a; 
   --text-muted: #64748b; 
   
-  /* La "física" del 2026: Una curva de animación con rebote sutil */
   --spring-physics: cubic-bezier(0.175, 0.885, 0.32, 1.15); 
 }
 
-/* 👇 INTEGRACIÓN DE NAVBAR (ELIMINA LA LÍNEA BLANCA VERTICAL) 👇 */
+/* 👇 INTEGRACIÓN DE NAVBAR Y MENÚ 👇 */
 ion-split-pane {
-  --border: none !important; /* Elimina la línea rígida por defecto de Ionic */
+  --border: none !important; 
 }
 
 ion-menu {
   --border: none !important;
   border-right: none !important;
-  /* Sombra levísima hacia la derecha para separar sutilmente el contenido blanco 
-     sin cortar la continuidad de la barra superior oscura */
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.03);
+}
+
+/* ==========================================
+   EFECTOS FLOTANTES EXCLUSIVOS PARA MÓVIL
+   ========================================== */
+/* Oscurece la vista de fondo cuando el menú está abierto en celular */
+ion-menu::part(backdrop) {
+  background-color: rgba(15, 23, 42, 0.5); 
+  backdrop-filter: blur(4px);
+}
+
+/* Redondea los bordes del menú solo cuando flota en celular */
+@media (max-width: 992px) {
+  ion-menu::part(container) {
+    border-radius: 0 24px 24px 0;
+    box-shadow: 10px 0 40px rgba(0,0,0,0.15);
+  }
 }
 
 /* ==========================================
    CABECERAS (DEEP FROSTED GLASS)
    ========================================== */
 .toolbar-elegante {
-  --background: rgba(15, 23, 42, 0.95); /* Translúcido oscuro */
+  --background: rgba(15, 23, 42, 0.95); 
   --color: #ffffff;
-  --border-width: 0 !important; /* Limpia cualquier borde interno extra de Ionic */
-  
-  /* Efecto de cristal esmerilado avanzado (Desenfoque + Saturación) */
+  --border-width: 0 !important; 
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Línea unificada inferior */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
 }
 
 .fondo-claro {
@@ -49,7 +60,6 @@ ion-menu {
    ========================================== */
 .user-profile-section {
   padding: 40px 20px 30px;
-  /* Gradiente radial: simula una luz suave viniendo de la esquina superior izquierda */
   background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.08) 0%, transparent 60%), transparent;
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   margin-bottom: 20px;
@@ -82,7 +92,7 @@ ion-menu {
 .lista-menu {
   background: transparent;
   padding: 0 16px; 
-  padding-bottom: 80px !important; /* Espacio extra seguro para los créditos */
+  padding-bottom: 80px !important; 
 }
 
 .item-menu {
@@ -94,8 +104,6 @@ ion-menu {
   border-radius: 16px; 
   border: 1px solid transparent; 
   cursor: pointer;
-  
-  /* Movimiento fluido */
   transition: all 0.4s var(--spring-physics);
 
   ion-icon {
@@ -104,7 +112,6 @@ ion-menu {
     transition: all 0.4s var(--spring-physics);
   }
 
-  /* Efecto Hover ÚNICAMENTE si el dispositivo tiene un ratón (PC) */
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       --background: rgba(37, 99, 235, 0.04);
@@ -116,13 +123,11 @@ ion-menu {
     }
   }
 
-  /* Efecto al tocar la pantalla (Móvil) */
   &:active {
-    transform: scale(0.97); /* Pequeño efecto de hundimiento al presionar */
+    transform: scale(0.97); 
     --background: rgba(37, 99, 235, 0.08);
   }
 
-  /* Estado Activo */
   &.seleccionado {
     --background: rgba(37, 99, 235, 0.08);
     --color: var(--primary-accent);
@@ -195,23 +200,20 @@ ion-menu {
   }
 }
 
-
 /* ==========================================
    📱 ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
    ========================================== */
 @media (max-width: 768px) {
   
-  /* Reducimos el espacio gigante de arriba en celulares */
   .user-profile-section {
     padding: 20px 16px 20px;
     margin-bottom: 10px;
   }
 
   .user-profile-section .user-name {
-    font-size: 1.15rem; /* Letra un poco más pequeña */
+    font-size: 1.15rem; 
   }
 
-  /* Reducimos el tamaño de los items para que quepan mejor en la pantalla */
   .item-menu {
     --min-height: 48px;
     margin-bottom: 6px;
@@ -219,14 +221,12 @@ ion-menu {
   }
 
   .menu-divider {
-    margin: 15px 20px; /* Menos espacio en blanco inútil */
+    margin: 15px 20px; 
   }
   
-  /* En celulares muy pequeños o acostados, el copyright fijo estorba. 
-     Esto evita que tape los últimos botones del menú. */
   @media (max-height: 600px) {
     .copyright-section {
-      position: relative; /* Lo quita del fondo fijo y lo pone al final de la lista */
+      position: relative; 
       margin-top: 20px;
     }
     .lista-menu {
