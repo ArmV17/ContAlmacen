@@ -81,17 +81,19 @@
                 </ion-button>
               </div>
             </div>
+
+            <!-- 👇 EL BOTÓN MASIVO ESTÁ AQUÍ ADENTRO PARA CONTROLAR SU POSICIÓN POR CSS 👇 -->
+            <ion-button 
+                class="boton-recibir-grupo" 
+                color="success"
+                (click)="recibirSeleccion(grupo)"
+                [disabled]="!grupo.alMenosUnaValidada">
+              <ion-icon name="checkmark-done-circle-outline" slot="start"></ion-icon>
+              Entregar ({{ obtenerConteoValidados(grupo) }})
+            </ion-button>
+
           </div>
         </ion-label>
-
-        <ion-button slot="end" 
-                    class="boton-recibir-grupo" 
-                    color="success"
-                    (click)="recibirSeleccion(grupo)"
-                    [disabled]="!grupo.alMenosUnaValidada">
-          <ion-icon name="checkmark-done-circle-outline" slot="start"></ion-icon>
-          Entregar ({{ obtenerConteoValidados(grupo) }})
-        </ion-button>
       </ion-item>
     </ion-list>
 

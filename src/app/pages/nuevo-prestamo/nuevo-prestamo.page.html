@@ -26,7 +26,7 @@
         
         <div *ngIf="prestamo.tipoReceptor === 'alumno'">
           <ion-item class="input-limpio ion-margin-top" lines="none">
-            <ion-label position="stacked">Matrícula del Alumno (Manual)</ion-label>
+            <ion-label position="stacked">Matrícula del Alumno</ion-label>
             <ion-input 
               #inputMatricula
               [(ngModel)]="prestamo.identificador" 
@@ -68,7 +68,7 @@
 
         <div *ngIf="prestamo.tipoReceptor === 'profesor'">
           <ion-item class="input-limpio ion-margin-top" lines="none">
-            <ion-label position="stacked">Número de Maestro (Manual)</ion-label>
+            <ion-label position="stacked">Número de Maestro</ion-label>
             <ion-input 
               #inputMatricula
               [(ngModel)]="prestamo.identificador" 
@@ -145,14 +145,13 @@
     
     <ion-card-content>
       <ion-item class="contenedor-escanner-minimal" lines="none">
-        <ion-label position="stacked">Escanea o escribe el código</ion-label>
         
         <ion-input 
           #inputHerramienta
           [(ngModel)]="codigoBusqueda" 
           (ionInput)="buscarHerramienta()" 
           (keyup.enter)="buscarHerramientaEscaneada()" 
-          placeholder="Ej: ARA-01"
+          placeholder="Escanea o escribe el código (Ej: ARA-01)"
           class="input-texto-codigo">
         </ion-input>
 

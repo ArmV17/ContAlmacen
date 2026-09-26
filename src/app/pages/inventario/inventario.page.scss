@@ -392,7 +392,7 @@ ion-item-divider {
 }
 
 /* ==========================================================================
-   📱 ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
+   📱 ADAPTACIÓN PARA MOVILES (DISPONIBLES COMPACTO Y MÁS ALTO)
    ========================================================================== */
 @media (max-width: 768px) {
   
@@ -405,79 +405,101 @@ ion-item-divider {
     font-size: 1rem;
   }
 
-  /* Reducción de márgenes laterales para maximizar el ancho de la tarjeta */
   .tarjeta-herramienta {
     margin: 0 8px 12px 8px;
     border-radius: 16px;
   }
 
-  /* Ajustes en la cabecera del acordeón */
   .header-acordeon {
-    --min-height: 70px;
-    --padding-start: 12px;
-    
-    .contenedor-icono-principal {
-      width: 42px;
-      height: 42px;
-      margin-right: 12px;
-      border-radius: 12px;
+    padding: 12px 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+
+    .contenedor-icono-principal, .avatar-herramienta {
+      width: 38px !important;
+      height: 38px !important;
+      margin-right: 8px !important;
+      border-radius: 10px !important;
+      flex-shrink: 0 !important;
       
-      ion-icon { font-size: 20px; }
+      ion-icon { font-size: 17px !important; }
     }
 
-    .avatar-herramienta {
-      width: 45px;
-      height: 45px;
-      margin-right: 12px;
+    ion-label {
+      flex: 1 !important;
+      margin: 0 !important;
+      min-width: 0 !important;
+      
+      .nombre-principal {
+        font-size: 0.95rem !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        line-height: 1.25 !important;
+      }
     }
 
-    .nombre-principal {
-      font-size: 1.1rem;
+    .controles-derecha {
+      display: flex !important;
+      flex-direction: column-reverse !important;
+      align-items: center !important;
+      gap: 5px !important;
+      margin-left: 6px !important;
+      flex-shrink: 0 !important;
+
+      /* 🔥 DISPONIBLES MÁS ESTRECHO PERO CON MÁS ALTURA Y ESPACIADO INTERNO */
+      .indicador-stock-moderno {
+        padding: 5px 8px !important; /* Aumentamos el padding vertical para darle altura */
+        min-width: 58px !important; 
+        text-align: center !important;
+        border-radius: 8px !important;
+        background: #f0fdf4 !important;
+        border: 1px solid rgba(16, 185, 129, 0.2) !important;
+
+        .stock-label { 
+          font-size: 0.45rem !important; 
+          font-weight: 700 !important; 
+          color: #059669 !important; 
+          display: block !important;
+          margin-bottom: 2px !important; /* Pequeño respiro entre la etiqueta y el número */
+          line-height: 1 !important;
+        }
+        
+        .stock-numero { 
+          font-size: 0.9rem !important; 
+          font-weight: 800 !important; 
+          color: #059669 !important; 
+          line-height: 1 !important;
+        }
+      }
     }
   }
 
-  /* Ajustes del Badge de Stock para que no empuje el texto en pantallas angostas */
-  .controles-derecha {
-    gap: 8px;
-
-    .indicador-stock-moderno {
-      min-width: 70px;
-      padding: 6px 12px;
-      border-radius: 12px;
-
-      .stock-label { font-size: 0.6rem; }
-      .stock-numero { font-size: 1.15rem; }
-    }
-  }
-
-  /* Ajustes del listado interno */
   .contenedor-desplegable {
-    padding: 15px 12px;
+    padding: 12px !important;
   }
 
   .fila-unidad {
-    padding: 12px;
-    flex-wrap: wrap; /* Si la pantalla es muy pequeña, permite que el estado baje a la siguiente línea */
-    gap: 10px;
+    padding: 12px !important;
+    flex-wrap: wrap !important; 
+    gap: 10px !important;
 
     .contenedor-icono-herramienta {
-      padding: 10px;
-      margin-right: 12px;
-      border-radius: 10px;
-      
-      ion-icon { font-size: 1.2rem; }
+      padding: 10px !important;
+      margin-right: 12px !important;
+      border-radius: 10px !important;
+      ion-icon { font-size: 1.2rem !important; }
     }
 
     .codigo-unidad {
-      font-size: 0.95rem;
+      font-size: 0.95rem !important;
     }
   }
 
   .estado-contenedor {
-    padding: 4px 10px;
-    
+    padding: 4px 10px !important;
     .texto-estado {
-      font-size: 0.7rem;
+      font-size: 0.7rem !important;
     }
   }
 }

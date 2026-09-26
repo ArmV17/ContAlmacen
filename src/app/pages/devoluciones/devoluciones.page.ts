@@ -93,9 +93,8 @@ export class DevolucionesPage implements OnInit {
     }
   }
 
-  // --- NUEVA LÓGICA DE SALTO DE FOCO ---
+  // --- LÓGICA DE SALTO DE FOCO ---
   filtrarLista(eventoEnter: boolean = false) {
-    // Protección contra undefined
     const busqueda = (this.busquedaId || '').trim().toLowerCase();
     
     if (!busqueda) {
@@ -118,7 +117,6 @@ export class DevolucionesPage implements OnInit {
     } else if (eventoEnter && this.prestamosAgrupados.length === 0) {
        this.mostrarMensaje('No se encontró al deudor', 'warning');
        
-       // SOLUCIÓN: Forzar la limpieza de manera asíncrona
        setTimeout(() => {
          this.busquedaId = '';
          this.inputBusquedaGlobal?.setFocus();
@@ -127,45 +125,52 @@ export class DevolucionesPage implements OnInit {
   }
 
   // ==========================================
-
+  // VALIDACIÓN INTELIGENTE AUTOMÁTICA
+  // ==========================================
   validarHerramientaEnGrupo(grupo: any) {
-    // Evitar escaneos basura si el sistema está procesando datos (falla de internet)
-    if (this.cargando) {
-       this.mostrarMensaje('Procesando, por favor espere...', 'warning');
-       setTimeout(() => { grupo.inputValidacion = ''; }, 50);
-       return;
-    }
+    if (this.cargando) return;
 
-    // Protección para evitar que .toUpperCase() rompa la app si el input llega vacío
     const inputBruto = grupo.inputValidacion || '';
-    const codigo = inputBruto.toUpperCase().trim();
+    const codigoIngresado = inputBruto.toUpperCase().trim();
 
-    if (!codigo) return;
+    if (!codigoIngresado) return;
 
-    const herramienta = grupo.datos_devolucion.find((h: any) => h.codigo === codigo);
+    // Buscamos si existe una herramienta en este grupo cuyo código coincida exactamente
+    const herramientaEncontrada = grupo.datos_devolucion.find(
+      (h: any) => h.codigo.toUpperCase().trim() === codigoIngresado
+    );
 
-    if (herramienta) {
-      if (!herramienta.validado) {
-        herramienta.validado = true;
-        this.mostrarMensaje(`Validado: ${herramienta.nombre}`, 'success');
+    // Si coincide exactamente de manera automática al escribir o escanear
+    if (herramientaEncontrada) {
+      if (!herramientaEncontrada.validado) {
+        herramientaEncontrada.validado = true;
+        this.mostrarMensaje(`Validado: ${herramientaEncontrada.nombre}`, 'success');
       }
       this.actualizarEstadosGrupo(grupo);
-    } else {
-       this.mostrarMensaje('Código no pertenece a este deudor', 'danger');
-    }
 
-    // SOLUCIÓN AL BUG PRINCIPAL:
-    // Al usar setTimeout aseguramos que Ionic borre el texto *después* de procesar el input, 
-    // evitando que se amontonen los códigos.
-    setTimeout(() => {
-      grupo.inputValidacion = '';
+      // Limpiamos el input de inmediato y pasamos al siguiente foco o limpiamos para el próximo escaneo
+      setTimeout(() => {
+        grupo.inputValidacion = '';
+        
+        const index = this.prestamosAgrupados.findIndex(g => g.receptor_id === grupo.receptor_id);
+        if (index !== -1) {
+           const inputCorrespondiente = this.inputsEscaneoHerramientas.toArray()[index];
+           if(inputCorrespondiente) inputCorrespondiente.setFocus();
+        }
+      }, 50);
+    } else {
+      // Si el texto escrito ya es largo (por ejemplo, igual o mayor a la longitud de los códigos) 
+      // y aun así no coincide con ninguno, avisamos que no pertenece.
+      // Esto evita que marque error mientras vas escribiendo la letra "P", "PA", etc.
+      const longitudPromedioCodigo = grupo.datos_devolucion[0]?.codigo?.length || 6;
       
-      const index = this.prestamosAgrupados.findIndex(g => g.receptor_id === grupo.receptor_id);
-      if (index !== -1) {
-         const inputCorrespondiente = this.inputsEscaneoHerramientas.toArray()[index];
-         if(inputCorrespondiente) inputCorrespondiente.setFocus();
+      if (codigoIngresado.length >= longitudPromedioCodigo) {
+        this.mostrarMensaje('Código no pertenece a este deudor', 'danger');
+        setTimeout(() => {
+          grupo.inputValidacion = '';
+        }, 100);
       }
-    }, 50);
+    }
   }
 
   actualizarEstadosGrupo(grupo: any) {
@@ -185,7 +190,6 @@ export class DevolucionesPage implements OnInit {
         
         if (grupo.datos_devolucion.length === 0) {
           this.prestamosAgrupados = this.prestamosAgrupados.filter(g => g.receptor_id !== grupo.receptor_id);
-          // Limpiamos de forma segura
           setTimeout(() => {
             this.busquedaId = '';
             this.inputBusquedaGlobal?.setFocus();

@@ -158,7 +158,7 @@
 }
 
 /* ==========================================================================
-   4. VALIDACIÓN DE HERRAMIENTAS (MICRO-INTERACCIONES)
+   4. VALIDACIÓN DE HERRAMIENTAS Y BOTÓN (PC CENTRADO / MÓVIL ANCHO TOTAL)
    ========================================================================== */
 .seccion-validacion-devolucion {
   margin-top: 16px;
@@ -167,11 +167,42 @@
   border-radius: 16px;
   border: 1px solid #e2e8f0;
 
+  /* 💻 ESTILO PC: Diseño vertical ordenado donde el botón queda centrado */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centra los elementos horizontalmente en la tarjeta */
+  gap: 12px;
+
+  .input-limpio.mini {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* El botón centrado en PC con un ancho agradable */
+  .boton-recibir-grupo {
+    position: static !important;
+    margin: 4px auto !important;
+    --background: var(--success-accent);
+    --background-hover: #059669;
+    --border-radius: 14px;
+    font-weight: 800;
+    height: 48px;
+    width: 250px; /* Ancho perfecto para que luzca centrado sin ocupar toda la pantalla en PC */
+    --box-shadow: 0 8px 20px -6px var(--success-glow);
+    font-size: 0.9rem;
+    letter-spacing: 0.3px;
+    transition: all 0.4s var(--spring-physics);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
   .lista-check-herramientas {
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 8px;
+    margin-top: 4px;
   }
 }
 
@@ -189,7 +220,6 @@
     transform: scale(0.97);
   }
 
-  /* 🌟 ESTADO DEVUELTO (ÉXITO) */
   &.validado {
     background: rgba(16, 185, 129, 0.08);
     border-color: var(--success-accent);
@@ -222,36 +252,74 @@
 }
 
 /* ==========================================================================
-   5. BOTÓN PRINCIPAL
+   📱 ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
    ========================================================================== */
-.boton-recibir-grupo {
-  --background: var(--success-accent);
-  --background-hover: #059669;
-  --border-radius: 14px;
-  font-weight: 800;
-  height: 52px;
-  margin-left: 10px;
-  min-width: 120px;
-  --box-shadow: 0 8px 20px -6px var(--success-glow);
-  font-size: 0.9rem;
-  letter-spacing: 0.3px;
-  transition: all 0.4s var(--spring-physics);
+@media (max-width: 768px) {
+  
+  .contenedor-maximo {
+    padding: 12px 8px;
+  }
 
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      transform: translateY(-2px);
-      --box-shadow: 0 12px 24px -6px var(--success-glow);
+  .item-gestion {
+    padding: 14px !important;
+    border-radius: 16px;
+
+    ion-label {
+      white-space: normal !important;
+      width: 100% !important;
+      margin: 0 !important;
+    }
+
+    .nombre-maestro {
+      font-size: 1.1rem !important;
+      line-height: 1.3;
+      white-space: normal !important;
+      width: 100% !important;
     }
   }
 
-  &:active {
-    transform: scale(0.96);
-  }
+  .seccion-validacion-devolucion {
+    display: block !important; /* En celular se apila todo en bloques verticales */
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 14px;
+    margin-top: 12px;
+    width: 100% !important;
+    box-sizing: border-box;
 
-  &[disabled] {
-    opacity: 0.5;
-    --box-shadow: none;
-    transform: none;
+    .input-limpio.mini {
+      width: 100% !important;
+      margin-bottom: 10px !important;
+    }
+
+    .lista-check-herramientas {
+      display: block !important;
+      margin-top: 8px;
+    }
+
+    .check-item-devolucion {
+      width: 100% !important;
+      display: flex !important;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      box-sizing: border-box;
+    }
+
+    /* 🔥 El botón verde baja y ocupa el 100% del ancho abajo en celulares */
+    .boton-recibir-grupo {
+      display: flex !important;
+      width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
+      margin: 10px 0 0 0 !important;
+      height: 50px !important;
+      font-size: 1rem !important;
+      justify-content: center !important;
+      align-items: center !important;
+      box-sizing: border-box !important;
+    }
   }
 }
 
@@ -271,7 +339,7 @@ ion-item {
 }
 
 /* ==========================================================================
-   6. ANIMACIONES FLUIDAS
+   5. ANIMACIONES FLUIDAS
    ========================================================================== */
 .animated {
   animation-duration: 0.5s;
@@ -291,76 +359,78 @@ ion-item {
 .fadeIn { animation-name: fadeIn; animation-timing-function: var(--spring-physics); }
 .zoomIn { animation-name: zoomIn; animation-timing-function: var(--spring-physics); }
 
-
 /* ==========================================================================
-   📱 ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
+   📱 6. ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
    ========================================================================== */
 @media (max-width: 768px) {
   
   .contenedor-maximo {
-    padding-top: 15px;
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-bottom: 20px;
-  }
-
-  .tarjeta-formulario {
-    border-radius: 16px;
-    margin-bottom: 16px;
+    padding: 12px 8px;
   }
 
   .item-gestion {
-    --padding-start: 12px;
-    --padding-end: 12px;
-    --padding-top: 12px;
-    --padding-bottom: 12px;
+    padding: 14px !important;
     border-radius: 16px;
 
+    ion-label {
+      white-space: normal !important;
+      width: 100% !important;
+      margin: 0 !important;
+    }
+
     .nombre-maestro {
-      font-size: 1.05rem;
-    }
-
-    .info-secundaria {
-      gap: 8px;
-      margin-bottom: 10px;
-      
-      .badge-id {
-        font-size: 0.7rem;
-        padding: 4px 8px;
-      }
-
-      .tipo-badge {
-        font-size: 0.75rem;
-      }
+      font-size: 1.1rem !important;
+      line-height: 1.3;
+      white-space: normal !important;
+      width: 100% !important;
     }
   }
 
+  /* Desactivamos el posicionamiento absoluto y convertimos en bloque para móvil */
   .seccion-validacion-devolucion {
+    display: block !important;
+    position: static !important;
+    background: #f8fafc;
     padding: 12px;
-    border-radius: 12px;
-  }
+    border-radius: 14px;
+    margin-top: 12px;
+    width: 100% !important;
+    box-sizing: border-box;
 
-  .check-item-devolucion {
-    padding: 10px 12px;
-    
-    .info-h {
-      gap: 10px;
-      
-      ion-icon { 
-        font-size: 1.2rem; 
-      }
-      
-      .textos-h {
-        .nombre-h { font-size: 0.85rem; }
-        .codigo-h { font-size: 0.75rem; }
-      }
+    /* Anulamos la restricción de ancho para que usen toda la pantalla */
+    .lista-check-herramientas, .input-limpio.mini {
+      max-width: 100% !important;
+      width: 100% !important;
     }
-  }
 
-  .boton-recibir-grupo {
-    height: 48px;
-    min-width: 100px;
-    margin-left: 5px;
-    font-size: 0.85rem;
+    .lista-check-herramientas {
+      display: block !important;
+      margin-top: 8px;
+    }
+
+    .check-item-devolucion {
+      width: 100% !important;
+      display: flex !important;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      box-sizing: border-box;
+    }
+
+    /* 🔥 El botón verde baja de forma natural y ocupa el 100% del ancho abajo */
+    .boton-recibir-grupo {
+      position: static !important;
+      display: flex !important;
+      width: 100% !important;
+      min-width: 100% !important;
+      max-width: 100% !important;
+      margin: 12px 0 0 0 !important;
+      height: 50px !important;
+      font-size: 1rem !important;
+      justify-content: center !important;
+      align-items: center !important;
+      box-sizing: border-box !important;
+    }
   }
 }

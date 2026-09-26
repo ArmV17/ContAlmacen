@@ -384,92 +384,24 @@ ion-popover {
    ========================================================================== */
 @media (max-width: 768px) {
   
-  .contenedor-maximo {
-    padding-top: 15px;
-    padding-left: 10px;
-    padding-right: 10px;
-  }
+  // ... (tus otros estilos anteriores) ...
 
-  /* Compactar las tarjetas del formulario principal */
-  .tarjeta-formulario {
-    border-radius: 16px;
-    margin-bottom: 16px;
-
-    /* Ajustar las pestañas Segment para móviles */
-    ion-segment {
-      margin: 5px;
-      padding: 4px;
-      
-      ion-segment-button {
-        min-height: 40px;
-        font-size: 0.85rem;
-      }
-    }
-
-    .titulo-seccion {
-      font-size: 1.05rem;
-      padding-left: 4px;
-      
-      ion-icon {
-        font-size: 1.2rem;
-      }
-    }
-  }
-
-  /* Ajustes en los inputs y banners de identificación */
-  .input-limpio {
-    margin-bottom: 12px;
-    --padding-start: 12px;
-    
-    ion-input, ion-select {
-      font-size: 0.95rem;
-    }
-  }
-
-  .banner-alumno, .banner-docente {
-    padding: 12px;
-    margin: 12px 0;
-    
-    p { font-size: 0.85rem; }
-  }
-
-  /* Optimizar el cuadro de escaneo para pantallas pequeñas */
+  /* Optimizar el cuadro de escaneo para que el placeholder largo se vea bien */
   .contenedor-escanner-minimal {
     .input-texto-codigo {
-      font-size: 1rem;
-      --padding-top: 10px;
-      --padding-bottom: 10px;
+      font-size: 0.95rem; /* Letra un poco más adaptable */
+      
+      /* Aseguramos que el placeholder luzca ordenado y con buen tamaño en móvil */
+      &::placeholder {
+        font-size: 0.85rem !important;
+        opacity: 0.7;
+      }
     }
     
     .boton-anadir-clean {
-      height: 32px;
+      height: 36px;
       font-size: 0.85rem;
-      margin-top: 6px;
+      margin-top: 8px;
     }
-  }
-
-  /* Compactar los items del carrito de préstamos */
-  .tarjeta-lista-prestamo {
-    margin-top: 20px;
-    
-    .titulo-seccion-lista {
-      margin: 15px 0 10px 4px;
-    }
-  }
-
-  .item-carrito-estilizado {
-    --padding-start: 10px;
-    margin-bottom: 8px;
-    
-    .icono-lista { font-size: 1.15rem; }
-    h3 { font-size: 0.9rem; }
-    p { font-size: 0.75rem; }
-  }
-
-  /* Ajuste final del botón Confirmar */
-  .boton-guardar {
-    height: 52px;
-    font-size: 1.05rem;
-    margin-top: 24px;
   }
 }

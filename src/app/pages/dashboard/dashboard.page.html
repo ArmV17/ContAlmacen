@@ -73,9 +73,6 @@
       
       <ion-list class="lista-transparente">
         <ion-item *ngFor="let grupo of vencidosAgrupados" class="item-limpio-agrupado vencido ion-margin-bottom" lines="none">
-          <div class="icono-contenedor bg-vencido" slot="start">
-            <ion-icon [name]="grupo.receptor_tipo?.toLowerCase() === 'profesor' ? 'school' : 'person'"></ion-icon>
-          </div>
           
           <ion-label>
             <div class="header-item-flex">
@@ -140,9 +137,6 @@
       
       <ion-list class="lista-transparente">
         <ion-item *ngFor="let grupo of activosAgrupados" class="item-limpio-agrupado ion-margin-bottom" lines="none">
-          <div class="icono-contenedor" slot="start">
-            <ion-icon [name]="grupo.receptor_tipo?.toLowerCase() === 'profesor' ? 'school-outline' : 'person-outline'"></ion-icon>
-          </div>
           
           <ion-label>
             <div class="header-item-flex">

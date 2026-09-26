@@ -48,7 +48,6 @@ Sigue estos pasos en orden para levantar el proyecto en una computadora nueva si
 **1. Clonar el repositorio:**
 ```bash
 git clone https://github.com/ArmV17/ContAlmacen.git
-cd camps-uaaan
 ```
 
 **2. Instalar herramientas globales (Angular y Ionic CLI):**

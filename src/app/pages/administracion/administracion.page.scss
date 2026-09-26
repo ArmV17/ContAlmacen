@@ -321,66 +321,90 @@ ion-item::part(native) { background: transparent; border: none !important; }
 ion-item { --border-width: 0 !important; --inner-border-width: 0 !important; }
 
 /* ==========================================================================
-   📱 ADAPTACIÓN PARA MÓVILES (RESPONSIVE)
+   📱 ARREGLO MÓVIL PARA REGISTROS / ALUMNOS (MATRÍCULA ARRIBA, CARRERA ABAJO)
    ========================================================================== */
 @media (max-width: 768px) {
   
-  /* Ajuste de Pestañas (Segment) para pantallas estrechas */
-  ion-segment {
-    margin: 5px;
-    width: calc(100% - 10px);
-    overflow-x: auto; /* Permite deslizar las pestañas si hay muchas */
-  }
+  /* Tarjeta general del registro de alumnos */
+  .lista-gestion .item-gestion, 
+  .tarjeta-registro, 
+  .item-gestion {
+    padding: 12px !important;
+    border-radius: 14px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: relative;
 
-  ion-segment-button {
-    font-size: 0.85rem !important; /* Letra más pequeña para que quepan */
-    min-height: 38px !important;
-  }
+    /* El bloque de texto principal del usuario/alumno */
+    ion-label {
+      margin: 0 !important;
+      flex: 1 !important;
+      min-width: 0 !important;
+      padding-right: 6px !important;
 
-  /* Aprovechar el espacio de la pantalla quitando márgenes laterales innecesarios */
-  .contenedor-maximo {
-    padding: 10px;
-  }
+      /* Nombre del alumno */
+      h3, .nombre-principal, h2 {
+        font-size: 0.95rem !important;
+        font-weight: 700 !important;
+        line-height: 1.2 !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        margin-bottom: 4px !important;
+      }
 
-  .tarjeta-formulario {
-    margin-bottom: 15px;
-    border-radius: 16px; /* Borde un poco menos redondo para ahorrar espacio */
-    box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.05); /* Sombra más ligera para mejor rendimiento */
-  }
+      /* 🔥 CONTENEDOR DE DATOS SECUNDARIOS: MATRÍCULA Y CARRERA EN BLOQUES SEPARADOS */
+      p, .detalles-usuario, .info-secundaria {
+        font-size: 0.75rem !important;
+        color: var(--text-muted, #64748b) !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        line-height: 1.3 !important;
+        display: flex !important;
+        flex-direction: column !important; /* Fuerza a que los elementos bajen de renglón */
+        align-items: flex-start !important;
+        gap: 2px !important; /* Pequeño espacio limpio entre la matrícula y la carrera */
 
-  .tarjeta-formulario ion-card-content {
-    padding: 12px; /* Reducción del relleno interior de la tarjeta */
-  }
+        /* Matrícula o ID destacado en su propia línea */
+        .matricula-texto, span.matricula, span:first-child {
+          font-weight: 600;
+          color: var(--text-main, #0f172a);
+          display: block !important;
+        }
 
-  .tarjeta-formulario .titulo-seccion {
-    font-size: 1.1rem;
-  }
+        /* Carrera o datos adicionales en la línea inferior */
+        .carrera-texto, span.carrera {
+          display: block !important;
+          opacity: 0.85;
+        }
 
-  /* Ajustar botones de acción en las tarjetas del Dashboard */
-  .lista-gestion .item-gestion {
-    --padding-start: 12px;
-    margin-bottom: 10px;
-  }
+        /* Ocultamos puntos separadores volando */
+        span.separador-punto, span:empty {
+          display: none !important;
+        }
+      }
+    }
 
-  .lista-gestion .item-gestion ion-label h3 {
-    font-size: 1rem;
-  }
+    /* Botones de acción compactos a la derecha */
+    .botones-accion, ion-buttons, .acciones-item {
+      display: flex !important;
+      flex-direction: row !important;
+      gap: 2px !important;
+      flex-shrink: 0 !important;
+      align-items: center !important;
 
-  /* Reducir el tamaño de los inputs para ganar altura en celulares */
-  .input-limpio {
-    margin-bottom: 12px;
-    --padding-start: 12px;
-  }
-  
-  .input-limpio ion-input, .input-limpio ion-select {
-    font-size: 0.95rem;
-  }
-  
-  /* Botones principales un poco más delgados */
-  .boton-guardar, ion-button[color="success"] {
-    height: 50px;
-    font-size: 1.05rem;
-    margin-top: 15px;
-    margin-bottom: 15px;
+      ion-button {
+        width: 30px !important;
+        height: 30px !important;
+        --padding-start: 2px !important;
+        --padding-end: 2px !important;
+        margin: 0 !important;
+
+        ion-icon {
+          font-size: 1rem !important;
+        }
+      }
+    }
   }
 }
